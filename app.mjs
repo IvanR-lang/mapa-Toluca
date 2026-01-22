@@ -1,16 +1,14 @@
 import express from 'express';
 import { readFile } from 'fs/promises';
 import mongoose from 'mongoose';
-import cron from 'node-cron'; // Necesitaremos esta librería
+import cron from 'node-cron';
 
 const app = express();
 app.use(express.json());
 
 const mongoURI = "mongodb+srv://erick_toluca:moto2026@cluster0.bsulozi.mongodb.net/reportes?retryWrites=true&w=majority&appName=Cluster0"; 
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Conectado a MongoDB"))
-  .catch(err => console.error("❌ Error:", err));
+mongoose.connect(mongoURI).then(() => console.log("✅ Conectado a MongoDB"));
 
 const reporteSchema = new mongoose.Schema({
   texto: String,
@@ -21,12 +19,12 @@ const reporteSchema = new mongoose.Schema({
 
 const Reporte = mongoose.model('Reporte', reporteSchema);
 
-// TAREA PROGRAMADA: Borrar todo a las 23:59 todos los días
-// El formato es: minuto hora día mes día-semana
+// BORRADO EXACTO A LAS 23:59
 cron.schedule('59 23 * * *', async () => {
-    console.log('🧹 Limpiando reportes del día...');
+    console.log('🧹 Borrando reportes del día...');
     await Reporte.deleteMany({});
 }, {
+    scheduled: true,
     timezone: "America/Mexico_City"
 });
 
@@ -46,11 +44,10 @@ app.post('/api/chat', async (req, res) => {
   res.json({ status: "ok" });
 });
 
-// NUEVA RUTA: Para eliminar un reporte específico
 app.delete('/api/chat/:id', async (req, res) => {
   await Reporte.findByIdAndDelete(req.params.id);
   res.json({ status: "borrado" });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
