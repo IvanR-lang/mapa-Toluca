@@ -9,44 +9,69 @@
         #map { height: 85vh; width: 100%; border-bottom: 3px solid #4CAF50; }
         .panel { padding: 10px; text-align: center; background: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         h1 { margin: 5px 0; color: #4CAF50; font-size: 1.4rem; }
-        p { margin: 2px; font-size: 0.9rem; color: #bbb; }
+        
+        /* Estilo para el botón de ubicación */
+        .btn-ubicacion {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 25px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
     <div class="panel">
         <h1>📍 Reportes Viales Toluca</h1>
-        <p>Toca el mapa para reportar. ¡Se actualiza solo cada 4 segundos!</p>
     </div>
 
+    <button class="btn-ubicacion" onclick="buscarMiUbicacion()">🎯</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Configuración Inicial del Mapa (Centrado en Toluca)
         const map = L.map('map').setView([19.2827, -99.6557], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
 
-        // 2. Función para cargar puntos con EMOJIS DE TEXTO
+        // FUNCIÓN NUEVA: Buscar ubicación del usuario
+        function buscarMiUbicacion() {
+            map.locate({setView: true, maxZoom: 16});
+        }
+
+        // Si se encuentra la ubicación, poner un círculo azul donde estás
+        map.on('locationfound', function(e) {
+            L.circle(e.latlng, {radius: 100, color: '#4CAF50'}).addTo(map)
+             .bindPopup("Estás aquí").openPopup();
+        });
+
+        map.on('locationerror', function() {
+            alert("No pude acceder a tu ubicación. Revisa los permisos.");
+        });
+
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
-                
-                // Limpiar mapa antes de actualizar
                 marcadoresActuales.forEach(m => map.removeLayer(m));
                 marcadoresActuales = [];
 
                 puntos.forEach(p => {
                     if(p.lat && p.lng) {
-                        // Lógica de Emojis según el texto
                         let emoji = "📍";
                         if (p.texto.includes("RETÉN")) emoji = "🚨";
                         if (p.texto.includes("ACCIDENTE")) emoji = "💥";
                         if (p.texto.includes("AVISO")) emoji = "⚠️";
 
-                        // Creamos el icono de texto
                         const iconoEmoji = L.divIcon({
                             html: `<div style="font-size: 24px; filter: drop-shadow(0 0 2px black);">${emoji}</div>`,
                             className: 'custom-div-icon',
@@ -60,36 +85,27 @@
                         marcadoresActuales.push(m);
                     }
                 });
-            } catch (e) { console.log("Error de conexión"); }
+            } catch (e) { console.log("Error"); }
         }
 
-        // 3. Sistema de Reporte
         map.on('click', async function(e) {
             const { lat, lng } = e.latlng;
             const nombre = prompt("¿Quién reporta?");
             if (!nombre) return;
-
             const tipo = prompt("Elige: (1) RETÉN 🚨, (2) ACCIDENTE 💥, (3) OTRO ⚠️");
             let textoFinal = "";
-
-            if (tipo === "1") {
-                textoFinal = `🚨 RETÉN: Reportado por ${nombre}`;
-            } else if (tipo === "2") {
-                textoFinal = `💥 ACCIDENTE: Reportado por ${nombre}`;
-            } else {
-                textoFinal = `⚠️ AVISO: ${nombre} reporta precaución`;
-            }
+            if (tipo === "1") textoFinal = `🚨 RETÉN: Reportado por ${nombre}`;
+            else if (tipo === "2") textoFinal = `💥 ACCIDENTE: Reportado por ${nombre}`;
+            else textoFinal = `⚠️ AVISO: ${nombre} reporta precaución`;
 
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ texto: textoFinal, lat: lat, lng: lng })
             });
-            
             cargarPuntos(); 
         });
 
-        // 4. Actualización automática
         setInterval(cargarPuntos, 4000); 
         cargarPuntos();
     </script>
