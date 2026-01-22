@@ -9,20 +9,16 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #262626; }
         
-        /* Capa Legal Bloqueante */
         #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-legal { background: #2a2a2a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-legal { background: #2a2a2a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #444; }
         .btn-entendido { background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
-        /* Mira Central Ajustada (La punta es el centro) */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
         
-        /* Botones laterales */
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: #333; border-radius: 12px; border: 1px solid #555; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
         .btn-gps { top: 20px; }
         .btn-lock { top: 80px; }
 
-        /* Botón REPORTAR Rojo */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
         .btn-reportar { background: #e63946; color: white; border: 3px solid #fff; padding: 15px 30px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4); display: flex; align-items: center; gap: 10px; }
 
@@ -32,6 +28,26 @@
         .btn-control { background: #ff0000; }
         .btn-vial { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
+
+        /* Estilo para el indicador de posición real (Círculo Azul) */
+        .user-position {
+            width: 15px; height: 15px;
+            background: #2196F3;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.8);
+        }
+        .user-position-pulse {
+            position: absolute;
+            width: 15px; height: 15px;
+            background: rgba(33, 150, 243, 0.4);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -69,41 +85,57 @@
         let marcadoresActuales = [];
         let siguiendo = true;
         let miUbicacionReal = null;
+        let marcadorUsuario = null;
 
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
+        // LÓGICA CORREGIDA: Candado Abierto (🔓) = MIRA / Candado Cerrado (🔒) = GPS
         function toggleLock() {
             siguiendo = !siguiendo;
-            document.getElementById('lockBtn').innerText = siguiendo ? '🔓' : '🔒';
-            document.getElementById('miraCentral').style.display = siguiendo ? 'block' : 'none';
+            document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
+            document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
         }
 
         function activarSeguimiento() {
             siguiendo = true;
-            document.getElementById('lockBtn').innerText = '🔓';
-            document.getElementById('miraCentral').style.display = 'block';
+            document.getElementById('lockBtn').innerText = '🔒';
+            document.getElementById('miraCentral').style.display = 'none';
             map.locate({setView: true, maxZoom: 17});
         }
 
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
+            
+            // Actualizar o crear el punto azul que se mueve contigo
+            if (!marcadorUsuario) {
+                const userIcon = L.divIcon({
+                    html: '<div class="user-position-pulse"></div><div class="user-position"></div>',
+                    className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]
+                });
+                marcadorUsuario = L.marker(e.latlng, {icon: userIcon, zIndexOffset: 1000}).addTo(map);
+            } else {
+                marcadorUsuario.setLatLng(e.latlng);
+            }
+
             if (siguiendo) map.setView(e.latlng, 17); 
         });
-        map.locate({watch: true, setView: true, maxZoom: 17});
+        
+        map.locate({watch: true, setView: true, maxZoom: 17, enableHighAccuracy: true});
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            // Si el candado está abierto, usamos la mira central
-            if (!siguiendo) {
+            
+            // Si el candado está ABIERTO (🔓), usamos la MIRA central
+            if (document.getElementById('lockBtn').innerText === '🔓') {
                 const centro = map.getCenter();
                 lat = centro.lat; lng = centro.lng;
             } else {
-                // Si está cerrado, usamos tu ubicación GPS real
+                // Si está CERRADO (🔒), usamos tu ubicación GPS REAL
                 if (miUbicacionReal) {
                     lat = miUbicacionReal.lat; lng = miUbicacionReal.lng;
                 } else {
-                    alert("Esperando señal GPS..."); return;
+                    alert("⚠️ Esperando señal GPS para ubicación exacta..."); return;
                 }
             }
 
@@ -123,13 +155,13 @@
             try {
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
-                marcadoresActuales.forEach(m => map.removeLayer(m));
+                marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
                     const emoji = p.texto.split(' ')[0];
                     const m = L.marker([p.lat, p.lng], {
                         icon: L.divIcon({ html: `<div style="font-size: 30px; filter: drop-shadow(0 2px 2px black);">${emoji}</div>`, className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15] })
                     }).addTo(map);
-                    m.bindPopup(`<div style="text-align:center;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#ff4444; color:white; border:none; padding:5px; border-radius:5px; cursor:pointer;">Eliminar</button></div>`);
+                    m.bindPopup(`<div style="text-align:center;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#ff4444; color:white; border:none; padding:8px; border-radius:8px; cursor:pointer; width:100%;">Eliminar</button></div>`);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
