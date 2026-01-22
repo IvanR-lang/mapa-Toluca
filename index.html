@@ -38,11 +38,11 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        let marcadoresActuales = [];
-        let siguiendo = true;
-        let ultimaUbicacionGPS = null;
+        // Agregamos 'preferCanvas' para que el mapa use el hardware del cel y vuele
+const map = L.map('map', { 
+    zoomControl: false,
+    preferCanvas: true 
+}).setView([19.2827, -99.6557], 15);
 
         function toggleLock() {
             siguiendo = !siguiendo;
@@ -129,5 +129,6 @@
     </script>
 </body>
 </html>
+
 
 
