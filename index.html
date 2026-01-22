@@ -46,7 +46,7 @@
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público.</p>
+            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público. Vigía Toluca no promueve conductas ilícitas; busca la transparencia vial y la prevención de incidentes.</p>
             <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -66,8 +66,8 @@
         <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
         <div class="opciones" id="menuOpciones">
             <button class="btn-opcion btn-control" onclick="enviarReporte('👮 CONTROL')">👮</button>
-            <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 VIAL')">🚧</button>
-            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
+            <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 BACHE')">🚧</button>
+            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ CHOQUE')">⚠️</button>
         </div>
     </div>
 
@@ -83,17 +83,24 @@
 
         function cerrarAviso() { 
             document.getElementById('avisoLegal').style.display = 'none'; 
-            // Primera localización manual
             map.locate({setView: true, maxZoom: 17}); 
             simularUsuarios();
         }
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // DETECTAR MOVIMIENTO MANUAL
-        map.on('movestart', (e) => {
-            // Si el movimiento NO fue disparado por nosotros (setView manual)
-            if (!e.fromCode && siguiendo) {
+        // --- SOLUCIÓN DEFINITIVA AL ERROR DE AUTO-DESBLOQUEO ---
+        // Solo abrimos el candado si el usuario TOCA la pantalla directamente.
+        // Esto ignora los movimientos automáticos del GPS.
+        map.getContainer().addEventListener('touchstart', () => {
+            if (siguiendo) {
+                siguiendo = false;
+                document.getElementById('lockBtn').innerText = '🔓';
+                document.getElementById('miraCentral').style.display = 'block';
+            }
+        });
+        map.getContainer().addEventListener('mousedown', () => {
+            if (siguiendo) {
                 siguiendo = false;
                 document.getElementById('lockBtn').innerText = '🔓';
                 document.getElementById('miraCentral').style.display = 'block';
@@ -120,21 +127,18 @@
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
             
-            // Actualizar punto de usuario
             if (!marcadorUsuario) {
                 marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
             } else { 
                 marcadorUsuario.setLatLng(e.latlng); 
             }
             
-            // CORRECCIÓN CRUCIAL: Solo movemos la cámara si el candado está cerrado (siguiendo = true)
+            // Si el candado está cerrado, la cámara sigue al GPS
             if (siguiendo) {
-                // Pasamos {fromCode: true} para que nuestro propio movimiento no abra el candado
-                map.setView(e.latlng, map.getZoom(), {animate: true, fromCode: true}); 
+                map.setView(e.latlng, map.getZoom(), {animate: true}); 
             }
         });
         
-        // RASTREO CONSTANTE PERO SIN MOVER LA CÁMARA POR DEFECTO
         map.locate({watch: true, enableHighAccuracy: true, setView: false});
 
         function simularUsuarios() {
