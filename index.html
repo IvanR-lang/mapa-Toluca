@@ -6,7 +6,29 @@
     <title>Vigía Toluca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        /* Botón de Instalación Flotante */
+#btnInstalar {
+    position: absolute;
+    bottom: 100px; /* Arriba del botón de reportar */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2500;
+    background: #00d4ff;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: bold;
+    display: none; /* Oculto por defecto */
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+}
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
+        <button id="btnInstalar" onclick="instalarPWA()">📲 INSTALAR APP (LIGERA)</button>
         #map { height: 100vh; width: 100%; background: #000; }
         
         .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -191,8 +213,39 @@
             }
         }
         setInterval(cargarPuntos, 5000); cargarPuntos();
+        let eventoInstalacion;
+const btnInstalar = document.getElementById('btnInstalar');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Evita que el navegador muestre su propio aviso feo
+    e.preventDefault();
+    // Guarda el evento para usarlo después
+    eventoInstalacion = e;
+    // Muestra nuestro botón bonito
+    btnInstalar.style.display = 'block';
+});
+
+async function instalarPWA() {
+    if (eventoInstalacion) {
+        eventoInstalacion.prompt();
+        const { outcome } = await eventoInstalacion.userChoice;
+        if (outcome === 'accepted') {
+            btnInstalar.style.display = 'none';
+        }
+        eventoInstalacion = null;
+    }
+}
+
+// Para iPhone (Safari no soporta el evento automático, así que esto ayuda)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+if (isIOS && !isStandalone) {
+    // Podrías mostrar un mensaje sutil: "Dale a compartir y Agregar a inicio"
+    console.log("Sugerencia: Agregar a inicio en iOS");
+}
     </script>
 </body>
 </html>
+
 
 
