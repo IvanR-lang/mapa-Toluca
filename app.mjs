@@ -5,12 +5,11 @@ import mongoose from 'mongoose';
 const app = express();
 app.use(express.json());
 
-// REEMPLAZA ESTE LINK con el que copies de "Connect -> Drivers" en MongoDB
-// No olvides poner tu usuario y tu contraseña real
-const mongoURI = "mongodb+srv://erick_toluca:moto2026@cluster0.mongodb.net/reportes?retryWrites=true&w=majority"; 
+// Este es tu link corregido con la contraseña moto2026
+const mongoURI = "mongodb+srv://erick_toluca:moto2026@cluster0.bsulozi.mongodb.net/reportes?retryWrites=true&w=majority&appName=Cluster0"; 
 
 mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Conectado a MongoDB Atlas"))
+  .then(() => console.log("✅ Conectado exitosamente a MongoDB Atlas"))
   .catch(err => console.error("❌ Error de conexión:", err));
 
 const reporteSchema = new mongoose.Schema({
@@ -18,7 +17,7 @@ const reporteSchema = new mongoose.Schema({
   fecha: String,
   lat: Number,
   lng: Number,
-  createdAt: { type: Date, default: Date.now, expires: 10800 } // Borra tras 3 horas
+  createdAt: { type: Date, default: Date.now, expires: 10800 } // Los reportes duran 3 horas
 });
 
 const Reporte = mongoose.model('Reporte', reporteSchema);
@@ -29,15 +28,19 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/api/chat', async (req, res) => {
-  const puntos = await Reporte.find();
-  res.json(puntos);
+  try {
+    const puntos = await Reporte.find();
+    res.json(puntos);
+  } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/chat', async (req, res) => {
-  const nuevo = new Reporte(req.body);
-  await nuevo.save();
-  res.json({ status: "ok" });
+  try {
+    const nuevo = new Reporte(req.body);
+    await nuevo.save();
+    res.json({ status: "ok" });
+  } catch (e) { res.status(500).json({ error: "error" }); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor funcionando en el puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
