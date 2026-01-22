@@ -1,61 +1,43 @@
-// app.mjs
 import express from 'express';
-import { readFile, writeFile } from 'node:fs/promises'; // Importamos 'writeFile' para poder guardar
-import { existsSync } from 'node:fs'; // Para comprobar si el archivo ya existe
+import { readFile } from 'fs/promises';
+import mongoose from 'mongoose';
 
 const app = express();
 app.use(express.json());
 
-const ARCHIVO_DB = './mensajes.json'; // Este será nuestro archivo "Base de Datos"
+// REEMPLAZA ESTE LINK con el que copies de "Connect -> Drivers" en MongoDB
+// No olvides poner tu usuario y tu contraseña real
+const mongoURI = "mongodb+srv://erick_toluca:moto2026@cluster0.mongodb.net/reportes?retryWrites=true&w=majority"; 
 
-// --- FUNCIÓN 1: Cargar mensajes al iniciar ---
-// Esta función busca si existe el archivo de mensajes y lo lee
-async function cargarMensajesGuardados() {
-  try {
-    if (existsSync(ARCHIVO_DB)) {
-      const datos = await readFile(ARCHIVO_DB, 'utf-8');
-      return JSON.parse(datos); // Convertimos el texto del archivo a Array
-    }
-  } catch (error) {
-    console.log('No había mensajes guardados, empezamos desde cero.');
-  }
-  return []; // Si no hay archivo, devolvemos una lista vacía
-}
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ Conectado a MongoDB Atlas"))
+  .catch(err => console.error("❌ Error de conexión:", err));
 
-// Inicializamos la lista leyendo el archivo
-// (Ojo: usamos 'let' porque la lista va a cambiar)
-let listaMensajes = await cargarMensajesGuardados();
+const reporteSchema = new mongoose.Schema({
+  texto: String,
+  fecha: String,
+  lat: Number,
+  lng: Number,
+  createdAt: { type: Date, default: Date.now, expires: 10800 } // Borra tras 3 horas
+});
 
-// RUTA 1: Inicio
+const Reporte = mongoose.model('Reporte', reporteSchema);
+
 app.get('/', async (req, res) => {
-  try {
-    const html = await readFile('./index.html', 'utf-8');
-    res.send(html);
-  } catch (error) {
-    res.status(500).send('Error leyendo el archivo');
-  }
+  const html = await readFile('./index.html', 'utf-8');
+  res.send(html);
 });
 
-// RUTA 2: Ver mensajes (API)
-app.get('/api/chat', (req, res) => {
-  res.json(listaMensajes);
+app.get('/api/chat', async (req, res) => {
+  const puntos = await Reporte.find();
+  res.json(puntos);
 });
 
-// RUTA 3: Guardar mensaje (API)
 app.post('/api/chat', async (req, res) => {
-  // Ahora recibimos un objeto completo: { texto, lat, lng }
-  const nuevoPunto = req.body; 
-  
-  listaMensajes.push(nuevoPunto);
-  await writeFile(ARCHIVO_DB, JSON.stringify(listaMensajes));
-
-  res.json({ todosLosMensajes: listaMensajes });
+  const nuevo = new Reporte(req.body);
+  await nuevo.save();
+  res.json({ status: "ok" });
 });
-// Esto permite que la nube elija el puerto automáticamente
+
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor funcionando en el puerto ${PORT}`);
-
-  mongodb+srv://erick_toluca:<db_moto2026>@cluster0.bsulozi.mongodb.net/?appName=Cluster0
-});
+app.listen(PORT, () => console.log(`🚀 Servidor funcionando en el puerto ${PORT}`));
