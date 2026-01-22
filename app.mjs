@@ -56,4 +56,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor funcionando en el puerto ${PORT}`);
+
+  mongodb+srv://erick_toluca:<db_moto2026>@cluster0.bsulozi.mongodb.net/?appName=Cluster0
 });
