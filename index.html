@@ -4,31 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Vigía Toluca</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Botón de Instalación Flotante */
-#btnInstalar {
-    position: absolute;
-    bottom: 100px; /* Arriba del botón de reportar */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2500;
-    background: #00d4ff;
-    color: black;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-weight: bold;
-    display: none; /* Oculto por defecto */
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
-    animation: bounce 2s infinite;
-}
-@keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-5px); }
-}
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
-        <button id="btnInstalar" onclick="instalarPWA()">📲 INSTALAR APP (LIGERA)</button>
         #map { height: 100vh; width: 100%; background: #000; }
         
         .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -48,6 +32,8 @@
         .btn-gps { top: 20px; }
         .btn-lock { top: 80px; }
 
+        #btnInstalar { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 2500; background: #00d4ff; color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; display: none; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4); }
+
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
         .btn-reportar { background: #e63946; color: white; border: 2px solid rgba(255,255,255,0.2); padding: 15px 35px; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); }
         
@@ -62,19 +48,13 @@
         .user-position-pulse { position: absolute; width: 14px; height: 14px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(5); opacity: 0; } }
     </style>
-    <link rel="manifest" href="/manifest.json">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Vigía Toluca">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
 </head>
 <body>
 
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca.</p>
+            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que los reportes viales son informativos y de carácter público.</p>
             <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -84,6 +64,8 @@
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
         <div class="online-counter"><div class="dot"></div> <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
     </div>
+
+    <button id="btnInstalar" onclick="instalarPWA()">📲 INSTALAR APP (LIGERA)</button>
 
     <div id="miraCentral">📍</div>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -101,12 +83,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map', { 
-            zoomControl: false, 
-            preferCanvas: true,
-            tap: false // Desactivamos el "tap" interno que a veces causa saltos
-        }).setView([19.2827, -99.6557], 15);
-        
+        const map = L.map('map', { zoomControl: false, preferCanvas: true, tap: false }).setView([19.2827, -99.6557], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
         let marcadoresActuales = [];
@@ -122,7 +99,6 @@
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // --- SISTEMA DE BLOQUEO MANUAL ---
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
@@ -137,46 +113,27 @@
             if (miUbicacionReal) map.setView(miUbicacionReal, 17);
         }
 
-        // --- GPS MANUAL (EL VERDADERO ENCIERRO) ---
         function iniciarGPS() {
-            // navigator.geolocation es la forma más pura de pedir el GPS sin que el mapa se meta
             if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        miUbicacionReal = [latitude, longitude];
-
-                        // Actualizamos el marcador (Punto Azul)
-                        if (!marcadorUsuario) {
-                            marcadorUsuario = L.marker(miUbicacionReal, {
-                                icon: L.divIcon({
-                                    html: '<div class="user-position-pulse"></div><div class="user-position"></div>',
-                                    className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]
-                                })
-                            }).addTo(map);
-                        } else {
-                            marcadorUsuario.setLatLng(miUbicacionReal);
-                        }
-
-                        // SOLO si el candado está cerrado dejamos que mueva la cámara
-                        if (siguiendo) {
-                            map.setView(miUbicacionReal, map.getZoom(), { animate: true });
-                        }
-                    },
-                    (error) => console.log("GPS Error:", error),
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
+                navigator.geolocation.watchPosition((pos) => {
+                    miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
+                    if (!marcadorUsuario) {
+                        marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10] }) }).addTo(map);
+                        map.setView(miUbicacionReal, 17);
+                    } else { marcadorUsuario.setLatLng(miUbicacionReal); }
+                    if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
+                }, (err) => console.log(err), { enableHighAccuracy: true });
             }
         }
 
         function simularUsuarios() {
             setInterval(() => {
-                const variacion = Math.floor(Math.random() * 3) - 1;
-                let actual = parseInt(document.getElementById('userCount').innerText) + variacion;
+                let actual = parseInt(document.getElementById('userCount').innerText);
+                actual += Math.floor(Math.random() * 3) - 1;
                 if (actual < 347) actual = 347;
-                if (actual > 572) actual = 572;
+                if (actual > 563) actual = 563;
                 document.getElementById('userCount').innerText = actual;
-            }, 15000);
+            }, 10000);
         }
 
         async function enviarReporte(tipo) {
@@ -185,10 +142,10 @@
                 const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
             } else {
                 if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
-                else { alert("⚠️ Esperando señal GPS"); return; }
+                else { alert("⚠️ Esperando GPS"); return; }
             }
-            const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng }) });
+            const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha, lat, lng }) });
             toggleMenu(); cargarPuntos();
         }
 
@@ -198,54 +155,35 @@
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], {
-                        icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] })
-                    }).addTo(map);
-                    m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b style="color:#e63946;">${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; width:100%;">¿Ya no está?</button></div>`);
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] }) }).addTo(map);
+                    m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; width:100%;">¿Ya no está?</button></div>`);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
 
         async function confirmarEliminar(id, nombre) {
-            if (confirm(`¿Estás seguro de que el ${nombre.split(' ').slice(1).join(' ')} ya no está?`)) {
+            if (confirm(`¿Eliminar reporte?`)) {
                 await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos();
             }
         }
-        setInterval(cargarPuntos, 5000); cargarPuntos();
-        let eventoInstalacion;
-const btnInstalar = document.getElementById('btnInstalar');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Evita que el navegador muestre su propio aviso feo
-    e.preventDefault();
-    // Guarda el evento para usarlo después
-    eventoInstalacion = e;
-    // Muestra nuestro botón bonito
-    btnInstalar.style.display = 'block';
-});
-
-async function instalarPWA() {
-    if (eventoInstalacion) {
-        eventoInstalacion.prompt();
-        const { outcome } = await eventoInstalacion.userChoice;
-        if (outcome === 'accepted') {
-            btnInstalar.style.display = 'none';
+        // Lógica de Instalación PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('btnInstalar').style.display = 'block';
+        });
+        async function instalarPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') document.getElementById('btnInstalar').style.display = 'none';
+                deferredPrompt = null;
+            }
         }
-        eventoInstalacion = null;
-    }
-}
 
-// Para iPhone (Safari no soporta el evento automático, así que esto ayuda)
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-if (isIOS && !isStandalone) {
-    // Podrías mostrar un mensaje sutil: "Dale a compartir y Agregar a inicio"
-    console.log("Sugerencia: Agregar a inicio en iOS");
-}
+        setInterval(cargarPuntos, 5000); cargarPuntos();
     </script>
 </body>
 </html>
-
-
-
