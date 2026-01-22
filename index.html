@@ -9,17 +9,19 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #000; }
         
-        /* Encabezado Principal */
+        /* Encabezado Vigía */
         .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .brand-header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; color: #e63946; }
         
-        /* Texto Especial para Iza */
+        /* Tu frase dedicada a Iza */
         .iza-text { font-size: 11px; color: #ff85a1; font-style: italic; margin-top: 4px; display: block; text-shadow: 0 0 5px rgba(255, 133, 161, 0.5); }
 
+        /* Aviso Legal */
         #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-legal { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #333; }
         .btn-entendido { background: #e63946; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
+        /* Interfaz de usuario */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 10px #000; display: none; }
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid #444; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
         .btn-gps { top: 20px; }
@@ -35,17 +37,19 @@
         .btn-vial { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
 
+        /* Punto azul de usuario */
         .user-position { width: 14px; height: 14px; background: #00d4ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
         .user-position-pulse { position: absolute; width: 14px; height: 14px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(5); opacity: 0; } }
     </style>
 </head>
 <body>
+
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
             <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público. Vigía Toluca no promueve conductas ilícitas; busca la transparencia vial y la prevención de incidentes.</p>
-            <button class="btn-entendido" onclick="cerrarAviso()">INGRESAR AL SISTEMA</button>
+            <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
 
@@ -63,8 +67,8 @@
         <button class="btn-reportar" onclick="toggleMenu()"><span>🛰️</span> GENERAR REPORTE</button>
         <div class="opciones" id="menuOpciones">
             <button class="btn-opcion btn-control" onclick="enviarReporte('👮 CONTROL')">👮</button>
-            <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 BACHE')">🚧</button>
-            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ CHOQUE')">⚠️</button>
+            <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 VIAL')">🚧</button>
+            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
         </div>
     </div>
 
@@ -85,18 +89,7 @@
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // --- SOLUCIÓN AL DESFASE Y MOVIMIENTO BRUSCO ---
-        function toggleLock() {
-            siguiendo = !siguiendo;
-            document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
-            document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
-            
-            if(siguiendo && miUbicacionReal) {
-                map.setView(miUbicacionReal, 17); // Solo regresa la cámara si tú lo pides cerrando el candado
-            }
-        }
-
-        // Si el usuario mueve el mapa con el dedo, desactivamos el auto-seguimiento automáticamente
+        // Si mueves el mapa, liberamos el candado automáticamente
         map.on('dragstart', () => {
             if (siguiendo) {
                 siguiendo = false;
@@ -104,6 +97,13 @@
                 document.getElementById('miraCentral').style.display = 'block';
             }
         });
+
+        function toggleLock() {
+            siguiendo = !siguiendo;
+            document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
+            document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
+            if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17);
+        }
 
         function activarSeguimiento() {
             siguiendo = true;
@@ -115,52 +115,27 @@
 
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
-            
-            // El punto azul/dragón SIEMPRE se mueve, pero la CÁMARA solo si 'siguiendo' es true
             if (!marcadorUsuario) {
-                const userIcon = L.divIcon({
-                    html: '<div class="user-position-pulse"></div><div class="user-position"></div>',
-                    className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]
-                });
-                marcadorUsuario = L.marker(e.latlng, {icon: userIcon, zIndexOffset: 1000}).addTo(map);
-            } else { 
-                marcadorUsuario.setLatLng(e.latlng); 
-            }
-
-            // AQUÍ ESTÁ EL TRUCO: Solo mueve la cámara si el candado está cerrado
-            if (siguiendo) {
-                map.setView(e.latlng, map.getZoom()); 
-            }
+                marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
+            } else { marcadorUsuario.setLatLng(e.latlng); }
+            
+            // Solo mueve la cámara si el candado está cerrado
+            if (siguiendo) map.setView(e.latlng, map.getZoom()); 
         });
         
         map.locate({watch: true, enableHighAccuracy: true});
-        // ----------------------------------------------
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            // Candado Abierto = Reportar donde está la mira
             if (!siguiendo) {
-                const centro = map.getCenter();
-                lat = centro.lat; lng = centro.lng;
+                const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
             } else {
-                // Candado Cerrado = Reportar donde estoy yo exactamente
-                if (miUbicacionReal) {
-                    lat = miUbicacionReal.lat; lng = miUbicacionReal.lng;
-                } else {
-                    alert("⚠️ Esperando señal GPS..."); return;
-                }
+                if (miUbicacionReal) { lat = miUbicacionReal.lat; lng = miUbicacionReal.lng; }
+                else { alert("⚠️ Esperando señal GPS..."); return; }
             }
-
-            const ahora = new Date();
-            const fechaTexto = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
-            });
-            toggleMenu();
-            cargarPuntos();
+            const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng }) });
+            toggleMenu(); cargarPuntos();
         }
 
         async function cargarPuntos() {
@@ -169,12 +144,7 @@
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], {
-                        icon: L.divIcon({ 
-                            html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, 
-                            className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] 
-                        })
-                    }).addTo(map);
+                    const m = L.marker([p.lat, p.lng], {icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] })}).addTo(map);
                     m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b style="color:#e63946;">${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; width:100%;">¿Ya no está?</button></div>`);
                     marcadoresActuales.push(m);
                 });
@@ -183,15 +153,10 @@
 
         async function confirmarEliminar(id, nombre) {
             if (confirm(`¿Estás seguro de que el ${nombre.split(' ').slice(1).join(' ')} ya no está?`)) {
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-                cargarPuntos();
+                await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos();
             }
         }
-
-        setInterval(cargarPuntos, 5000);
-        cargarPuntos();
+        setInterval(cargarPuntos, 5000); cargarPuntos();
     </script>
 </body>
 </html>
-
-
