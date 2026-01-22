@@ -2,39 +2,71 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mapa de Reportes Toluca</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Toluca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #1a1a1a; color: white; }
-        #map { height: 85vh; width: 100%; border-bottom: 3px solid #4CAF50; }
-        .panel { padding: 10px; text-align: center; background: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        h1 { margin: 5px 0; color: #4CAF50; font-size: 1.4rem; }
+        body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; overflow: hidden; }
+        #map { height: 75vh; width: 100%; }
         
-        /* Estilo para el botón de ubicación */
+        .menu-reporte {
+            height: 25vh;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: #222;
+        }
+
+        .btn-accion {
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .btn-reten { background: #d32f2f; }
+        .btn-accidente { background: #f57c00; }
+        .btn-otro { background: #388e3c; }
         .btn-ubicacion {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            top: 10px;
+            right: 10px;
             z-index: 1000;
-            background: #4CAF50;
-            color: white;
-            border: none;
+            background: white;
+            border: 2px solid #4CAF50;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 25px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
         }
+
+        .emoji-grande { font-size: 2rem; }
     </style>
 </head>
 <body>
-    <div class="panel">
-        <h1>📍 Reportes Viales Toluca</h1>
-    </div>
 
     <button class="btn-ubicacion" onclick="buscarMiUbicacion()">🎯</button>
+    
     <div id="map"></div>
+
+    <div class="menu-reporte">
+        <button class="btn-accion btn-reten" onclick="reportar('🚨 RETÉN')">
+            <span class="emoji-grande">🚨</span><span>RETÉN</span>
+        </button>
+        <button class="btn-accion btn-accidente" onclick="reportar('💥 CHOQUE')">
+            <span class="emoji-grande">💥</span><span>CHOQUE</span>
+        </button>
+        <button class="btn-accion btn-otro" onclick="reportar('⚠️ AVISO')">
+            <span class="emoji-grande">⚠️</span><span>AVISO</span>
+        </button>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -42,71 +74,70 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
+        let miUbicacion = null;
 
-        // FUNCIÓN NUEVA: Buscar ubicación del usuario
+        // Rastrear ubicación constantemente
+        map.locate({watch: true, setView: false});
+        map.on('locationfound', (e) => { miUbicacion = e.latlng; });
+
         function buscarMiUbicacion() {
-            map.locate({setView: true, maxZoom: 16});
+            if(miUbicacion) map.setView(miUbicacion, 16);
         }
 
-        // Si se encuentra la ubicación, poner un círculo azul donde estás
-        map.on('locationfound', function(e) {
-            L.circle(e.latlng, {radius: 100, color: '#4CAF50'}).addTo(map)
-             .bindPopup("Estás aquí").openPopup();
+        async function reportar(tipo) {
+            // Si no tenemos ubicación, pedimos tocar el mapa
+            let coords = miUbicacion;
+            if (!coords) {
+                alert("Esperando señal GPS o toca el mapa para marcar.");
+                return;
+            }
+
+            await enviarDatos(tipo, coords.lat, coords.lng);
+        }
+
+        // También permite tocar el mapa para reportar en un punto específico
+        map.on('click', (e) => {
+            const tipo = prompt("Escribe el reporte (Ej: Retén, Bache, etc):");
+            if(tipo) enviarDatos(tipo.toUpperCase(), e.latlng.lat, e.latlng.lng);
         });
 
-        map.on('locationerror', function() {
-            alert("No pude acceder a tu ubicación. Revisa los permisos.");
-        });
+        async function enviarDatos(texto, lat, lng) {
+            await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto, lat, lng })
+            });
+            cargarPuntos();
+        }
 
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => map.removeLayer(m));
-                marcadoresActuales = [];
-
+                
                 puntos.forEach(p => {
                     if(p.lat && p.lng) {
                         let emoji = "📍";
                         if (p.texto.includes("RETÉN")) emoji = "🚨";
-                        if (p.texto.includes("ACCIDENTE")) emoji = "💥";
+                        if (p.texto.includes("CHOQUE")) emoji = "💥";
                         if (p.texto.includes("AVISO")) emoji = "⚠️";
 
-                        const iconoEmoji = L.divIcon({
-                            html: `<div style="font-size: 24px; filter: drop-shadow(0 0 2px black);">${emoji}</div>`,
-                            className: 'custom-div-icon',
+                        const icono = L.divIcon({
+                            html: `<div style="font-size: 24px;">${emoji}</div>`,
+                            className: 'dummy',
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
 
-                        const m = L.marker([p.lat, p.lng], { icon: iconoEmoji })
-                                  .addTo(map)
-                                  .bindPopup(`<b>${p.texto}</b>`);
+                        const m = L.marker([p.lat, p.lng], { icon: icono }).addTo(map);
                         marcadoresActuales.push(m);
                     }
                 });
-            } catch (e) { console.log("Error"); }
+            } catch (e) {}
         }
 
-        map.on('click', async function(e) {
-            const { lat, lng } = e.latlng;
-            const nombre = prompt("¿Quién reporta?");
-            if (!nombre) return;
-            const tipo = prompt("Elige: (1) RETÉN 🚨, (2) ACCIDENTE 💥, (3) OTRO ⚠️");
-            let textoFinal = "";
-            if (tipo === "1") textoFinal = `🚨 RETÉN: Reportado por ${nombre}`;
-            else if (tipo === "2") textoFinal = `💥 ACCIDENTE: Reportado por ${nombre}`;
-            else textoFinal = `⚠️ AVISO: ${nombre} reporta precaución`;
-
-            await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: textoFinal, lat: lat, lng: lng })
-            });
-            cargarPuntos(); 
-        });
-
-        setInterval(cargarPuntos, 4000); 
+        setInterval(cargarPuntos, 4000);
         cargarPuntos();
     </script>
 </body>
