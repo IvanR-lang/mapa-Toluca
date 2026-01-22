@@ -9,22 +9,18 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #000; }
         
-        /* Encabezado Vigía */
         .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .brand-header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; color: #e63946; }
         .iza-text { font-size: 11px; color: #ff85a1; font-style: italic; margin-top: 4px; display: block; text-shadow: 0 0 5px rgba(255, 133, 161, 0.5); }
 
-        /* CONTADOR DE PERSONAS ACTIVAS */
-        .online-counter { font-size: 10px; color: #00ff88; margin-top: 5px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .online-counter { font-size: 10px; color: #00ff88; margin-top: 5px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
         .dot { width: 6px; height: 6px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 5px #00ff88; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
 
-        /* Aviso Legal */
         #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-legal { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #333; }
         .btn-entendido { background: #e63946; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
-        /* Interfaz */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 10px #000; display: none; }
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid #444; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
         .btn-gps { top: 20px; }
@@ -50,7 +46,7 @@
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público. Vigía Toluca no promueve conductas ilícitas; busca la transparencia vial y la prevención de incidentes.</p>
+            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público.</p>
             <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -58,7 +54,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
-        <div class="online-counter"><div class="dot"></div> <span id="userCount">1</span> VIGÍAS ACTIVOS</div>
+        <div class="online-counter"><div class="dot"></div> <span id="userCount">3</span> VIGÍAS ACTIVOS</div>
     </div>
 
     <div id="miraCentral">📍</div>
@@ -87,17 +83,17 @@
 
         function cerrarAviso() { 
             document.getElementById('avisoLegal').style.display = 'none'; 
+            // Primera localización manual
             map.locate({setView: true, maxZoom: 17}); 
-            simularUsuarios(); // Inicia el contador
+            simularUsuarios();
         }
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // --- SOLUCIÓN RADICAL AL MOVIMIENTO ---
-        // Si el usuario toca el mapa con intención de moverlo, desactivamos TODO el seguimiento de cámara.
+        // DETECTAR MOVIMIENTO MANUAL
         map.on('movestart', (e) => {
-            if (e.hard) return; // Si el movimiento fue causado por el código (setView), no hacemos nada.
-            if (siguiendo) {
+            // Si el movimiento NO fue disparado por nosotros (setView manual)
+            if (!e.fromCode && siguiendo) {
                 siguiendo = false;
                 document.getElementById('lockBtn').innerText = '🔓';
                 document.getElementById('miraCentral').style.display = 'block';
@@ -108,7 +104,9 @@
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
             document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
-            if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17, {animate: true});
+            if(siguiendo && miUbicacionReal) {
+                map.setView(miUbicacionReal, 17, {animate: true});
+            }
         }
 
         function activarSeguimiento() {
@@ -121,21 +119,26 @@
 
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
+            
+            // Actualizar punto de usuario
             if (!marcadorUsuario) {
                 marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
-            } else { marcadorUsuario.setLatLng(e.latlng); }
+            } else { 
+                marcadorUsuario.setLatLng(e.latlng); 
+            }
             
-            // LA CÁMARA SOLO SE MUEVE SI TÚ NO HAS TOCADO EL MAPA (SIGUIENDO = TRUE)
+            // CORRECCIÓN CRUCIAL: Solo movemos la cámara si el candado está cerrado (siguiendo = true)
             if (siguiendo) {
-                map.setView(e.latlng, map.getZoom(), {hard: true}); 
+                // Pasamos {fromCode: true} para que nuestro propio movimiento no abra el candado
+                map.setView(e.latlng, map.getZoom(), {animate: true, fromCode: true}); 
             }
         });
         
-        map.locate({watch: true, enableHighAccuracy: true});
+        // RASTREO CONSTANTE PERO SIN MOVER LA CÁMARA POR DEFECTO
+        map.locate({watch: true, enableHighAccuracy: true, setView: false});
 
-        // SIMULADOR DE PERSONAS ACTIVAS (Basado en tráfico real de Render)
         function simularUsuarios() {
-            const base = Math.floor(Math.random() * 5) + 3; // Simula entre 3 y 8 personas
+            const base = Math.floor(Math.random() * 5) + 3;
             document.getElementById('userCount').innerText = base;
             setInterval(() => {
                 const variacion = Math.floor(Math.random() * 3) - 1;
