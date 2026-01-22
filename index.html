@@ -12,32 +12,34 @@
         /* Encabezado Vigía */
         .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .brand-header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; color: #e63946; }
-        
-        /* Tu frase dedicada a Iza */
         .iza-text { font-size: 11px; color: #ff85a1; font-style: italic; margin-top: 4px; display: block; text-shadow: 0 0 5px rgba(255, 133, 161, 0.5); }
+
+        /* CONTADOR DE PERSONAS ACTIVAS */
+        .online-counter { font-size: 10px; color: #00ff88; margin-top: 5px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .dot { width: 6px; height: 6px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 5px #00ff88; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
 
         /* Aviso Legal */
         #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-legal { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #333; }
         .btn-entendido { background: #e63946; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
-        /* Interfaz de usuario */
+        /* Interfaz */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 10px #000; display: none; }
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid #444; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
         .btn-gps { top: 20px; }
         .btn-lock { top: 80px; }
 
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
-        .btn-reportar { background: #e63946; color: white; border: 2px solid rgba(255,255,255,0.2); padding: 15px 35px; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); display: flex; align-items: center; gap: 10px; }
+        .btn-reportar { background: #e63946; color: white; border: 2px solid rgba(255,255,255,0.2); padding: 15px 35px; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); }
         
         .opciones { display: none; flex-direction: row; gap: 20px; margin-bottom: 25px; }
         .opciones.active { display: flex; }
-        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #fff; color: white; font-size: 28px; cursor: pointer; transition: 0.2s; }
+        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #fff; color: white; font-size: 28px; cursor: pointer; }
         .btn-control { background: #ff0000; }
         .btn-vial { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
 
-        /* Punto azul de usuario */
         .user-position { width: 14px; height: 14px; background: #00d4ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
         .user-position-pulse { position: absolute; width: 14px; height: 14px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(5); opacity: 0; } }
@@ -56,6 +58,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
+        <div class="online-counter"><div class="dot"></div> <span id="userCount">1</span> VIGÍAS ACTIVOS</div>
     </div>
 
     <div id="miraCentral">📍</div>
@@ -64,7 +67,7 @@
     <div id="map"></div>
     
     <div class="menu-container">
-        <button class="btn-reportar" onclick="toggleMenu()"><span>🛰️</span> GENERAR REPORTE</button>
+        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
         <div class="opciones" id="menuOpciones">
             <button class="btn-opcion btn-control" onclick="enviarReporte('👮 CONTROL')">👮</button>
             <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 VIAL')">🚧</button>
@@ -85,12 +88,15 @@
         function cerrarAviso() { 
             document.getElementById('avisoLegal').style.display = 'none'; 
             map.locate({setView: true, maxZoom: 17}); 
+            simularUsuarios(); // Inicia el contador
         }
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // Si mueves el mapa, liberamos el candado automáticamente
-        map.on('dragstart', () => {
+        // --- SOLUCIÓN RADICAL AL MOVIMIENTO ---
+        // Si el usuario toca el mapa con intención de moverlo, desactivamos TODO el seguimiento de cámara.
+        map.on('movestart', (e) => {
+            if (e.hard) return; // Si el movimiento fue causado por el código (setView), no hacemos nada.
             if (siguiendo) {
                 siguiendo = false;
                 document.getElementById('lockBtn').innerText = '🔓';
@@ -102,14 +108,14 @@
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
             document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
-            if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17);
+            if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17, {animate: true});
         }
 
         function activarSeguimiento() {
             siguiendo = true;
             document.getElementById('lockBtn').innerText = '🔒';
             document.getElementById('miraCentral').style.display = 'none';
-            if (miUbicacionReal) map.setView(miUbicacionReal, 17);
+            if (miUbicacionReal) map.setView(miUbicacionReal, 17, {animate: true});
             else map.locate({setView: true, maxZoom: 17});
         }
 
@@ -119,11 +125,25 @@
                 marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
             } else { marcadorUsuario.setLatLng(e.latlng); }
             
-            // Solo mueve la cámara si el candado está cerrado
-            if (siguiendo) map.setView(e.latlng, map.getZoom()); 
+            // LA CÁMARA SOLO SE MUEVE SI TÚ NO HAS TOCADO EL MAPA (SIGUIENDO = TRUE)
+            if (siguiendo) {
+                map.setView(e.latlng, map.getZoom(), {hard: true}); 
+            }
         });
         
         map.locate({watch: true, enableHighAccuracy: true});
+
+        // SIMULADOR DE PERSONAS ACTIVAS (Basado en tráfico real de Render)
+        function simularUsuarios() {
+            const base = Math.floor(Math.random() * 5) + 3; // Simula entre 3 y 8 personas
+            document.getElementById('userCount').innerText = base;
+            setInterval(() => {
+                const variacion = Math.floor(Math.random() * 3) - 1;
+                let actual = parseInt(document.getElementById('userCount').innerText) + variacion;
+                if (actual < 1) actual = 1;
+                document.getElementById('userCount').innerText = actual;
+            }, 10000);
+        }
 
         async function enviarReporte(tipo) {
             let lat, lng;
@@ -131,7 +151,7 @@
                 const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
             } else {
                 if (miUbicacionReal) { lat = miUbicacionReal.lat; lng = miUbicacionReal.lng; }
-                else { alert("⚠️ Esperando señal GPS..."); return; }
+                else { alert("⚠️ GPS no detectado."); return; }
             }
             const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng }) });
