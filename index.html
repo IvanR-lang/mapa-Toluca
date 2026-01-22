@@ -46,7 +46,7 @@
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que los reportes son informativos y de carácter público.</p>
+            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que los reportes viales son informativos y de carácter público.</p>
             <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -54,7 +54,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
-        <div class="online-counter"><div class="dot"></div> <span id="userCount">3</span> VIGÍAS ACTIVOS</div>
+        <div class="online-counter"><div class="dot"></div> <span id="userCount">1</span> VIGÍAS ACTIVOS</div>
     </div>
 
     <div id="miraCentral">📍</div>
@@ -82,25 +82,22 @@
         let marcadorUsuario = null;
 
         function cerrarAviso() { 
-            document.getElementById('avisoLegal').style.display = 'none'; 
-            map.locate({setView: true, maxZoom: 17}); 
+            document.getElementById('avisoLegal').style.display = 'none';
+            map.locate({setView: true, maxZoom: 17});
             simularUsuarios();
         }
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // --- SOLUCIÓN DE FUERZA BRUTA: CERO AUTO-DESBLOQUEO ---
-        // Eliminamos los event listeners de 'touchstart' y 'mousedown' que intentaban ser inteligentes.
-        // Ahora el candado SOLAMENTE cambia cuando tú le das clic al botón.
-
+        // --- EL "CUARTO" DEL GPS ---
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
             document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
             
-            // Si cerramos el candado, nos lleva a nuestra posición actual
+            // Solo dejamos que el GPS "salga del cuarto" para mover la cámara si tú cierras el candado
             if(siguiendo && miUbicacionReal) {
-                map.setView(miUbicacionReal, 17, {animate: true});
+                map.setView(miUbicacionReal, map.getZoom(), {animate: true});
             }
         }
 
@@ -115,40 +112,39 @@
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
             
+            // El punto azul vive en el cuarto pero SIEMPRE se ve en el mapa
             if (!marcadorUsuario) {
                 marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
             } else { 
-                marcadorUsuario.setLatLng(e.latlng); 
+                marcadorUsuario.setLatLng(e.latlng);
             }
             
-            // La cámara SOLO se mueve si el estado es 'siguiendo'
+            // LA CÁMARA TIENE PROHIBIDO MOVERSE SI EL CANDADO ESTÁ ABIERTO
             if (siguiendo) {
-                map.setView(e.latlng, map.getZoom(), {animate: true}); 
+                map.setView(e.latlng, map.getZoom(), {animate: true});
             }
         });
         
+        // Rastreamos el GPS pero le quitamos el permiso de mover el mapa automáticamente (setView: false)
         map.locate({watch: true, enableHighAccuracy: true, setView: false});
 
         function simularUsuarios() {
-            const base = Math.floor(Math.random() * 5) + 3;
-            document.getElementById('userCount').innerText = base;
             setInterval(() => {
                 const variacion = Math.floor(Math.random() * 3) - 1;
                 let actual = parseInt(document.getElementById('userCount').innerText) + variacion;
                 if (actual < 1) actual = 1;
+                if (actual > 12) actual = 12;
                 document.getElementById('userCount').innerText = actual;
-            }, 10000);
+            }, 15000);
         }
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            // Si el candado está ABIERTO (🔓), reportamos el centro del mapa (la mira)
             if (!siguiendo) {
                 const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
             } else {
-                // Si está CERRADO (🔒), reportamos nuestra ubicación real
                 if (miUbicacionReal) { lat = miUbicacionReal.lat; lng = miUbicacionReal.lng; }
-                else { alert("⚠️ GPS no detectado."); return; }
+                else { alert("⚠️ Esperando señal GPS"); return; }
             }
             const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng }) });
