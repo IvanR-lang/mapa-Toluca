@@ -54,7 +54,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
-        <div class="online-counter"><div class="dot"></div> <span id="userCount">1</span> VIGÍAS ACTIVOS</div>
+        <div class="online-counter"><div class="dot"></div> <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
     </div>
 
     <div id="miraCentral">📍</div>
@@ -145,8 +145,8 @@
             setInterval(() => {
                 const variacion = Math.floor(Math.random() * 3) - 1;
                 let actual = parseInt(document.getElementById('userCount').innerText) + variacion;
-                if (actual < 1) actual = 1;
-                if (actual > 10) actual = 10;
+                if (actual < 347) actual = 347;
+                if (actual > 572) actual = 572;
                 document.getElementById('userCount').innerText = actual;
             }, 15000);
         }
@@ -188,3 +188,4 @@
     </script>
 </body>
 </html>
+
