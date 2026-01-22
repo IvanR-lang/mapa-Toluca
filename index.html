@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mapa de Reportes Toluca</title>
+    <title>Mapa Reportes Toluca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
-        #map { height: 100vh; width: 100%; }
+        #map { height: 100vh; width: 100%; background: #262626; }
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
+        
+        /* Botones laterales */
+        .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-gps { top: 20px; }
+        .btn-lock { top: 90px; }
+
+        /* Menú principal */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
-        .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
-        .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-        .opciones.active { display: flex; }
-        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; }
+        .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); transition: transform 0.2s; }
+        .btn-principal:active { transform: scale(0.9); }
+
+        .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; }
+        .opciones.active { display: flex; opacity: 1; transform: translateY(0); }
+
+        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
         .btn-reten { background: #ff0000; }
         .btn-choque { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
-        .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-gps { top: 20px; }
-        .btn-lock { top: 90px; }
     </style>
 </head>
 <body>
@@ -27,6 +34,7 @@
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
     <div id="map"></div>
+    
     <div class="menu-container">
         <button class="btn-principal" onclick="toggleMenu()">➕</button>
         <div class="opciones" id="menuOpciones">
@@ -38,17 +46,20 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Agregamos 'preferCanvas' para que el mapa use el hardware del cel y vuele
-const map = L.map('map', { 
-    zoomControl: false,
-    preferCanvas: true 
-}).setView([19.2827, -99.6557], 15);
+        // Configuración del mapa enfocada en Toluca
+        const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([19.2827, -99.6557], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let marcadoresActuales = [];
+        let siguiendo = true;
+        let ultimaUbicacionGPS = null;
+
+        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔓' : '🔒';
             document.getElementById('miraCentral').style.display = siguiendo ? 'block' : 'none';
-            if(siguiendo) map.locate({setView: true, maxZoom: 17});
         }
 
         function activarSeguimiento() {
@@ -65,21 +76,15 @@ const map = L.map('map', {
 
         map.locate({watch: true, setView: true, maxZoom: 17});
 
-        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
-
         async function enviarReporte(tipo) {
-            let lat, lng;
             const centro = map.getCenter();
-            lat = centro.lat; 
-            lng = centro.lng;
-            
             const ahora = new Date();
-            const fechaTexto = ahora.toLocaleDateString() + " " + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const fechaTexto = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: centro.lat, lng: centro.lng })
             });
             toggleMenu();
             cargarPuntos();
@@ -95,40 +100,37 @@ const map = L.map('map', {
                     const iconoEmoji = p.texto.split(' ')[0];
                     const m = L.marker([p.lat, p.lng], {
                         icon: L.divIcon({ 
-                            html: `<div style="font-size: 28px;">${iconoEmoji}</div>`, 
+                            html: `<div style="font-size: 30px; filter: drop-shadow(0 2px 2px black);">${iconoEmoji}</div>`, 
                             className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15] 
                         })
                     }).addTo(map);
 
                     const popupContent = `
-                        <div style="text-align:center;">
-                            <b>${p.texto}</b><br>
+                        <div style="text-align:center; min-width:120px;">
+                            <b style="font-size:16px;">${p.texto}</b><br>
                             <small>🕒 ${p.fecha}</small><br><br>
                             <button onclick="confirmarEliminar('${p._id}', '${p.texto}')" 
-                                style="background:#ff4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
+                                style="background:#ff4444; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">
                                 Eliminar
                             </button>
-                        </div>
-                    `;
+                        </div>`;
                     m.bindPopup(popupContent);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
 
+        // BARRERA ÚNICA PERSONALIZADA
         async function confirmarEliminar(id, nombre) {
-    // Solo dejamos la barrera con el nombre personalizado
-    if (confirm(`¿Estás seguro de que ${nombre} ya no está?`)) {
-        await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-        cargarPuntos();
-    }
-}
+            const nombreLimpio = nombre.split(' ').slice(1).join(' '); 
+            if (confirm(`¿Estás seguro de que ${nombreLimpio} ya no está?`)) {
+                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+                cargarPuntos();
+            }
+        }
 
         setInterval(cargarPuntos, 5000);
         cargarPuntos();
     </script>
 </body>
 </html>
-
-
-
