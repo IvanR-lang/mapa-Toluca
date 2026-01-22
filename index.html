@@ -46,7 +46,7 @@
     <div id="avisoLegal">
         <div class="modal-legal">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que los reportes viales son informativos y de carácter público.</p>
+            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca.</p>
             <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -73,7 +73,12 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([19.2827, -99.6557], 15);
+        const map = L.map('map', { 
+            zoomControl: false, 
+            preferCanvas: true,
+            tap: false // Desactivamos el "tap" interno que a veces causa saltos
+        }).setView([19.2827, -99.6557], 15);
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
         let marcadoresActuales = [];
@@ -82,58 +87,66 @@
         let marcadorUsuario = null;
 
         function cerrarAviso() { 
-            document.getElementById('avisoLegal').style.display = 'none';
-            map.locate({setView: true, maxZoom: 17});
+            document.getElementById('avisoLegal').style.display = 'none'; 
+            iniciarGPS();
             simularUsuarios();
         }
 
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // --- EL "CUARTO" DEL GPS ---
+        // --- SISTEMA DE BLOQUEO MANUAL ---
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
             document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
-            
-            // Solo dejamos que el GPS "salga del cuarto" para mover la cámara si tú cierras el candado
-            if(siguiendo && miUbicacionReal) {
-                map.setView(miUbicacionReal, map.getZoom(), {animate: true});
-            }
+            if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17);
         }
 
         function activarSeguimiento() {
             siguiendo = true;
             document.getElementById('lockBtn').innerText = '🔒';
             document.getElementById('miraCentral').style.display = 'none';
-            if (miUbicacionReal) map.setView(miUbicacionReal, 17, {animate: true});
-            else map.locate({setView: true, maxZoom: 17});
+            if (miUbicacionReal) map.setView(miUbicacionReal, 17);
         }
 
-        map.on('locationfound', (e) => { 
-            miUbicacionReal = e.latlng;
-            
-            // El punto azul vive en el cuarto pero SIEMPRE se ve en el mapa
-            if (!marcadorUsuario) {
-                marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
-            } else { 
-                marcadorUsuario.setLatLng(e.latlng);
+        // --- GPS MANUAL (EL VERDADERO ENCIERRO) ---
+        function iniciarGPS() {
+            // navigator.geolocation es la forma más pura de pedir el GPS sin que el mapa se meta
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        miUbicacionReal = [latitude, longitude];
+
+                        // Actualizamos el marcador (Punto Azul)
+                        if (!marcadorUsuario) {
+                            marcadorUsuario = L.marker(miUbicacionReal, {
+                                icon: L.divIcon({
+                                    html: '<div class="user-position-pulse"></div><div class="user-position"></div>',
+                                    className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]
+                                })
+                            }).addTo(map);
+                        } else {
+                            marcadorUsuario.setLatLng(miUbicacionReal);
+                        }
+
+                        // SOLO si el candado está cerrado dejamos que mueva la cámara
+                        if (siguiendo) {
+                            map.setView(miUbicacionReal, map.getZoom(), { animate: true });
+                        }
+                    },
+                    (error) => console.log("GPS Error:", error),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
             }
-            
-            // LA CÁMARA TIENE PROHIBIDO MOVERSE SI EL CANDADO ESTÁ ABIERTO
-            if (siguiendo) {
-                map.setView(e.latlng, map.getZoom(), {animate: true});
-            }
-        });
-        
-        // Rastreamos el GPS pero le quitamos el permiso de mover el mapa automáticamente (setView: false)
-        map.locate({watch: true, enableHighAccuracy: true, setView: false});
+        }
 
         function simularUsuarios() {
             setInterval(() => {
                 const variacion = Math.floor(Math.random() * 3) - 1;
                 let actual = parseInt(document.getElementById('userCount').innerText) + variacion;
                 if (actual < 1) actual = 1;
-                if (actual > 12) actual = 12;
+                if (actual > 10) actual = 10;
                 document.getElementById('userCount').innerText = actual;
             }, 15000);
         }
@@ -143,7 +156,7 @@
             if (!siguiendo) {
                 const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
             } else {
-                if (miUbicacionReal) { lat = miUbicacionReal.lat; lng = miUbicacionReal.lng; }
+                if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
                 else { alert("⚠️ Esperando señal GPS"); return; }
             }
             const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -157,7 +170,9 @@
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], {icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] })}).addTo(map);
+                    const m = L.marker([p.lat, p.lng], {
+                        icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] })
+                    }).addTo(map);
                     m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b style="color:#e63946;">${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; width:100%;">¿Ya no está?</button></div>`);
                     marcadoresActuales.push(m);
                 });
