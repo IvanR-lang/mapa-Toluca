@@ -9,21 +9,21 @@
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; }
 
-        /* Pin fijo en el centro de la pantalla */
-        .centro-mira {
+        /* Mira central (Visible solo cuando el GPS te sigue) */
+        #miraCentral {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -100%);
             z-index: 2000;
             font-size: 45px;
-            pointer-events: none; /* No estorba al mover el mapa */
+            pointer-events: none;
             text-shadow: 0 0 5px #fff;
+            display: block; /* Inicia visible */
         }
 
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
         .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
-        
         .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; }
@@ -34,13 +34,15 @@
 
         .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .btn-gps { top: 20px; }
+        .btn-lock { top: 90px; }
     </style>
 </head>
 <body>
 
-    <div class="centro-mira">📍</div>
+    <div id="miraCentral">📍</div>
 
-    <button class="side-btn btn-gps" onclick="buscarMiUbicacion()">🎯</button>
+    <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
+    <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
     
     <div id="map"></div>
 
@@ -59,35 +61,55 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
+        let siguiendo = true;
+
+        function toggleLock() {
+            siguiendo = !siguiendo;
+            const btn = document.getElementById('lockBtn');
+            const mira = document.getElementById('miraCentral');
+            
+            btn.innerText = siguiendo ? '🔓' : '🔒';
+            btn.style.background = siguiendo ? 'white' : '#eee';
+            
+            // Lógica para aparecer/desaparecer el pin 📍
+            mira.style.display = siguiendo ? 'block' : 'none';
+            
+            if(siguiendo) {
+                map.locate({setView: true, maxZoom: 17});
+            } else {
+                map.stopLocate();
+            }
+        }
+
+        function activarSeguimiento() {
+            siguiendo = true;
+            document.getElementById('lockBtn').innerText = '🔓';
+            document.getElementById('miraCentral').style.display = 'block';
+            map.locate({setView: true, maxZoom: 17});
+        }
+
+        map.on('locationfound', (e) => {
+            if (siguiendo) map.setView(e.latlng, 17);
+        });
+
+        map.locate({watch: true, setView: true, maxZoom: 17});
 
         function toggleMenu() {
             document.getElementById('menuOpciones').classList.toggle('active');
         }
 
         async function enviarReporte(tipo) {
-            // Obtenemos el centro exacto de la cámara
             const centro = map.getCenter();
-            
-            // Creamos la fecha y hora actual
             const ahora = new Date();
             const fechaTexto = ahora.toLocaleDateString() + " " + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    texto: tipo, 
-                    fecha: fechaTexto, // Guardamos la hora
-                    lat: centro.lat, 
-                    lng: centro.lng 
-                })
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: centro.lat, lng: centro.lng })
             });
             toggleMenu();
             cargarPuntos();
-        }
-
-        function buscarMiUbicacion() {
-            map.locate({setView: true, maxZoom: 17});
         }
 
         async function cargarPuntos() {
@@ -104,9 +126,7 @@
                                 className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15]
                             })
                         }).addTo(map)
-                        // Agregamos la fecha y hora al popup
                         .bindPopup(`<b>${p.texto}</b><br><small>🕒 ${p.fecha || 'Reciente'}</small>`);
-                        
                         marcadoresActuales.push(m);
                     }
                 });
