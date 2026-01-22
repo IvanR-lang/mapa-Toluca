@@ -117,7 +117,6 @@
         }
 
         async function confirmarEliminar(id, nombre) {
-            if (confirm("¿Quieres eliminar este reporte?")) {
                 if (confirm(`¿Estás seguro de que ${nombre} ya no está?`)) {
                     await fetch(`/api/chat/${id}`, { method: 'DELETE' });
                     cargarPuntos();
@@ -130,3 +129,4 @@
     </script>
 </body>
 </html>
+
