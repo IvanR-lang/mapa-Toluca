@@ -8,19 +8,7 @@
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; }
-
-        /* Mira central */
-        #miraCentral {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -100%);
-            z-index: 2000;
-            font-size: 45px;
-            pointer-events: none;
-            text-shadow: 0 0 5px #fff;
-        }
-
+        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
         .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
         .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
@@ -29,21 +17,16 @@
         .btn-reten { background: #ff0000; }
         .btn-choque { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
-
         .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .btn-gps { top: 20px; }
         .btn-lock { top: 90px; }
     </style>
 </head>
 <body>
-
     <div id="miraCentral">📍</div>
-
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
-    
     <div id="map"></div>
-
     <div class="menu-container">
         <button class="btn-principal" onclick="toggleMenu()">➕</button>
         <div class="opciones" id="menuOpciones">
@@ -52,26 +35,19 @@
             <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
         </div>
     </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
         let marcadoresActuales = [];
         let siguiendo = true;
-        let ultimaUbicacionGPS = null; // Aquí guardamos donde estás realmente
+        let ultimaUbicacionGPS = null;
 
         function toggleLock() {
             siguiendo = !siguiendo;
-            const btn = document.getElementById('lockBtn');
-            const mira = document.getElementById('miraCentral');
-            btn.innerText = siguiendo ? '🔓' : '🔒';
-            mira.style.display = siguiendo ? 'block' : 'none';
-            
-            if(siguiendo) {
-                map.locate({setView: true, maxZoom: 17});
-            }
+            document.getElementById('lockBtn').innerText = siguiendo ? '🔓' : '🔒';
+            document.getElementById('miraCentral').style.display = siguiendo ? 'block' : 'none';
+            if(siguiendo) map.locate({setView: true, maxZoom: 17});
         }
 
         function activarSeguimiento() {
@@ -82,43 +58,29 @@
         }
 
         map.on('locationfound', (e) => {
-            ultimaUbicacionGPS = e.latlng; // Actualizamos tu posición real siempre
+            ultimaUbicacionGPS = e.latlng;
             if (siguiendo) map.setView(e.latlng, 17);
         });
 
-        // Seguimiento constante del sensor GPS
         map.locate({watch: true, setView: true, maxZoom: 17});
 
-        function toggleMenu() {
-            document.getElementById('menuOpciones').classList.toggle('active');
-        }
+        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
         async function enviarReporte(tipo) {
             let lat, lng;
-
             if (siguiendo) {
-                // Si el candado está abierto, usamos el centro (donde está el pin)
                 const centro = map.getCenter();
-                lat = centro.lat;
-                lng = centro.lng;
+                lat = centro.lat; lng = centro.lng;
             } else {
-                // Si el candado está cerrado, usamos tu ubicación real de fondo
-                if (ultimaUbicacionGPS) {
-                    lat = ultimaUbicacionGPS.lat;
-                    lng = ultimaUbicacionGPS.lng;
-                } else {
-                    alert("Aún no detecto tu GPS. Intenta de nuevo.");
-                    return;
-                }
+                if (ultimaUbicacionGPS) { lat = ultimaUbicacionGPS.lat; lng = ultimaUbicacionGPS.lng; }
+                else { alert("Esperando GPS..."); return; }
             }
-
             const ahora = new Date();
             const fechaTexto = ahora.toLocaleDateString() + " " + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: lat, lng: lng })
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
             });
             toggleMenu();
             cargarPuntos();
@@ -129,22 +91,14 @@
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => map.removeLayer(m));
-                
                 puntos.forEach(p => {
-                    if(p.lat && p.lng) {
-                        const m = L.marker([p.lat, p.lng], {
-                            icon: L.divIcon({
-                                html: `<div style="font-size: 28px;">${p.texto.split(' ')[0]}</div>`,
-                                className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15]
-                            })
-                        }).addTo(map)
-                        .bindPopup(`<b>${p.texto}</b><br><small>🕒 ${p.fecha || 'Reciente'}</small>`);
-                        marcadoresActuales.push(m);
-                    }
+                    const m = L.marker([p.lat, p.lng], {
+                        icon: L.divIcon({ html: `<div style="font-size: 28px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15] })
+                    }).addTo(map).bindPopup(`<b>${p.texto}</b><br><small>🕒 ${p.fecha || 'Reciente'}</small>`);
+                    marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
-
         setInterval(cargarPuntos, 5000);
         cargarPuntos();
     </script>
