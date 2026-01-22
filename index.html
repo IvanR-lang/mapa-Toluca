@@ -9,7 +9,7 @@
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; }
 
-        /* Mira central (Visible solo cuando el GPS te sigue) */
+        /* Mira central */
         #miraCentral {
             position: absolute;
             top: 50%;
@@ -19,7 +19,6 @@
             font-size: 45px;
             pointer-events: none;
             text-shadow: 0 0 5px #fff;
-            display: block; /* Inicia visible */
         }
 
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
@@ -27,7 +26,6 @@
         .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; }
-        
         .btn-reten { background: #ff0000; }
         .btn-choque { background: #ff8c00; }
         .btn-aviso { background: #ffd700; }
@@ -62,22 +60,17 @@
 
         let marcadoresActuales = [];
         let siguiendo = true;
+        let ultimaUbicacionGPS = null; // Aquí guardamos donde estás realmente
 
         function toggleLock() {
             siguiendo = !siguiendo;
             const btn = document.getElementById('lockBtn');
             const mira = document.getElementById('miraCentral');
-            
             btn.innerText = siguiendo ? '🔓' : '🔒';
-            btn.style.background = siguiendo ? 'white' : '#eee';
-            
-            // Lógica para aparecer/desaparecer el pin 📍
             mira.style.display = siguiendo ? 'block' : 'none';
             
             if(siguiendo) {
                 map.locate({setView: true, maxZoom: 17});
-            } else {
-                map.stopLocate();
             }
         }
 
@@ -89,9 +82,11 @@
         }
 
         map.on('locationfound', (e) => {
+            ultimaUbicacionGPS = e.latlng; // Actualizamos tu posición real siempre
             if (siguiendo) map.setView(e.latlng, 17);
         });
 
+        // Seguimiento constante del sensor GPS
         map.locate({watch: true, setView: true, maxZoom: 17});
 
         function toggleMenu() {
@@ -99,14 +94,31 @@
         }
 
         async function enviarReporte(tipo) {
-            const centro = map.getCenter();
+            let lat, lng;
+
+            if (siguiendo) {
+                // Si el candado está abierto, usamos el centro (donde está el pin)
+                const centro = map.getCenter();
+                lat = centro.lat;
+                lng = centro.lng;
+            } else {
+                // Si el candado está cerrado, usamos tu ubicación real de fondo
+                if (ultimaUbicacionGPS) {
+                    lat = ultimaUbicacionGPS.lat;
+                    lng = ultimaUbicacionGPS.lng;
+                } else {
+                    alert("Aún no detecto tu GPS. Intenta de nuevo.");
+                    return;
+                }
+            }
+
             const ahora = new Date();
             const fechaTexto = ahora.toLocaleDateString() + " " + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: centro.lat, lng: centro.lng })
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: lat, lng: lng })
             });
             toggleMenu();
             cargarPuntos();
