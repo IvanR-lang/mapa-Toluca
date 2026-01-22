@@ -16,7 +16,17 @@
         .btn-entendido { background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
 
         /* Mira Central */
-        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
+        #miraCentral { 
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
+    /* Ajustamos el transform para que la punta del pin sea el centro exacto */
+    transform: translate(-50%, -95%); 
+    z-index: 2000; 
+    font-size: 45px; 
+    pointer-events: none; 
+    text-shadow: 0 0 5px #fff; 
+}
         
         /* Botones laterales */
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: #333; border-radius: 12px; border: 1px solid #555; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -106,15 +116,43 @@
         map.locate({watch: true, setView: true, maxZoom: 17});
 
         async function enviarReporte(tipo) {
-            const centro = map.getCenter();
-            const ahora = new Date();
-            const fechaTexto = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat: centro.lat, lng: centro.lng })
-            });
+    let lat, lng;
+
+    // Si el candado está abierto (siguiendo = false), reporta en la mira
+    if (!siguiendo) {
+        const centro = map.getCenter();
+        lat = centro.lat;
+        lng = centro.lng;
+    } 
+    // Si el candado está cerrado (siguiendo = true), reporta en tu GPS real
+    else {
+        if (ultimaUbicacionGPS) {
+            lat = ultimaUbicacionGPS.lat;
+            lng = ultimaUbicacionGPS.lng;
+        } else {
+            alert("⚠️ Error: Esperando señal GPS para reporte exacto.");
+            return;
+        }
+    }
+
+    const ahora = new Date();
+    const fechaTexto = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
+    });
+    
+    toggleMenu();
+    cargarPuntos();
+}
+
+// Asegúrate de actualizar la ubicación GPS globalmente
+map.on('locationfound', (e) => {
+    ultimaUbicacionGPS = e.latlng; // Guardamos tu posición real aquí
+    if (siguiendo) map.setView(e.latlng, 17);
+});
             toggleMenu();
             cargarPuntos();
         }
@@ -162,3 +200,4 @@
     </script>
 </body>
 </html>
+
