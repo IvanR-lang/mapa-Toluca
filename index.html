@@ -9,11 +9,9 @@
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; }
 
-        /* Botón Flotante Principal */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
-        .btn-principal { width: 70px; height: 70px; background: #4CAF50; border-radius: 50%; border: 4px solid #1a1a1a; color: white; font-size: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.3s; }
+        .btn-principal { width: 70px; height: 70px; background: #4CAF50; border-radius: 50%; border: 4px solid #1a1a1a; color: white; font-size: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
-        /* Opciones que se despliegan */
         .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-size: 25px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
@@ -22,7 +20,6 @@
         .btn-choque { background: #f57c00; }
         .btn-aviso { background: #fbc02d; }
 
-        /* Botones laterales (Ubicación y Candado) */
         .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: white; border-radius: 12px; border: 2px solid #4CAF50; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .btn-gps { top: 15px; }
         .btn-lock { top: 80px; }
@@ -46,26 +43,34 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Iniciar mapa centrado en Toluca
         const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
         
-        // 1. PIN MOVIBLE (El que usas para marcar el punto)
+        // 1. PIN MOVIBLE NARANJA (Inicia en el centro de Toluca)
         const pinMovible = L.marker([19.2827, -99.6557], {
             draggable: true,
-            icon: L.divIcon({ html: '📍', className: 'dummy', iconSize: [40, 40], iconAnchor: [20, 40] })
+            icon: L.divIcon({ 
+                html: '<div style="font-size: 40px; filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));">📍</div>', 
+                className: 'dummy', 
+                iconSize: [40, 40], 
+                iconAnchor: [20, 40] 
+            })
         }).addTo(map);
 
-        // Bloquear / Desbloquear Pin
+        // Función para Bloquear / Desbloquear Pin
         function toggleLock() {
             const isDraggable = pinMovible.dragging.enabled();
             if (isDraggable) {
                 pinMovible.dragging.disable();
                 document.getElementById('lockBtn').innerText = '🔒';
+                document.getElementById('lockBtn').style.background = '#eee';
             } else {
                 pinMovible.dragging.enable();
                 document.getElementById('lockBtn').innerText = '🔓';
+                document.getElementById('lockBtn').style.background = 'white';
             }
         }
 
@@ -74,7 +79,7 @@
             document.getElementById('menuOpciones').classList.toggle('active');
         }
 
-        // 3. ENVIAR REPORTE (Usa la posición del Pin Movible)
+        // 3. ENVIAR REPORTE (Usa la posición exacta del Pin)
         async function enviarReporte(tipo) {
             const pos = pinMovible.getLatLng();
             await fetch('/api/chat', {
@@ -86,13 +91,19 @@
             cargarPuntos();
         }
 
-        // 4. GPS
+        // 4. GPS (Solo mueve el pin cuando TÚ presionas el botón)
         function buscarMiUbicacion() {
             map.locate({setView: true, maxZoom: 16});
         }
-        map.on('locationfound', (e) => { pinMovible.setLatLng(e.latlng); });
+        
+        map.on('locationfound', (e) => {
+            // Solo movemos el pin si el candado está abierto
+            if (pinMovible.dragging.enabled()) {
+                pinMovible.setLatLng(e.latlng);
+            }
+        });
 
-        // 5. CARGAR TODOS LOS PUNTOS
+        // 5. CARGAR REPORTES
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
