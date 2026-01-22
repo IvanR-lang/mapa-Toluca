@@ -2,114 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Reportes Toluca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; overflow: hidden; }
-        #map { height: 75vh; width: 100%; }
+        body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
+        #map { height: 100vh; width: 100%; }
+
+        /* Botón Flotante Principal */
+        .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
+        .btn-principal { width: 70px; height: 70px; background: #4CAF50; border-radius: 50%; border: 4px solid #1a1a1a; color: white; font-size: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.3s; }
         
-        .menu-reporte {
-            height: 25vh;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 10px;
-            background: #222;
-        }
-
-        .btn-accion {
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
+        /* Opciones que se despliegan */
+        .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .opciones.active { display: flex; }
+        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-size: 25px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+        
         .btn-reten { background: #d32f2f; }
-        .btn-accidente { background: #f57c00; }
-        .btn-otro { background: #388e3c; }
-        .btn-ubicacion {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: white;
-            border: 2px solid #4CAF50;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-        }
+        .btn-choque { background: #f57c00; }
+        .btn-aviso { background: #fbc02d; }
 
-        .emoji-grande { font-size: 2rem; }
+        /* Botones laterales (Ubicación y Candado) */
+        .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: white; border-radius: 12px; border: 2px solid #4CAF50; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-gps { top: 15px; }
+        .btn-lock { top: 80px; }
     </style>
 </head>
 <body>
 
-    <button class="btn-ubicacion" onclick="buscarMiUbicacion()">🎯</button>
+    <button class="side-btn btn-gps" onclick="buscarMiUbicacion()">🎯</button>
+    <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
     
     <div id="map"></div>
 
-    <div class="menu-reporte">
-        <button class="btn-accion btn-reten" onclick="reportar('🚨 RETÉN')">
-            <span class="emoji-grande">🚨</span><span>RETÉN</span>
-        </button>
-        <button class="btn-accion btn-accidente" onclick="reportar('💥 CHOQUE')">
-            <span class="emoji-grande">💥</span><span>CHOQUE</span>
-        </button>
-        <button class="btn-accion btn-otro" onclick="reportar('⚠️ AVISO')">
-            <span class="emoji-grande">⚠️</span><span>AVISO</span>
-        </button>
+    <div class="menu-container">
+        <button class="btn-principal" onclick="toggleMenu()">➕</button>
+        <div class="opciones" id="menuOpciones">
+            <button class="btn-opcion btn-reten" onclick="enviarReporte('🚨 RETÉN')">🚨</button>
+            <button class="btn-opcion btn-choque" onclick="enviarReporte('💥 CHOQUE')">💥</button>
+            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map').setView([19.2827, -99.6557], 13);
+        const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
-        let miUbicacion = null;
+        
+        // 1. PIN MOVIBLE (El que usas para marcar el punto)
+        const pinMovible = L.marker([19.2827, -99.6557], {
+            draggable: true,
+            icon: L.divIcon({ html: '📍', className: 'dummy', iconSize: [40, 40], iconAnchor: [20, 40] })
+        }).addTo(map);
 
-        // Rastrear ubicación constantemente
-        map.locate({watch: true, setView: false});
-        map.on('locationfound', (e) => { miUbicacion = e.latlng; });
-
-        function buscarMiUbicacion() {
-            if(miUbicacion) map.setView(miUbicacion, 16);
-        }
-
-        async function reportar(tipo) {
-            // Si no tenemos ubicación, pedimos tocar el mapa
-            let coords = miUbicacion;
-            if (!coords) {
-                alert("Esperando señal GPS o toca el mapa para marcar.");
-                return;
+        // Bloquear / Desbloquear Pin
+        function toggleLock() {
+            const isDraggable = pinMovible.dragging.enabled();
+            if (isDraggable) {
+                pinMovible.dragging.disable();
+                document.getElementById('lockBtn').innerText = '🔒';
+            } else {
+                pinMovible.dragging.enable();
+                document.getElementById('lockBtn').innerText = '🔓';
             }
-
-            await enviarDatos(tipo, coords.lat, coords.lng);
         }
 
-        // También permite tocar el mapa para reportar en un punto específico
-        map.on('click', (e) => {
-            const tipo = prompt("Escribe el reporte (Ej: Retén, Bache, etc):");
-            if(tipo) enviarDatos(tipo.toUpperCase(), e.latlng.lat, e.latlng.lng);
-        });
+        // 2. MENÚ DESPLEGABLE
+        function toggleMenu() {
+            document.getElementById('menuOpciones').classList.toggle('active');
+        }
 
-        async function enviarDatos(texto, lat, lng) {
+        // 3. ENVIAR REPORTE (Usa la posición del Pin Movible)
+        async function enviarReporte(tipo) {
+            const pos = pinMovible.getLatLng();
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texto, lat, lng })
+                body: JSON.stringify({ texto: tipo, lat: pos.lat, lng: pos.lng })
             });
+            toggleMenu();
             cargarPuntos();
         }
 
+        // 4. GPS
+        function buscarMiUbicacion() {
+            map.locate({setView: true, maxZoom: 16});
+        }
+        map.on('locationfound', (e) => { pinMovible.setLatLng(e.latlng); });
+
+        // 5. CARGAR TODOS LOS PUNTOS
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
@@ -118,18 +101,10 @@
                 
                 puntos.forEach(p => {
                     if(p.lat && p.lng) {
-                        let emoji = "📍";
-                        if (p.texto.includes("RETÉN")) emoji = "🚨";
-                        if (p.texto.includes("CHOQUE")) emoji = "💥";
-                        if (p.texto.includes("AVISO")) emoji = "⚠️";
-
                         const icono = L.divIcon({
-                            html: `<div style="font-size: 24px;">${emoji}</div>`,
-                            className: 'dummy',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
+                            html: `<div style="font-size: 24px;">${p.texto.split(' ')[0]}</div>`,
+                            className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15]
                         });
-
                         const m = L.marker([p.lat, p.lng], { icon: icono }).addTo(map);
                         marcadoresActuales.push(m);
                     }
