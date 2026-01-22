@@ -78,46 +78,89 @@
         let miUbicacionReal = null;
         let marcadorUsuario = null;
 
-        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; map.locate({setView: true, maxZoom: 17}); }
+        function cerrarAviso() { 
+            document.getElementById('avisoLegal').style.display = 'none'; 
+            map.locate({setView: true, maxZoom: 17}); 
+        }
+
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
-        // FIX: Sincronización inicial del candado y la mira
+        // --- SOLUCIÓN AL DESFASE Y MOVIMIENTO BRUSCO ---
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
             document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
-            if(siguiendo) map.locate({setView: true, maxZoom: 17});
+            
+            if(siguiendo && miUbicacionReal) {
+                map.setView(miUbicacionReal, 17); // Solo regresa la cámara si tú lo pides cerrando el candado
+            }
         }
+
+        // Si el usuario mueve el mapa con el dedo, desactivamos el auto-seguimiento automáticamente
+        map.on('dragstart', () => {
+            if (siguiendo) {
+                siguiendo = false;
+                document.getElementById('lockBtn').innerText = '🔓';
+                document.getElementById('miraCentral').style.display = 'block';
+            }
+        });
 
         function activarSeguimiento() {
             siguiendo = true;
             document.getElementById('lockBtn').innerText = '🔒';
             document.getElementById('miraCentral').style.display = 'none';
-            map.locate({setView: true, maxZoom: 17});
+            if (miUbicacionReal) map.setView(miUbicacionReal, 17);
+            else map.locate({setView: true, maxZoom: 17});
         }
 
         map.on('locationfound', (e) => { 
             miUbicacionReal = e.latlng;
+            
+            // El punto azul/dragón SIEMPRE se mueve, pero la CÁMARA solo si 'siguiendo' es true
             if (!marcadorUsuario) {
-                marcadorUsuario = L.marker(e.latlng, {icon: L.divIcon({html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]})}).addTo(map);
-            } else { marcadorUsuario.setLatLng(e.latlng); }
-            if (siguiendo) map.setView(e.latlng, 17); 
+                const userIcon = L.divIcon({
+                    html: '<div class="user-position-pulse"></div><div class="user-position"></div>',
+                    className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10]
+                });
+                marcadorUsuario = L.marker(e.latlng, {icon: userIcon, zIndexOffset: 1000}).addTo(map);
+            } else { 
+                marcadorUsuario.setLatLng(e.latlng); 
+            }
+
+            // AQUÍ ESTÁ EL TRUCO: Solo mueve la cámara si el candado está cerrado
+            if (siguiendo) {
+                map.setView(e.latlng, map.getZoom()); 
+            }
         });
         
-        map.locate({watch: true, setView: true, maxZoom: 17, enableHighAccuracy: true});
+        map.locate({watch: true, enableHighAccuracy: true});
+        // ----------------------------------------------
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            // Lógica corregida para detectar el estado real del candado
+            // Candado Abierto = Reportar donde está la mira
             if (!siguiendo) {
-                const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
+                const centro = map.getCenter();
+                lat = centro.lat; lng = centro.lng;
             } else {
-                if (miUbicacionReal) { lat = miUbicacionReal.lat; lng = miUbicacionReal.lng; }
-                else { alert("⚠️ Esperando señal GPS..."); return; }
+                // Candado Cerrado = Reportar donde estoy yo exactamente
+                if (miUbicacionReal) {
+                    lat = miUbicacionReal.lat; lng = miUbicacionReal.lng;
+                } else {
+                    alert("⚠️ Esperando señal GPS..."); return;
+                }
             }
-            const fechaTexto = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng }) });
-            toggleMenu(); cargarPuntos();
+
+            const ahora = new Date();
+            const fechaTexto = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
+            });
+            toggleMenu();
+            cargarPuntos();
         }
 
         async function cargarPuntos() {
@@ -126,7 +169,12 @@
                 const puntos = await res.json();
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], {icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] })}).addTo(map);
+                    const m = L.marker([p.lat, p.lng], {
+                        icon: L.divIcon({ 
+                            html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, 
+                            className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] 
+                        })
+                    }).addTo(map);
                     m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b style="color:#e63946;">${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; width:100%;">¿Ya no está?</button></div>`);
                     marcadoresActuales.push(m);
                 });
@@ -135,11 +183,15 @@
 
         async function confirmarEliminar(id, nombre) {
             if (confirm(`¿Estás seguro de que el ${nombre.split(' ').slice(1).join(' ')} ya no está?`)) {
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos();
+                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+                cargarPuntos();
             }
         }
-        setInterval(cargarPuntos, 5000); cargarPuntos();
+
+        setInterval(cargarPuntos, 5000);
+        cargarPuntos();
     </script>
 </body>
 </html>
+
 
