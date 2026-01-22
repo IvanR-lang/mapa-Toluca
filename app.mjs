@@ -45,6 +45,10 @@ app.get('/borrado-manual-secreto-iza', async (req, res) => {
     }
 });
 
+// Agrega esto para que el manifest sea accesible
+app.get('/manifest.json', async (req, res) => {
+  res.sendFile(process.cwd() + '/manifest.json');
+});
 app.get('/', async (req, res) => {
   const html = await readFile('./index.html', 'utf-8');
   res.send(html);
@@ -68,3 +72,4 @@ app.delete('/api/chat/:id', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Vigía Toluca en puerto ${PORT}`));
+
