@@ -117,16 +117,17 @@
         }
 
         async function confirmarEliminar(id, nombre) {
-                if (confirm(`¿Estás seguro de que ${nombre} ya no está?`)) {
-                    await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-                    cargarPuntos();
-                }
-            }
-        }
+    // Solo dejamos la barrera con el nombre personalizado
+    if (confirm(`¿Estás seguro de que ${nombre} ya no está?`)) {
+        await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+        cargarPuntos();
+    }
+}
 
         setInterval(cargarPuntos, 5000);
         cargarPuntos();
     </script>
 </body>
 </html>
+
 
