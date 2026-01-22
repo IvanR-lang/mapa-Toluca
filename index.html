@@ -3,57 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mapa Reportes Toluca</title>
+    <title>Sistema de Información Vial - Toluca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #262626; }
+        
+        /* Aviso Legal al inicio */
+        #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .modal-legal { background: #2a2a2a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #444; }
+        .modal-legal h2 { color: #ff4444; margin-top: 0; }
+        .btn-entendido { background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+
+        /* Mira Central */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
         
         /* Botones laterales */
-        .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: #333; border-radius: 12px; border: 1px solid #555; font-size: 22px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .btn-gps { top: 20px; }
-        .btn-lock { top: 90px; }
+        .btn-lock { top: 80px; }
 
-        /* Menú principal */
-        .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
-        .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); transition: transform 0.2s; }
-        .btn-principal:active { transform: scale(0.9); }
+        /* Botón REPORTAR (Nuevo Diseño) */
+        .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
+        .btn-reportar { 
+            background: #e63946; 
+            color: white; 
+            border: 3px solid #fff; 
+            padding: 15px 30px; 
+            border-radius: 50px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-reportar:active { transform: scale(0.95); background: #c12a36; }
 
-        .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; }
-        .opciones.active { display: flex; opacity: 1; transform: translateY(0); }
-
-        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
-        .btn-reten { background: #ff0000; }
-        .btn-choque { background: #ff8c00; }
+        /* Opciones del menú */
+        .opciones { display: none; flex-direction: row; gap: 15px; margin-bottom: 20px; }
+        .opciones.active { display: flex; }
+        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-control { background: #ff0000; } /* Antes Retén */
+        .btn-vial { background: #ff8c00; }    /* Antes Choque */
         .btn-aviso { background: #ffd700; }
     </style>
 </head>
 <body>
+
+    <div id="avisoLegal">
+        <div class="modal-legal">
+            <h2>⚠️ AVISO IMPORTANTE</h2>
+            <p>Esta plataforma es comunitaria y se basa en información de usuarios. No garantizamos la exactitud de los reportes.</p>
+            <p>Al continuar, aceptas que no nos hacemos responsables del uso de la información ni de cualquier inconveniente legal.</p>
+            <button class="btn-entendido" onclick="cerrarAviso()">ACEPTAR Y CONTINUAR</button>
+        </div>
+    </div>
+
     <div id="miraCentral">📍</div>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
     <div id="map"></div>
     
     <div class="menu-container">
-        <button class="btn-principal" onclick="toggleMenu()">➕</button>
+        <button class="btn-reportar" onclick="toggleMenu()">
+            <span>📢</span> REPORTAR <span>🚨</span>
+        </button>
         <div class="opciones" id="menuOpciones">
-            <button class="btn-opcion btn-reten" onclick="enviarReporte('🚨 RETÉN')">🚨</button>
-            <button class="btn-opcion btn-choque" onclick="enviarReporte('💥 CHOQUE')">💥</button>
+            <button class="btn-opcion btn-control" onclick="enviarReporte('👮 CONTROL')">👮</button>
+            <button class="btn-opcion btn-vial" onclick="enviarReporte('🚧 VIAL')">🚧</button>
             <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Configuración del mapa enfocada en Toluca
         const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([19.2827, -99.6557], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let marcadoresActuales = [];
         let siguiendo = true;
-        let ultimaUbicacionGPS = null;
 
+        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
         function toggleLock() {
@@ -69,11 +102,7 @@
             map.locate({setView: true, maxZoom: 17});
         }
 
-        map.on('locationfound', (e) => {
-            ultimaUbicacionGPS = e.latlng;
-            if (siguiendo) map.setView(e.latlng, 17);
-        });
-
+        map.on('locationfound', (e) => { if (siguiendo) map.setView(e.latlng, 17); });
         map.locate({watch: true, setView: true, maxZoom: 17});
 
         async function enviarReporte(tipo) {
@@ -106,11 +135,11 @@
                     }).addTo(map);
 
                     const popupContent = `
-                        <div style="text-align:center; min-width:120px;">
-                            <b style="font-size:16px;">${p.texto}</b><br>
+                        <div style="text-align:center; color:#333;">
+                            <b>${p.texto}</b><br>
                             <small>🕒 ${p.fecha}</small><br><br>
                             <button onclick="confirmarEliminar('${p._id}', '${p.texto}')" 
-                                style="background:#ff4444; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">
+                                style="background:#ff4444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; width:100%;">
                                 Eliminar
                             </button>
                         </div>`;
@@ -120,10 +149,9 @@
             } catch (e) {}
         }
 
-        // BARRERA ÚNICA PERSONALIZADA
         async function confirmarEliminar(id, nombre) {
             const nombreLimpio = nombre.split(' ').slice(1).join(' '); 
-            if (confirm(`¿Estás seguro de que ${nombreLimpio} ya no está?`)) {
+            if (confirm(`¿Estás seguro de que el ${nombreLimpio} ya no está?`)) {
                 await fetch(`/api/chat/${id}`, { method: 'DELETE' });
                 cargarPuntos();
             }
