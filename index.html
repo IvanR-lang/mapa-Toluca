@@ -1,11 +1,89 @@
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mapa de Reportes Toluca</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #1a1a1a; overflow: hidden; }
+        #map { height: 100vh; width: 100%; }
+        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; text-shadow: 0 0 5px #fff; }
+        .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; }
+        .btn-principal { width: 75px; height: 75px; background: #4CAF50; border-radius: 50%; border: 4px solid #fff; color: white; font-size: 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
+        .opciones { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .opciones.active { display: flex; }
+        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; color: white; font-size: 28px; cursor: pointer; }
+        .btn-reten { background: #ff0000; }
+        .btn-choque { background: #ff8c00; }
+        .btn-aviso { background: #ffd700; }
+        .side-btn { position: absolute; right: 15px; width: 55px; height: 55px; background: white; border-radius: 15px; border: 2px solid #4CAF50; font-size: 25px; z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-gps { top: 20px; }
+        .btn-lock { top: 90px; }
+    </style>
+</head>
+<body>
+    <div id="miraCentral">📍</div>
+    <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
+    <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔓</button>
+    <div id="map"></div>
+    <div class="menu-container">
+        <button class="btn-principal" onclick="toggleMenu()">➕</button>
+        <div class="opciones" id="menuOpciones">
+            <button class="btn-opcion btn-reten" onclick="enviarReporte('🚨 RETÉN')">🚨</button>
+            <button class="btn-opcion btn-choque" onclick="enviarReporte('💥 CHOQUE')">💥</button>
+            <button class="btn-opcion btn-aviso" onclick="enviarReporte('⚠️ AVISO')">⚠️</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         let marcadoresActuales = [];
         let siguiendo = true;
+        let ultimaUbicacionGPS = null;
 
-        // ... (el resto de tus funciones de GPS)
+        function toggleLock() {
+            siguiendo = !siguiendo;
+            document.getElementById('lockBtn').innerText = siguiendo ? '🔓' : '🔒';
+            document.getElementById('miraCentral').style.display = siguiendo ? 'block' : 'none';
+            if(siguiendo) map.locate({setView: true, maxZoom: 17});
+        }
+
+        function activarSeguimiento() {
+            siguiendo = true;
+            document.getElementById('lockBtn').innerText = '🔓';
+            document.getElementById('miraCentral').style.display = 'block';
+            map.locate({setView: true, maxZoom: 17});
+        }
+
+        map.on('locationfound', (e) => {
+            ultimaUbicacionGPS = e.latlng;
+            if (siguiendo) map.setView(e.latlng, 17);
+        });
+
+        map.locate({watch: true, setView: true, maxZoom: 17});
+
+        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
+
+        async function enviarReporte(tipo) {
+            let lat, lng;
+            const centro = map.getCenter();
+            lat = centro.lat; 
+            lng = centro.lng;
+            
+            const ahora = new Date();
+            const fechaTexto = ahora.toLocaleDateString() + " " + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto: tipo, fecha: fechaTexto, lat, lng })
+            });
+            toggleMenu();
+            cargarPuntos();
+        }
 
         async function cargarPuntos() {
             try {
@@ -16,10 +94,12 @@
                 puntos.forEach(p => {
                     const iconoEmoji = p.texto.split(' ')[0];
                     const m = L.marker([p.lat, p.lng], {
-                        icon: L.divIcon({ html: `<div style="font-size: 28px;">${iconoEmoji}</div>`, className: 'dummy' })
+                        icon: L.divIcon({ 
+                            html: `<div style="font-size: 28px;">${iconoEmoji}</div>`, 
+                            className: 'dummy', iconSize: [30, 30], iconAnchor: [15, 15] 
+                        })
                     }).addTo(map);
 
-                    // POPUP CON BOTÓN ELIMINAR
                     const popupContent = `
                         <div style="text-align:center;">
                             <b>${p.texto}</b><br>
@@ -28,14 +108,14 @@
                                 style="background:#ff4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
                                 Eliminar
                             </button>
-                        </div>`;
+                        </div>
+                    `;
                     m.bindPopup(popupContent);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
 
-        // DOBLE BARRERA DE SEGURIDAD
         async function confirmarEliminar(id, nombre) {
             if (confirm("¿Quieres eliminar este reporte?")) {
                 if (confirm(`¿Estás seguro de que ${nombre} ya no está?`)) {
@@ -44,6 +124,9 @@
                 }
             }
         }
+
         setInterval(cargarPuntos, 5000);
         cargarPuntos();
     </script>
+</body>
+</html>
