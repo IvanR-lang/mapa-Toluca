@@ -243,6 +243,44 @@ const buscador = L.Control.geocoder({
                     }
                 });
 
+// Variable para no repetir la alerta de voz mil veces del mismo retén
+let retenesAlertados = {}; 
+
+async function cargarPuntos() {
+    try {
+        const res = await fetch('/api/chat');
+        const puntos = await res.json();
+        
+        puntos.forEach(p => {
+            // --- DETECTOR DE RETENES CERCANOS ---
+            if (p.texto.includes('CONTROL') && miUbicacionReal) {
+                // Calculamos la distancia en metros entre tú y el reporte
+                const distanciaMetros = map.distance(miUbicacionReal, [p.lat, p.lng]);
+
+                // Si estás a menos de 400 metros (distancia ideal para reaccionar)
+                if (distanciaMetros < 400) {
+                    // Si no te hemos avisado de este retén específico en los últimos 10 minutos
+                    if (!retenesAlertados[p._id]) {
+                        
+                        alertarVoz("¡Atención! Vigías reportan un control policial a 400 metros. Conduce con precaución.");
+                        
+                        // Marcamos como avisado para no molestarte cada 5 segundos
+                        retenesAlertados[p._id] = true; 
+                        
+                        // Opcional: Que el celular vibre largo para que lo sientas en el manubrio
+                        if ('vibrate' in navigator) navigator.vibrate([500, 200, 500]);
+                    }
+                }
+            }
+            
+            // Aquí sigue tu lógica normal de Auxilio y de dibujar los marcadores...
+            // (La que ya tenías de Auxilio a 500m)
+        });
+        
+        // ... resto de la función para dibujar los iconos
+    } catch (e) {}
+}
+                
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
                     const m = L.marker([p.lat, p.lng], { 
@@ -258,4 +296,5 @@ const buscador = L.Control.geocoder({
     </script>
 </body>
 </html>
+
 
