@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Vigía Toluca</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
@@ -33,12 +29,12 @@
         .btn-help { top: 235px; }
 
         #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; border: 3px solid white; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; cursor: pointer; }
-
         .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; }
 
         /* Buscador */
         .leaflet-control-geocoder { margin-top: 15px !important; margin-left: 10px !important; border-radius: 8px !important; z-index: 1500 !important; }
-        .leaflet-routing-container { display: none; } /* Ocultamos panel de texto de Waze */
+        .leaflet-routing-container { display: none; }
+        .leaflet-marker-icon.dummy { background: none !important; border: none !important; }
 
         /* Menú Reporte */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
@@ -67,7 +63,6 @@
             <p>👮 <b>CONTROL:</b> Reporta retenes.</p>
             <p>🚧 <b>BACHE:</b> Peligros en el suelo.</p>
             <p>💥 <b>CHOQUE:</b> Accidentes viales.</p>
-            <p>☀️/🌙 <b>MODO:</b> Cambio para el sol.</p>
             <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
         </div>
     </div>
@@ -113,9 +108,10 @@
         let miUbicacionReal = null;
         let marcadorUsuario = null;
         let controlRuta = null;
+        let metaCoords = null;
         let alertasEscuchadas = {};
 
-        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); simularUsuarios(); alertarVoz("Sistema Activo"); }
+        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); alertarVoz("Vigía Toluca activo. Bienvenida."); }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         
@@ -127,25 +123,35 @@
             }
         }
 
-        // BUSCADOR PHOTON (MEJORADO PARA TOLUCA)
+        // BUSCADOR CON TRADUCTOR Y META
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
             geocoder: L.Control.Geocoder.photon({ location: [19.2827, -99.6557], include_proximity: true })
         }).on('markgeocode', function(e) {
-            const dest = e.geocode.center;
+            metaCoords = e.geocode.center;
+            let nombreLugar = e.geocode.name;
+            
+            if (nombreLugar.includes("Lic. Adolfo López Mateos")) nombreLugar = "Prepa 1";
+            if (nombreLugar.includes("Cuauhtémoc")) nombreLugar = "Prepa 3";
+            if (nombreLugar.includes("Ignacio Ramírez Calzada")) nombreLugar = "Prepa 4";
+
             if (controlRuta) map.removeControl(controlRuta);
             controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(dest.lat, dest.lng)],
+                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
                 lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] },
-                createMarker: () => null,
+                createMarker: (i, wp) => {
+                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; width:70px; font-weight:bold; border:1px solid black;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
+                    return null;
+                },
                 show: false
             }).addTo(map);
             document.getElementById('btnCerrarRuta').style.display = 'flex';
+            alertarVoz("Iniciando ruta hacia " + nombreLugar);
         }).addTo(map);
 
         function limpiarRuta() {
-            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; document.getElementById('btnCerrarRuta').style.display = 'none'; }
+            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; }
         }
 
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; }
@@ -155,6 +161,13 @@
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition((pos) => {
                     miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
+                    
+                    // AUTO-BORRAR RUTA AL LLEGAR (30 metros)
+                    if (metaCoords && map.distance(miUbicacionReal, metaCoords) < 30) {
+                        limpiarRuta();
+                        alertarVoz("Has llegado a tu destino. Gracias por usar Vigía Toluca.");
+                    }
+
                     if (!marcadorUsuario) {
                         marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-pos"></div>', className: 'dummy', iconSize: [15, 15] }) }).addTo(map);
                         map.setView(miUbicacionReal, 17);
@@ -166,15 +179,14 @@
 
         function alertarVoz(mensaje) {
             const speech = new SpeechSynthesisUtterance(mensaje);
-            speech.lang = 'es-MX'; window.speechSynthesis.speak(speech);
-            if ('vibrate' in navigator) navigator.vibrate([200, 100]);
+            speech.lang = 'es-MX';
+            speech.pitch = 1.2; // Voz un poco más femenina
+            speech.rate = 0.9;  // Más lenta y gentil
+            window.speechSynthesis.speak(speech);
         }
 
         async function borrarReporte(id) {
-            if (confirm("¿Ya no está el reporte?")) {
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-                cargarPuntos();
-            }
+            if (confirm("¿Ya no está?")) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
         }
 
         async function enviarReporte(tipo) {
@@ -183,7 +195,7 @@
             else { const c = map.getCenter(); lat = c.lat; lng = c.lng; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha, lat, lng }) });
-            if (tipo.includes('CONTROL')) alertarVoz("Reporte de policía enviado");
+            if (tipo.includes('CONTROL')) alertarVoz("Reporte enviado.");
             cargarPuntos();
         }
 
@@ -193,11 +205,10 @@
                 const puntos = await res.json();
                 
                 puntos.forEach(p => {
-                    // Copiloto de Voz para Retenes
                     if (p.texto.includes('CONTROL') && miUbicacionReal) {
                         const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
                         if (d < 400 && !alertasEscuchadas[p._id]) {
-                            alertarVoz("Atención, control policial a 400 metros.");
+                            alertarVoz("Cuidado, control policial reportado adelante.");
                             alertasEscuchadas[p._id] = true;
                         }
                     }
@@ -206,15 +217,14 @@
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
                     const m = L.marker([p.lat, p.lng], { 
-                        icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32] }) 
+                        icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) 
                     }).addTo(map);
-                    m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; margin-top:5px; border-radius:4px;">¿YA NO ESTÁ?</button></div>`);
+                    m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; margin-top:5px; border-radius:4px;">BORRAR</button></div>`);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
 
-        function simularUsuarios() { setInterval(() => { let n = parseInt(document.getElementById('userCount').innerText); n += Math.floor(Math.random() * 3) - 1; if(n<347) n=347; document.getElementById('userCount').innerText = n; }, 10000); }
         setInterval(cargarPuntos, 5000);
     </script>
 </body>
