@@ -15,33 +15,29 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* Header */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; }
 
-        /* Mira Central (PIN MÓVIL) */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.8)); }
 
-        /* Modales */
         #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
 
-        /* Botones Laterales */
         .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
         .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
-        .btn-help { top: 235px; background: #333; } /* BOTÓN AYUDA RECUPERADO */
+        .btn-help { top: 235px; background: #333; }
+        
+        /* BOTÓN DE SUGERENCIAS CENTRALIZADO */
+        .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
         #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; border: 2px solid white; }
         .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; }
 
-        /* PIN AZUL GPS */
         .user-pos-marker { width: 18px; height: 18px; background: #00d4ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
-        
-        /* Menú Reporte */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
         .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; }
         .opciones { display: none; gap: 15px; margin-bottom: 20px; }
@@ -64,10 +60,9 @@
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left;">
             <h3 style="text-align:center;">📖 ¿Cómo usar Vigía?</h3>
-            <p>📍 <b>¿La cámara no se mueve?</b> Pica el botón 🎯 para que el mapa te siga mientras avanzas.</p>
-            <p>🔓 <b>Reportar a distancia:</b> Abre el candado para mover el mapa libremente y marcar puntos lejos de ti usando la mira central 📍.</p>
-            <p>🚨 <b>Alertas de voz:</b> La app te avisará solita si hay un peligro o patrulla cerca de tu ruta.</p>
-            <p>🗑️ <b>Limpieza:</b> Si pasas por un reporte que ya no existe, por favor pícalo y usa el botón BORRAR.</p>
+            <p>🎯 <b>Seguimiento:</b> Activa esto para que el mapa se mueva contigo.</p>
+            <p>🔓 <b>Modo Libre:</b> Abre el candado para reportar puntos lejanos con la mira 📍.</p>
+            <p>💬 <b>Sugerencias:</b> Usa el botón azul de la izquierda para enviarnos tus ideas.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -85,6 +80,9 @@
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
+    
+    <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/n0Xp1a', '_blank')">💬</button>
+
     <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
 
     <div id="map"></div>
@@ -125,7 +123,6 @@
             }
         }
 
-        // BUSCADOR
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
@@ -165,7 +162,7 @@
                     miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
                     if (metaCoords && map.distance(miUbicacionReal, metaCoords) < 35) {
                         limpiarRuta();
-                        alertarVoz("Has llegado. Gracias por usar Vigía Toluca.");
+                        alertarVoz("Has llegado a tu destino. Gracias por usar Vigía Toluca.");
                     }
                     if (!marcadorUsuario) {
                         marcadorUsuario = L.marker(miUbicacionReal, { zIndexOffset: 1000, icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy', iconSize: [20, 20], iconAnchor: [10, 10] }) }).addTo(map);
@@ -193,16 +190,6 @@
             cargarPuntos();
         }
 
-        // LIMPIEZA AUTOMÁTICA DIARIA (Frontend check)
-        function verificarLimpieza() {
-            const ahora = new Date();
-            if (ahora.getHours() === 23 && ahora.getMinutes() === 59) {
-                // Aquí el frontend refresca, pero el backend debe tener la lógica de borrar la DB
-                console.log("Hora de limpieza.");
-                cargarPuntos();
-            }
-        }
-
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
@@ -220,7 +207,6 @@
             } catch (e) {}
         }
         setInterval(cargarPuntos, 8000);
-        setInterval(verificarLimpieza, 60000);
         cargarPuntos();
     </script>
 </body>
