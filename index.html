@@ -7,50 +7,47 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #000; }
         
-        /* Header y Estilos */
-        .brand-header { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
-        .brand-header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; color: #e63946; }
-        .iza-text { font-size: 11px; color: #ff85a1; font-style: italic; margin-top: 4px; display: block; }
-        .online-counter { font-size: 10px; color: #00ff88; margin-top: 5px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .dot { width: 6px; height: 6px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 5px #00ff88; animation: blink 1.5s infinite; }
-        @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
+        .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
+        .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; }
 
         /* Modales */
         #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; text-align: center; border: 1px solid #333; }
-        .btn-main { background: #e63946; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
+        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; }
+        .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; }
 
-        /* Interfaz Flotante */
-        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 45px; pointer-events: none; display: none; }
-        .side-btn { position: absolute; right: 15px; width: 50px; height: 50px; background: rgba(0,0,0,0.6); border-radius: 12px; border: 1px solid #444; font-size: 22px; z-index: 1000; color: white; display: flex; align-items: center; justify-content: center; }
-        .btn-gps { top: 20px; }
-        .btn-lock { top: 80px; }
-        .btn-help { top: 140px; background: rgba(0, 212, 255, 0.2); border-color: #00d4ff; }
+        /* Botones Flotantes */
+        .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .btn-gps { top: 70px; }
+        .btn-lock { top: 125px; }
+        .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
+        .btn-help { top: 235px; }
 
-        /* Menú de Reporte */
+        /* Botón Policía Rápido */
+        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+
+        /* Buscador y Ruta */
+        .leaflet-control-geocoder { margin-top: 15px !important; margin-left: 10px !important; border-radius: 8px !important; }
+        .leaflet-routing-container { background: white; color: black; font-size: 11px; max-width: 200px; border-radius: 10px; }
+
+        /* Menú Reporte */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
-        .btn-reportar { background: #e63946; color: white; padding: 15px 35px; border-radius: 50px; font-size: 16px; font-weight: bold; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); }
-        .opciones { display: none; flex-direction: row; gap: 15px; margin-bottom: 25px; }
+        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; box-shadow: 0 5px 20px rgba(230, 57, 70, 0.5); }
+        .opciones { display: none; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
-        .btn-opcion { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #fff; font-size: 28px; color: white; cursor: pointer; }
-        
-        /* Tipos de Botones solicitados */
-        .btn-auxilio { background: #e63946; border: 4px solid white; box-shadow: 0 0 20px #e63946; animation: pulse-red 1s infinite; }
-        .btn-control { background: #ff0000; }
-        .btn-bache { background: #ff8c00; }
-        .btn-choque { background: #ffd700; }
+        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
 
-        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        /* Punto Azul Usuario */
-        .user-position { width: 14px; height: 14px; background: #00d4ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
-        .user-position-pulse { position: absolute; width: 14px; height: 14px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: user-pulse 2s infinite; }
-        @keyframes user-pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(5); opacity: 0; } }
+        /* Punto Usuario */
+        .user-pos { width: 15px; height: 15px; background: #00d4ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px #00d4ff; }
     </style>
 </head>
 <body>
@@ -58,18 +55,19 @@
     <div id="avisoLegal">
         <div class="modal-box">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa funciona como una red de apoyo entre ciudadanos para el tránsito seguro en Toluca. Al ingresar, aceptas que la ubicación de los controles preventivos y reportes viales son informativos y de carácter público. Vigía Toluca no promueve conductas ilícitas; busca la transparencia vial y la prevención de incidentes.</p>
+            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
             <button class="btn-main" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
 
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left;">
-            <h3 style="color:#e63946;">📖 Manual del Vigía</h3>
-            <p>• <b>Reportar:</b> Usa "Generar Reporte". Si el candado está abierto (🔓), reportas donde esté la mira 📍si el candado esta cerrado (🔒) reportas en tu posicion gps.</p>
-            <p>• <b>📖 Guía del Vigía:</b> 🚨 AUXILIO: Úsalo solo si en el control se pusieron agresivos o quisieron mordida. Alertará a todos los Vigías cercanos 👮 CONTROL: Úsalo para reportar la ubicación exacta de retenes, operativos o revisiones viales activas 🚧 BACHE: Avisa sobre imperfecciones, baches o daños graves en el pavimento para evitar accidentes 💥 CHOQUE: Reporta accidentes o colisiones recientes que estén obstruyendo la circulación.</p>
-            <p>• <b>Borrar:</b> Si pasas por una ubicacion marcada y ya no ves el reten, por favor borra el reporte para mantenernos actualizados.</p>
-            <p>• <b>¿Como Borrar?:</b> Solo aprietas el icono y despues al boton "¿Ya no está?".</p>
+            <h3>📖 Guía del Vigía</h3>
+            <p>🚨 <b>AUXILIO:</b> Alerta a 500m con voz.</p>
+            <p>👮 <b>CONTROL:</b> Reporta retenes.</p>
+            <p>🚧 <b>BACHE:</b> Peligros en el suelo.</p>
+            <p>💥 <b>CHOQUE:</b> Accidentes viales.</p>
+            <p>☀️/🌙 <b>MODO:</b> Cambia el mapa para ver bajo el sol.</p>
             <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
         </div>
     </div>
@@ -77,61 +75,86 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated node: Iza ✨</span>
-        <div class="online-counter"><div class="dot"></div> <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
+        <div style="font-size: 9px; color: #00ff88; font-weight: bold;">● <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
     </div>
 
-    <div id="miraCentral">📍</div>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
+    <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
+    <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
 
     <div id="map"></div>
     
     <div class="menu-container">
         <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
         <div class="opciones" id="menuOpciones">
-            <button class="btn-opcion btn-auxilio" onclick="enviarReporte('🚨 AUXILIO CRÍTICO')">🚨</button>
-            <button class="btn-opcion btn-control" onclick="enviarReporte('👮 CONTROL')">👮</button>
-            <button class="btn-opcion btn-bache" onclick="enviarReporte('🚧 BACHE')">🚧</button>
-            <button class="btn-opcion btn-choque" onclick="enviarReporte('💥 CHOQUE')">💥</button>
+            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 AUXILIO')">🚨</button>
+            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 BACHE')">🚧</button>
+            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 CHOQUE')">💥</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
     <script>
-        const map = L.map('map', { zoomControl: false, preferCanvas: true, tap: false }).setView([19.2827, -99.6557], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 15);
+        
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        
+        darkLayer.addTo(map); // Inicia en modo noche
+        let currentMode = 'dark';
 
         let marcadoresActuales = [];
-        let alertasEscuchadas = {}; // Aquí guardaremos cuántas veces se ha anunciado cada ID
         let siguiendo = true;
         let miUbicacionReal = null;
         let marcadorUsuario = null;
+        let controlRuta = null;
+        let alertasEscuchadas = {};
 
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); simularUsuarios(); }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
 
+        function toggleTheme() {
+            if (currentMode === 'dark') {
+                map.removeLayer(darkLayer); lightLayer.addTo(map);
+                currentMode = 'light'; document.querySelector('.btn-theme').innerText = '🌙';
+            } else {
+                map.removeLayer(lightLayer); darkLayer.addTo(map);
+                currentMode = 'dark'; document.querySelector('.btn-theme').innerText = '☀️';
+            }
+        }
+
+        // --- BUSCADOR ESTILO WAZE ---
+        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "A dónde vas?" })
+        .on('markgeocode', function(e) {
+            const dest = e.geocode.center;
+            if (controlRuta) map.removeControl(controlRuta);
+            controlRuta = L.Routing.control({
+                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(dest.lat, dest.lng)],
+                lineOptions: { styles: [{ color: '#0051ff', weight: 6 }] },
+                createMarker: () => null
+            }).addTo(map);
+        }).addTo(map);
+
         function toggleLock() {
             siguiendo = !siguiendo;
             document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓';
-            document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
             if(siguiendo && miUbicacionReal) map.setView(miUbicacionReal, 17);
         }
 
-        function activarSeguimiento() {
-            siguiendo = true;
-            document.getElementById('lockBtn').innerText = '🔒';
-            document.getElementById('miraCentral').style.display = 'none';
-            if (miUbicacionReal) map.setView(miUbicacionReal, 17);
-        }
+        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
 
         function iniciarGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition((pos) => {
                     miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
                     if (!marcadorUsuario) {
-                        marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-position-pulse"></div><div class="user-position"></div>', className: 'dummy-user', iconSize: [20, 20], iconAnchor: [10, 10] }) }).addTo(map);
+                        marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-pos"></div>', className: 'dummy', iconSize: [15, 15], iconAnchor: [7, 7] }) }).addTo(map);
                         map.setView(miUbicacionReal, 17);
                     } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                     if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
@@ -143,34 +166,26 @@
             setInterval(() => {
                 let actual = parseInt(document.getElementById('userCount').innerText);
                 actual += Math.floor(Math.random() * 3) - 1;
-                if (actual < 347) actual = 347;
-                if (actual > 563) actual = 563;
+                if (actual < 347) actual = 347; if (actual > 563) actual = 563;
                 document.getElementById('userCount').innerText = actual;
-            }, 10000);
+            }, 12000);
         }
 
-        // --- ALERTAS DE AUDIO Y VOZ ---
         function alertarVoz(mensaje) {
-            if ('speechSynthesis' in window) {
-                const speech = new SpeechSynthesisUtterance(mensaje);
-                speech.lang = 'es-MX';
-                window.speechSynthesis.speak(speech);
-            }
+            const speech = new SpeechSynthesisUtterance(mensaje);
+            speech.lang = 'es-MX'; window.speechSynthesis.speak(speech);
             if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
         }
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            if (!siguiendo) {
-                const centro = map.getCenter(); lat = centro.lat; lng = centro.lng;
-            } else {
-                if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
-                else { alert("⚠️ Esperando GPS"); return; }
-            }
+            const centro = map.getCenter();
+            if (!siguiendo) { lat = centro.lat; lng = centro.lng; }
+            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha, lat, lng }) });
-            toggleMenu(); cargarPuntos();
-            if (tipo.includes('AUXILIO')) alertarVoz("Alerta enviada. Mantén la calma.");
+            if (tipo.includes('CONTROL')) alertarVoz("Reporte de policía enviado");
+            cargarPuntos();
         }
 
         async function cargarPuntos() {
@@ -178,53 +193,28 @@
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
                 
-                // Verificar si hay nuevos reportes de Auxilio cerca
                 puntos.forEach(p => {
-    const yaExiste = marcadoresActuales.find(m => m._id === p._id);
-    
-    // Si es un reporte de AUXILIO y estamos cerca...
-    if (p.texto.includes('AUXILIO') && miUbicacionReal) {
-        const dist = map.distance(miUbicacionReal, [p.lat, p.lng]);
-        
-        if (dist < 500) {
-            // Si este reporte no se ha escuchado o lleva menos de 2 veces:
-            if (!alertasEscuchadas[p._id] || alertasEscuchadas[p._id] < 2) {
-                
-                // CAMBIA AQUÍ EL TEXTO: Lo que pongas entre comillas es lo que dirá la voz
-                alertarVoz("¡Atención! Hay un control cerca. Atento"); 
-                
-                // Sumamos 1 al contador de este reporte específico
-                alertasEscuchadas[p._id] = (alertasEscuchadas[p._id] || 0) + 1;
-            }
-        }
-    }
-    // ... resto del código para dibujar los marcadores
-});
+                    if (p.texto.includes('AUXILIO') && miUbicacionReal) {
+                        const dist = map.distance(miUbicacionReal, [p.lat, p.lng]);
+                        if (dist < 500 && (!alertasEscuchadas[p._id] || alertasEscuchadas[p._id] < 2)) {
+                            alertarVoz("¡Atención! Emergencia cerca.");
+                            alertasEscuchadas[p._id] = (alertasEscuchadas[p._id] || 0) + 1;
+                        }
+                    }
+                });
 
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
-                    const iconColor = p.texto.includes('AUXILIO') ? 'red' : 'white';
                     const m = L.marker([p.lat, p.lng], { 
-                        _id: p._id,
-                        icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px ${iconColor});">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] }) 
+                        icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 5px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy', iconSize: [32, 32], iconAnchor: [16, 16] }) 
                     }).addTo(map);
-                    m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><br><button onclick="confirmarEliminar('${p._id}', '${p.texto}')" style="background:#444; color:white; border:none; padding:8px; border-radius:5px; width:100%;">¿Ya no está?</button></div>`);
+                    m.bindPopup(`<div style="text-align:center; background:#1a1a1a; color:white; padding:10px; border-radius:10px;"><b>${p.texto}</b><br><small>${p.fecha}</small></div>`);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
-        }
-
-        async function confirmarEliminar(id, nombre) {
-            if (confirm(`¿Eliminar reporte?`)) {
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos();
-            }
         }
 
         setInterval(cargarPuntos, 5000); cargarPuntos();
     </script>
 </body>
 </html>
-
-
-
-
