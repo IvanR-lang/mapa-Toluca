@@ -78,6 +78,7 @@
         <div style="font-size: 9px; color: #00ff88; font-weight: bold;">● <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
     </div>
 
+    <button id="btnCerrarRuta" class="side-btn" style="top: 290px; background: #e63946; display: none;" onclick="limpiarRuta()">❌</button>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
@@ -130,16 +131,54 @@
         }
 
         // --- BUSCADOR ESTILO WAZE ---
-        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "A dónde vas?" })
-        .on('markgeocode', function(e) {
-            const dest = e.geocode.center;
-            if (controlRuta) map.removeControl(controlRuta);
-            controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(dest.lat, dest.lng)],
-                lineOptions: { styles: [{ color: '#0051ff', weight: 6 }] },
-                createMarker: () => null
-            }).addTo(map);
-        }).addTo(map);
+        // Variable para el botón de cerrar
+const btnCerrarRuta = document.getElementById('btnCerrarRuta');
+
+// BUSCADOR MEJORADO
+L.Control.geocoder({ 
+    defaultMarkGeocode: false, 
+    placeholder: "A dónde vas?",
+    // Esto obliga al buscador a buscar cerca de Toluca primero
+    geocoder: L.Control.Geocoder.nominatim({
+        geocodingQueryParams: {
+            viewbox: "-99.8,19.1,-99.4,19.5", // Coordenadas aproximadas de Toluca
+            bounded: 1
+        }
+    })
+})
+.on('markgeocode', function(e) {
+    const dest = e.geocode.center;
+    
+    if (controlRuta) map.removeControl(controlRuta);
+    
+    controlRuta = L.Routing.control({
+        waypoints: [
+            L.latLng(miUbicacionReal[0], miUbicacionReal[1]), 
+            L.latLng(dest.lat, dest.lng)
+        ],
+        lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] }, // Línea más gruesa para la moto
+        createMarker: () => null,
+        addWaypoints: false, // Evita que el usuario mueva la ruta por error
+        routeWhileDragging: false
+    }).addTo(map);
+
+    // Mostramos el botón para poder quitar la ruta después
+    btnCerrarRuta.style.display = 'flex';
+    
+    // Cerramos el teclado y centramos la vista
+    map.setView(miUbicacionReal, 15);
+}).addTo(map);
+
+// FUNCIÓN PARA QUITAR LA RUTA
+function limpiarRuta() {
+    if (controlRuta) {
+        map.removeControl(controlRuta);
+        controlRuta = null;
+        btnCerrarRuta.style.display = 'none';
+        // Volvemos a centrar en el usuario
+        if (miUbicacionReal) map.setView(miUbicacionReal, 17);
+    }
+}
 
         function toggleLock() {
             siguiendo = !siguiendo;
@@ -218,3 +257,4 @@
     </script>
 </body>
 </html>
+
