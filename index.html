@@ -102,6 +102,7 @@
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
         let marcadoresActuales = [];
+        let alertasEscuchadas = {}; // Aquí guardaremos cuántas veces se ha anunciado cada ID
         let siguiendo = true;
         let miUbicacionReal = null;
         let marcadorUsuario = null;
@@ -178,14 +179,26 @@
                 
                 // Verificar si hay nuevos reportes de Auxilio cerca
                 puntos.forEach(p => {
-                    const yaExiste = marcadoresActuales.find(m => m._id === p._id);
-                    if (!yaExiste && p.texto.includes('AUXILIO') && miUbicacionReal) {
-                        const dist = map.distance(miUbicacionReal, [p.lat, p.lng]);
-                        if (dist < 500) { // Alerta a 500 metros para dar tiempo
-                            alertarVoz("¡Atención! Alerta de auxilio detectada cerca de tu posición.");
-                        }
-                    }
-                });
+    const yaExiste = marcadoresActuales.find(m => m._id === p._id);
+    
+    // Si es un reporte de AUXILIO y estamos cerca...
+    if (p.texto.includes('AUXILIO') && miUbicacionReal) {
+        const dist = map.distance(miUbicacionReal, [p.lat, p.lng]);
+        
+        if (dist < 500) {
+            // Si este reporte no se ha escuchado o lleva menos de 2 veces:
+            if (!alertasEscuchadas[p._id] || alertasEscuchadas[p._id] < 2) {
+                
+                // CAMBIA AQUÍ EL TEXTO: Lo que pongas entre comillas es lo que dirá la voz
+                alertarVoz("¡Atención! Hay un control cerca. Atento"); 
+                
+                // Sumamos 1 al contador de este reporte específico
+                alertasEscuchadas[p._id] = (alertasEscuchadas[p._id] || 0) + 1;
+            }
+        }
+    }
+    // ... resto del código para dibujar los marcadores
+});
 
                 marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
                 puntos.forEach(p => {
@@ -210,3 +223,4 @@
     </script>
 </body>
 </html>
+
