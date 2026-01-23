@@ -4,37 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Vigía Toluca</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
-        #map { height: 100vh; width: 100%; background: #000; z-index: 1; }
+        #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
+        /* Header */
+        .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; }
 
+        /* Mira Central (PIN MÓVIL) */
+        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.8)); }
+
         /* Modales */
-        #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; }
+        #avisoLegal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
 
-        /* Botones Flotantes */
-        .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+        /* Botones Laterales */
+        .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
         .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
-        .btn-help { top: 235px; }
+        #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; border: 2px solid white; }
+        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
-        #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; border: 3px solid white; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; cursor: pointer; }
-        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; }
-
-        /* Buscador */
-        .leaflet-control-geocoder { margin-top: 15px !important; margin-left: 10px !important; border-radius: 8px !important; z-index: 1500 !important; }
-        .leaflet-routing-container { display: none; }
-        .leaflet-marker-icon.dummy { background: none !important; border: none !important; }
+        /* PIN AZUL GPS */
+        .user-pos-marker { width: 18px; height: 18px; background: #00d4ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
+        .pulse { position: absolute; width: 18px; height: 18px; background: rgba(0, 212, 255, 0.4); border-radius: 50%; animation: pulse-anim 2s infinite; }
+        @keyframes pulse-anim { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
 
         /* Menú Reporte */
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
@@ -42,49 +45,38 @@
         .opciones { display: none; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
-
-        .user-pos { width: 15px; height: 15px; background: #00d4ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px #00d4ff; }
+        
+        .leaflet-routing-container { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
-            <button class="btn-main" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
-        </div>
-    </div>
-
-    <div id="manualVigia" style="display:none;">
-        <div class="modal-box">
-            <h3>📖 Guía del Vigía</h3>
-            <p>🚨 <b>AUXILIO:</b> Alerta a 500m con voz.</p>
-            <p>👮 <b>CONTROL:</b> Reporta retenes.</p>
-            <p>🚧 <b>BACHE:</b> Peligros en el suelo.</p>
-            <p>💥 <b>CHOQUE:</b> Accidentes viales.</p>
-            <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
+            <h2>🚨 Vigía Toluca</h2>
+            <p>Red ciudadana de monitoreo vial en el Edomex. Los reportes son informativos y anónimos.</p>
+            <button class="btn-main" onclick="cerrarAviso()">INGRESAR</button>
         </div>
     </div>
 
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
-        <span class="iza-text">✨ Dedicated node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88;">● <span id="userCount">347</span> VIGÍAS ACTIVOS</div>
+        <span class="iza-text">✨ Node: Iza ✨</span>
+        <div style="font-size: 9px; color: #00ff88;">● <span id="userCount">412</span> VIGÍAS</div>
     </div>
 
+    <div id="miraCentral">📍</div>
     <div id="btnCerrarRuta" onclick="limpiarRuta()">✕</div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
-    <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
     <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
 
     <div id="map"></div>
     
     <div class="menu-container">
-        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
+        <button class="btn-reportar" onclick="toggleMenu()">🛰️ REPORTE RÁPIDO</button>
         <div class="opciones" id="menuOpciones">
             <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 AUXILIO')">🚨</button>
             <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 BACHE')">🚧</button>
@@ -98,8 +90,8 @@
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 15);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { updateWhenIdle: true });
+        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { updateWhenIdle: true });
         darkLayer.addTo(map);
 
         let currentMode = 'dark';
@@ -112,7 +104,6 @@
         let alertasEscuchadas = {};
 
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); alertarVoz("Vigía Toluca activo. Bienvenida."); }
-        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         
         function toggleTheme() {
@@ -123,7 +114,7 @@
             }
         }
 
-        // BUSCADOR CON TRADUCTOR Y META
+        // BUSCADOR PHOTON
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
@@ -131,45 +122,54 @@
         }).on('markgeocode', function(e) {
             metaCoords = e.geocode.center;
             let nombreLugar = e.geocode.name;
-            
             if (nombreLugar.includes("Lic. Adolfo López Mateos")) nombreLugar = "Prepa 1";
-            if (nombreLugar.includes("Cuauhtémoc")) nombreLugar = "Prepa 3";
-            if (nombreLugar.includes("Ignacio Ramírez Calzada")) nombreLugar = "Prepa 4";
-
             if (controlRuta) map.removeControl(controlRuta);
             controlRuta = L.Routing.control({
                 waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
                 lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] },
                 createMarker: (i, wp) => {
-                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; width:70px; font-weight:bold; border:1px solid black;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
+                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; font-weight:bold; border:1px solid black; width:70px;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
                     return null;
                 },
                 show: false
             }).addTo(map);
             document.getElementById('btnCerrarRuta').style.display = 'flex';
-            alertarVoz("Iniciando ruta hacia " + nombreLugar);
+            alertarVoz("Ruta a " + nombreLugar);
         }).addTo(map);
 
         function limpiarRuta() {
             if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; }
         }
 
-        function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; }
-        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
+        function toggleLock() {
+            siguiendo = !siguiendo;
+            const lockBtn = document.getElementById('lockBtn');
+            const mira = document.getElementById('miraCentral');
+            if (siguiendo) {
+                lockBtn.innerText = '🔒';
+                mira.style.display = 'none';
+                if (miUbicacionReal) map.setView(miUbicacionReal, 17);
+            } else {
+                lockBtn.innerText = '🔓';
+                mira.style.display = 'block';
+            }
+        }
+
+        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
 
         function iniciarGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition((pos) => {
                     miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                    
-                    // AUTO-BORRAR RUTA AL LLEGAR (30 metros)
-                    if (metaCoords && map.distance(miUbicacionReal, metaCoords) < 30) {
+                    if (metaCoords && map.distance(miUbicacionReal, metaCoords) < 35) {
                         limpiarRuta();
                         alertarVoz("Has llegado a tu destino. Gracias por usar Vigía Toluca.");
                     }
-
                     if (!marcadorUsuario) {
-                        marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-pos"></div>', className: 'dummy', iconSize: [15, 15] }) }).addTo(map);
+                        marcadorUsuario = L.marker(miUbicacionReal, { 
+                            zIndexOffset: 1000, 
+                            icon: L.divIcon({ html: '<div class="pulse"></div><div class="user-pos-marker"></div>', className: 'dummy', iconSize: [20, 20], iconAnchor: [10, 10] }) 
+                        }).addTo(map);
                         map.setView(miUbicacionReal, 17);
                     } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                     if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
@@ -179,10 +179,9 @@
 
         function alertarVoz(mensaje) {
             const speech = new SpeechSynthesisUtterance(mensaje);
-            speech.lang = 'es-MX';
-            speech.pitch = 1.2; // Voz un poco más femenina
-            speech.rate = 0.9;  // Más lenta y gentil
+            speech.lang = 'es-MX'; speech.pitch = 1.2; speech.rate = 0.95;
             window.speechSynthesis.speak(speech);
+            if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
         }
 
         async function borrarReporte(id) {
@@ -191,11 +190,11 @@
 
         async function enviarReporte(tipo) {
             let lat, lng;
-            if (siguiendo && miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } 
-            else { const c = map.getCenter(); lat = c.lat; lng = c.lng; }
+            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
+            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha, lat, lng }) });
-            if (tipo.includes('CONTROL')) alertarVoz("Reporte enviado.");
+            alertarVoz("Reportado.");
             cargarPuntos();
         }
 
@@ -203,29 +202,24 @@
             try {
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
-                
+                marcadoresActuales.forEach(m => map.removeLayer(m));
+                marcadoresActuales = [];
                 puntos.forEach(p => {
                     if (p.texto.includes('CONTROL') && miUbicacionReal) {
                         const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
-                        if (d < 400 && !alertasEscuchadas[p._id]) {
-                            alertarVoz("Cuidado, control policial reportado adelante.");
+                        if (d < 450 && !alertasEscuchadas[p._id]) {
+                            alertarVoz("Atención, control adelante.");
                             alertasEscuchadas[p._id] = true;
                         }
                     }
-                });
-
-                marcadoresActuales.forEach(m => { if(m !== marcadorUsuario) map.removeLayer(m); });
-                puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], { 
-                        icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) 
-                    }).addTo(map);
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 3px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) }).addTo(map);
                     m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; margin-top:5px; border-radius:4px;">BORRAR</button></div>`);
                     marcadoresActuales.push(m);
                 });
             } catch (e) {}
         }
-
-        setInterval(cargarPuntos, 5000);
+        setInterval(cargarPuntos, 8000);
+        cargarPuntos();
     </script>
 </body>
 </html>
