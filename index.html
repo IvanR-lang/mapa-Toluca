@@ -18,7 +18,6 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         
-        /* Brillo especial para el Nodo Iza */
         .iza-text { 
             font-size: 10px; 
             color: #ff85a1; 
@@ -54,8 +53,9 @@
         .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; border: none !important; margin-top: 15px !important; margin-right: 70px !important; }
         .leaflet-routing-container { display: none !important; }
 
-        /* Estilo para la consola de Iza */
-        #consoleIza { display: none; background: #000; color: #0f0; font-family: monospace; padding: 20px; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 10000; font-size: 14px; overflow-y: auto; }
+        /* Consola Iza V2 */
+        #consoleIza { display: none; background: #000; color: #0f0; font-family: monospace; padding: 20px; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 10000; font-size: 13px; overflow-y: hidden; }
+        .cmd-line { margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -124,9 +124,8 @@
         let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 });
         map.addLayer(clusterGroup);
 
-        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
+        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null;
         
-        // --- BUSCADOR ---
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
@@ -145,7 +144,6 @@
                 show: false
             }).addTo(map);
             document.getElementById('btnCerrarRuta').style.display = 'flex';
-            alertarVoz("Iniciando ruta a " + nombreLugar);
         }).addTo(map);
 
         function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
@@ -153,35 +151,17 @@
         function toggleLock() {
             siguiendo = !siguiendo;
             const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
-            if (siguiendo) { 
-                lockBtn.innerText = '🔒'; mira.style.display = 'none'; 
-                if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
-            } else { 
-                lockBtn.innerText = '🔓'; mira.style.display = 'block'; 
-            }
+            if (siguiendo) { lockBtn.innerText = '🔒'; mira.style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); } 
+            else { lockBtn.innerText = '🔓'; mira.style.display = 'block'; }
         }
 
-        function activarSeguimiento() { 
-            siguiendo = true; 
-            document.getElementById('lockBtn').innerText = '🔒'; 
-            document.getElementById('miraCentral').style.display = 'none'; 
-            if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
-        }
+        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
 
-        async function borrarReporte(id) { 
-            if (confirm("¿Ya no está?")) { 
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' }); 
-                cargarPuntos(); 
-            } 
-        }
-
-        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); alertarVoz("Vigía Toluca activo."); }
+        async function borrarReporte(id) { if (confirm("¿Ya no está?")) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); } }
+        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
-        function toggleTheme() {
-            if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); }
-            else { map.removeLayer(lightLayer); darkLayer.addTo(map); }
-        }
+        function toggleTheme() { if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); } else { map.removeLayer(lightLayer); darkLayer.addTo(map); } }
 
         function iniciarGPS() {
             if (navigator.geolocation) {
@@ -196,16 +176,9 @@
             }
         }
 
-        function alertarVoz(m) {
-            const s = new SpeechSynthesisUtterance(m);
-            s.lang = 'es-MX'; s.rate = 0.95;
-            window.speechSynthesis.speak(s);
-        }
-
         async function enviarReporte(t) {
             let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
-            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
+            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat, lng }) });
             cargarPuntos();
@@ -224,30 +197,41 @@
             } catch (e) {}
         }
 
-        // --- LÓGICA DE LA CONSOLA PARA IZA ---
+        // --- CONSOLA MAESTRA IZA V2 ---
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 const consola = document.getElementById('consoleIza');
                 consola.style.display = 'block';
                 const logs = [
-                    "[SYSTEM] Iniciando Protocolo de Seguridad...",
-                    "[INFO] Nodo Detectado: <span style='color:#ff85a1'>IZA_DEDICATED_V24</span>",
-                    "[OK] Encriptación SHA-256 Activa.",
-                    "[SCAN] Verificando dependencias en Toluca: advapi32.dll, AuthBroker.dll...",
-                    "[OK] Base de datos de Vigías sincronizada.",
-                    "[SUCCESS] Acceso Concedido al Motor Principal.",
+                    "[SYS] Initializing Kernel 4.19-VIGIA...",
+                    "[NET] Sincronizando con clúster de Render.com...",
+                    "[AUTH] Buscando Hash de identidad...",
+                    "[OK] Nodo detectado: <span style='color:#ff85a1'>IZA_DEDICATED_CORE</span>",
+                    "[SEC] Encriptación SHA-512 simétrica activa.",
+                    "[SCAN] Cargando librerías críticas: advapi32.dll, AuthBroker.dll, netapi32.dll...",
+                    "[GPS] Sincronizando satélites para Toluca de Lerdo...",
+                    "[DB] Verificando 412 vigías activos en el clúster...",
+                    "[SUCCESS] Enlace de datos establecido.",
                     "--------------------------------------------------",
-                    "ESTADO DEL SISTEMA: <span style='color:white; font-weight:bold;'>AUTORIZADO POR IZA</span>",
+                    "IDENTIDAD VERIFICADA: <span style='color:white; font-weight:bold;'>ACCESO MAESTRO CONCEDIDO</span>",
                     "--------------------------------------------------",
-                    "[LOG] Monitoreando 412 nodos activos...",
-                    "[INFO] El mapa solo funciona con este nodo activo."
+                    "[FW] Cortafuegos Vigía activo contra intrusos.",
+                    "[INFO] Paquetes de red fluyendo a través del nodo Iza.",
+                    "[READY] Vigía Toluca Engine en línea.",
+                    "[LOG] Latencia: 14ms | Encriptación: AES-256",
+                    "[SEC] Puerto 443 abierto para tráfico seguro.",
+                    "[INFO] Escaneando Paseo Tollocan y Av. Morelos...",
+                    "[OK] Protocolo de transparencia vial activo."
                 ];
                 let i = 0;
                 consola.innerHTML = "";
                 function print() {
                     if(i < logs.length) {
-                        consola.innerHTML += logs[i] + "<br>";
-                        i++; setTimeout(print, 800);
+                        const line = document.createElement('div');
+                        line.className = 'cmd-line';
+                        line.innerHTML = logs[i];
+                        consola.appendChild(line);
+                        i++; setTimeout(print, 600);
                     }
                 }
                 print();
