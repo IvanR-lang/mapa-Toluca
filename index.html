@@ -45,13 +45,10 @@
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
         
-        /* Video oculto para el Plan B de PiP */
-        #pipVideo { position: fixed; bottom: -100px; width: 1px; height: 1px; pointer-events: none; }
+        .leaflet-routing-container { display: none !important; }
     </style>
 </head>
 <body>
-
-    <video id="pipVideo" muted playsinline></video>
 
     <div id="avisoLegal">
         <div class="modal-box">
@@ -64,16 +61,17 @@
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left;">
             <h3 style="text-align:center;">📖 ¿Cómo usar Vigía?</h3>
-            <p>🎯 <b>Seguimiento:</b> Activa esto para que el mapa se mueva contigo.</p>
-            <p>🔓 <b>Modo Libre:</b> Abre el candado para reportar puntos lejanos con la mira 📍.</p>
-            <p>🖼️ <b>Mini Mapa:</b> El botón morado deja el mapa flotando sobre otras apps.</p>
+            <p>📍 <b>¿La cámara no se mueve?</b> Pica el botón 🎯 para que el mapa te siga mientras avanzas.</p>
+            <p>🔓 <b>Reportar a distancia:</b> Abre el candado para mover el mapa libremente y marcar puntos lejos de ti usando la mira central 📍.</p>
+            <p>🚨 <b>Alertas de voz:</b> La app te avisará solita si hay un peligro o patrulla cerca de tu ruta.</p>
+            <p>🗑️ <b>Limpieza:</b> Si pasas por un reporte que ya no existe, por favor pícalo y usa el botón BORRAR.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
 
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
-        <span class="iza-text">✨ Node: Iza ✨</span>
+        <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
         <div style="font-size: 9px; color: #00ff88;">● <span id="userCount">412</span> VIGÍAS</div>
     </div>
 
@@ -117,14 +115,41 @@
 
         let currentMode = 'dark', siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
         
-        // --- LÓGICA PiP MULTI-COMPATIBLE ---
+        // --- REPARACIÓN DE FUNCIONES DE BOTONES ---
+        function toggleLock() {
+            siguiendo = !siguiendo;
+            const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
+            if (siguiendo) { 
+                lockBtn.innerText = '🔒'; 
+                mira.style.display = 'none'; 
+                if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
+            } else { 
+                lockBtn.innerText = '🔓'; 
+                mira.style.display = 'block'; 
+            }
+        }
+
+        function activarSeguimiento() { 
+            siguiendo = true; 
+            document.getElementById('lockBtn').innerText = '🔒'; 
+            document.getElementById('miraCentral').style.display = 'none'; 
+            if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
+        }
+
+        // --- REPARACIÓN DE BORRADO ---
+        async function borrarReporte(id) { 
+            if (confirm("¿Borrar reporte?")) { 
+                await fetch(`/api/chat/${id}`, { method: 'DELETE' }); 
+                cargarPuntos(); 
+            } 
+        }
+
+        // --- PIP Y GPS ---
         async function handlePiP() {
-            // Intento 1: PiP de Documentos (El más pro)
             if ('documentPictureInPicture' in window) {
                 try {
                     const pipWin = await window.documentPictureInPicture.requestWindow({ width: 350, height: 350 });
                     const mapContainer = document.getElementById('map');
-                    
                     [...document.styleSheets].forEach(s => {
                         try {
                             const style = document.createElement('style');
@@ -132,46 +157,17 @@
                             pipWin.document.head.appendChild(style);
                         } catch(e){}
                     });
-                    
                     pipWin.document.body.appendChild(mapContainer);
-                    alertarVoz("Modo ventana activado.");
-                    
                     pipWin.addEventListener('pagehide', () => {
                         document.body.appendChild(mapContainer);
                         map.invalidateSize();
                     });
                     return;
-                } catch(e) { console.log("Fallo Document PiP, probando Video PiP"); }
+                } catch(e) {}
             }
-
-            // Intento 2: PiP de Video (El Plan B compatible con Android viejo)
-            const video = document.getElementById('pipVideo');
-            if (video.requestPictureInPicture) {
-                try {
-                    // Creamos un stream del mapa para el video
-                    const stream = document.querySelector('canvas')?.captureStream() || null;
-                    if(stream) {
-                        video.srcObject = stream;
-                        await video.play();
-                        await video.requestPictureInPicture();
-                        alertarVoz("Mini mapa activo.");
-                    } else {
-                        alertarVoz("Tu teléfono es incompatible con el mini mapa.");
-                    }
-                } catch(e) { alertarVoz("No se pudo activar el mini mapa."); }
-            } else {
-                alertarVoz("Navegador no compatible.");
-            }
+            alertarVoz("Mini mapa no compatible.");
         }
 
-        // --- INSTALACIÓN ---
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            document.getElementById('installBtn').style.display = 'flex';
-        });
-
-        // --- FUNCIONES CORE ---
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); alertarVoz("Vigía Toluca activo."); }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
@@ -203,9 +199,11 @@
         }
 
         async function enviarReporte(t) {
-            const c = map.getCenter();
+            let lat, lng;
+            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
+            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat: c.lat, lng: c.lng }) });
+            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat, lng }) });
             cargarPuntos();
         }
 
@@ -215,8 +213,12 @@
                 const puntos = await res.json();
                 clusterGroup.clearLayers();
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
-                    m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small>`);
+                    if (p.texto.includes('CONTROL') && miUbicacionReal) {
+                        const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
+                        if (d < 450 && !alertasEscuchadas[p._id]) { alertarVoz("Control adelante."); alertasEscuchadas[p._id] = true; }
+                    }
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 3px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
+                    m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:8px; margin-top:8px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">BORRAR</button></div>`);
                     clusterGroup.addLayer(m);
                 });
             } catch (e) {}
