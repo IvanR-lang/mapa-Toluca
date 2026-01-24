@@ -20,7 +20,6 @@
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
-        /* MIRA CENTRAL */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
@@ -68,7 +67,7 @@
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
         .leaflet-routing-container { display: none; }
 
-        /* --- ESTILOS CONSOLA IZA ENTERPRISE --- */
+        /* CONSOLA IZA PROFESIONAL */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -123,9 +122,9 @@
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🚨 Aviso Ciudadano</h2>
-            <p>Este mapa es una red de apoyo en Toluca. Al ingresar, aceptas que los reportes son informativos.</p>
-            <button class="btn-main" onclick="irARegistro()">INGRESAR</button>
+            <h2>🚨 Aviso de Monitoreo Comunitario</h2>
+            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
+            <button class="btn-main" onclick="irARegistro()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
 
@@ -153,7 +152,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88;">● VIGÍA ONLINE</div>
+        <div style="font-size: 9px; color: #00ff88; margin-top: 3px;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -187,17 +186,19 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
+        // --- BUSCADOR PHOTON (ARREGLO DEFINITIVO) ---
+        // Photon es el que entiende "Prepa 1" y lugares informales
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Buscar calle...",
-            geocoder: L.Control.Geocoder.nominatim()
+            placeholder: "Buscar (ej: Prepa 1)...",
+            geocoder: L.Control.Geocoder.photon() // CAMBIO CLAVE AQUÍ
         })
         .on('markgeocode', function(e) {
             var bbox = e.geocode.bbox;
@@ -231,9 +232,11 @@
             if (n.length < 3) return alert("Nombre muy corto.");
             if (n.toLowerCase() === "iza") {
                 if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); }
-            }
-            miNombre = n; localStorage.setItem('vigiaNombre', n);
-            document.getElementById('registroNombre').style.display = 'none'; iniciarGPS();
+            } else if (["admin", "root"].includes(n.toLowerCase())) { return alert("Nombre no permitido."); }
+            miNombre = n;
+            localStorage.setItem('vigiaNombre', n);
+            document.getElementById('registroNombre').style.display = 'none';
+            iniciarGPS();
         }
 
         function obtenerRango(pts) {
@@ -251,6 +254,7 @@
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
 
         function iniciarGPS() {
+            if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
             navigator.geolocation.watchPosition((pos) => {
                 miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
                 if (!marcadorUsuario) {
@@ -258,59 +262,89 @@
                     map.setView(miUbicacionReal, 16);
                 } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                 if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-                checarAlertas(miUbicacionReal);
-            }, null, { enableHighAccuracy: true });
+                checarCercaniaPolicial(miUbicacionReal);
+            }, (err) => { console.log(err); }, { enableHighAccuracy: true });
         }
 
-        function checarAlertas(miPos) {
+        function checarCercaniaPolicial(miPos) {
+            if (!puntosCache || puntosCache.length === 0) return;
             puntosCache.forEach(p => {
                 if (!p._id) return;
                 const dist = map.distance(miPos, [p.lat, p.lng]);
-                if (!historialAlertas[p._id]) historialAlertas[p._id] = 0;
-                if (p.texto.includes('👮') && dist < 500 && historialAlertas[p._id] < 1) { hablar("Atención. Control policial a 500 metros."); historialAlertas[p._id]++; }
-                if (p.texto.includes('🚨') && dist < 1000 && historialAlertas[p._id] < 2) { hablar("Peligro. Auxilio cerca de tu ubicación."); historialAlertas[p._id]++; }
+                const id = p._id;
+                if (!historialAlertas[id]) { historialAlertas[id] = 0; }
+                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Atención. Control policial a 500 metros."); historialAlertas[id]++; } }
+                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación."); historialAlertas[id]++; } }
             });
         }
 
-        function hablar(t) { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(t); u.lang = "es-MX"; u.rate = 1.5; window.speechSynthesis.speak(u); } }
+        function hablarSistema(texto) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = "es-MX"; 
+                utterance.rate = 1.5; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function getIconHTML(texto) {
+            if (texto.includes('🚨')) return '🚨';
+            if (texto.includes('🚧')) return '🚧';
+            if (texto.includes('💥')) return '💥';
+            if (texto.includes('👮')) return '👮';
+            return null; 
+        }
+
+        function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
+        async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
-                const puntos = await res.json(); puntosCache = puntos;
-                clusterGroup.clearLayers(); let html = ""; const vigias = new Set();
+                if(!res.ok) throw new Error("Server error");
+                const puntos = await res.json();
+                puntosCache = puntos; 
+                clusterGroup.clearLayers();
+                let htmlChat = "";
+                const usuariosActivos = new Set();
+                
                 puntos.reverse().forEach(p => {
-                    const icono = p.texto.includes('🚨')?'🚨':p.texto.includes('🚧')?'🚧':p.texto.includes('💥')?'💥':p.texto.includes('👮')?'👮':null;
-                    if (icono) {
-                        const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: icono, className: 'custom-marker', iconSize: [35, 35] }) });
-                        m.bindPopup(`<div style="text-align:center;">${p.texto}<br><button onclick="borrarReporte('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px; border-radius:4px; margin-top:5px; cursor:pointer;">🗑️ Borrar</button></div>`);
-                        clusterGroup.addLayer(m);
+                    const iconoEmoji = getIconHTML(p.texto);
+                    if (iconoEmoji) { 
+                        const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) });
+                        marker.bindPopup(`<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
+                        clusterGroup.addLayer(marker);
                     }
-                    html += `<div style="margin-bottom:12px; border-bottom:1px solid #222; padding-bottom:8px;">${p.texto} <div style="color:#666; font-size:10px; text-align:right;">${p.fecha}</div></div>`;
-                    const match = p.texto.match(/<b>(.*):<\/b>/); if (match) vigias.add(match[1]);
+                    htmlChat += `<div style="margin-bottom:12px; border-bottom:1px solid #222; padding-bottom:8px; line-height:1.4;">${p.texto} <div style="color:#666; font-size:10px; text-align:right; margin-top:2px;">${p.fecha}</div></div>`;
+                    const matchUser = p.texto.match(/<b>(.*):<\/b>/);
+                    if (matchUser) usuariosActivos.add(matchUser[1]);
                 });
-                document.getElementById('chatMessages').innerHTML = html || "Sin reportes.";
-                document.getElementById('contadorVigiasAdmin').innerText = vigias.size;
+
+                document.getElementById('chatMessages').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Sin reportes.</div>";
+                document.getElementById('contadorVigias').innerText = usuariosActivos.size;
+                document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
 
-        async function borrarReporte(id) { if(confirm("¿Eliminar?")) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); } }
+        function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
 
-        async function enviarReporte(tBase) {
+        async function enviarReporte(textoBase) {
             let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
+            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
-            const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${tBase}`;
-            const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng }) });
-            cargarPuntos(); document.getElementById('chatInput').value = "";
+            const mensajeFinal = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${textoBase}`;
+            const fechaHora = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            try {
+                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: mensajeFinal, fecha: fechaHora, lat: lat, lng: lng }) });
+                cargarPuntos();
+                document.getElementById('chatInput').value = "";
+            } catch (e) { alert("Error de envío."); }
         }
 
-        function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
-        function enviarChat() { const i = document.getElementById('chatInput'); if (i.value.trim()) enviarReporte(i.value.trim()); }
+        function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
-        // --- LÓGICA DE CONSOLA PROFESIONAL (HASH) ---
+        // --- CONSOLA PROFESIONAL IZA ---
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
