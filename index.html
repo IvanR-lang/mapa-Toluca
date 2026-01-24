@@ -53,9 +53,14 @@
         
         .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; border: none !important; margin-top: 15px !important; margin-right: 70px !important; }
         .leaflet-routing-container { display: none !important; }
+
+        /* Estilo para la consola de Iza */
+        #consoleIza { display: none; background: #000; color: #0f0; font-family: monospace; padding: 20px; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 10000; font-size: 14px; overflow-y: auto; }
     </style>
 </head>
 <body>
+
+    <div id="consoleIza"></div>
 
     <div id="avisoLegal">
         <div class="modal-box">
@@ -121,6 +126,7 @@
 
         let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
         
+        // --- BUSCADOR ---
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
@@ -211,10 +217,6 @@
                 const puntos = await res.json();
                 clusterGroup.clearLayers(); 
                 puntos.forEach(p => {
-                    if (p.texto.includes('CONTROL') && miUbicacionReal) {
-                        const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
-                        if (d < 450 && !alertasEscuchadas[p._id]) { alertarVoz("Control adelante."); alertasEscuchadas[p._id] = true; }
-                    }
                     const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 3px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
                     m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:8px; margin-top:8px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">BORRAR</button></div>`);
                     clusterGroup.addLayer(m);
@@ -222,28 +224,37 @@
             } catch (e) {}
         }
 
-        // Lógica para que Iza pueda entrar a su "consola de seguridad"
-        if (window.location.pathname === '/node-iza-auth') {
-            document.body.innerHTML = `
-            <div style="background:#000; color:#0f0; font-family:monospace; padding:20px; height:100vh; font-size:14px;">
-                <div id="console"></div>
-            </div>`;
-            const logs = [
-                "[SYSTEM] Iniciando Protocolo de Seguridad...",
-                "[INFO] Nodo Detectado: <span style='color:#ff85a1'>IZA_V24</span>",
-                "[OK] Encriptación SHA-256 Activa.",
-                "[SCAN] Verificando dependencias en Toluca...",
-                "[SUCCESS] Acceso Concedido al Motor Vigía."
-            ];
-            let i = 0;
-            function print() {
-                if(i < logs.length) {
-                    document.getElementById('console').innerHTML += logs[i] + "<br>";
-                    i++; setTimeout(print, 1000);
+        // --- LÓGICA DE LA CONSOLA PARA IZA ---
+        function checarHash() {
+            if (window.location.hash === '#iza-secure') {
+                const consola = document.getElementById('consoleIza');
+                consola.style.display = 'block';
+                const logs = [
+                    "[SYSTEM] Iniciando Protocolo de Seguridad...",
+                    "[INFO] Nodo Detectado: <span style='color:#ff85a1'>IZA_DEDICATED_V24</span>",
+                    "[OK] Encriptación SHA-256 Activa.",
+                    "[SCAN] Verificando dependencias en Toluca: advapi32.dll, AuthBroker.dll...",
+                    "[OK] Base de datos de Vigías sincronizada.",
+                    "[SUCCESS] Acceso Concedido al Motor Principal.",
+                    "--------------------------------------------------",
+                    "ESTADO DEL SISTEMA: <span style='color:white; font-weight:bold;'>AUTORIZADO POR IZA</span>",
+                    "--------------------------------------------------",
+                    "[LOG] Monitoreando 412 nodos activos...",
+                    "[INFO] El mapa solo funciona con este nodo activo."
+                ];
+                let i = 0;
+                consola.innerHTML = "";
+                function print() {
+                    if(i < logs.length) {
+                        consola.innerHTML += logs[i] + "<br>";
+                        i++; setTimeout(print, 800);
+                    }
                 }
+                print();
             }
-            print();
         }
+        window.addEventListener('hashchange', checarHash);
+        checarHash();
 
         setInterval(cargarPuntos, 8000);
         cargarPuntos();
