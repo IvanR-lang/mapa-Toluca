@@ -10,19 +10,19 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
     <style>
-        /* ESTILOS GENERALES */
+        /* ESTILOS BASE */
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* HEADER SUPERIOR */
+        /* HEADER */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
-        /* MIRA CENTRAL (PIN) */
+        /* MIRA CENTRAL */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
-        /* MODALES (Aviso, Registro, Manual) */
+        /* MODALES */
         #avisoLegal, #manualVigia, #registroNombre { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
@@ -34,13 +34,10 @@
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
         
-        /* BOTÓN AZUL POLICÍA */
         .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
-        
-        /* BOTÓN SUGERENCIAS */
         .btn-sugerencias { position: absolute; bottom: 130px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-        /* MENÚ REPORTE CENTRAL (ROJO) */
+        /* MENÚ REPORTE */
         .menu-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; pointer-events: none; }
         .menu-container > * { pointer-events: auto; }
         .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 14px; }
@@ -49,13 +46,14 @@
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
         .btn-opcion:active { transform: scale(0.9); }
 
-        /* CHAT WHATSAPP */
+        /* CHAT */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 70vh; }
         .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
         #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
         #chatDrawer.open #chatBody { display: flex; }
-        #chatMessages { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 15px; display: flex; flex-direction: column-reverse; } /* Invertido para que lo nuevo salga abajo */
+        /* CAMBIO: Eliminado flex-direction: column-reverse para que el orden HTML natural (nuevos primero) funcione */
+        #chatMessages { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 15px; display: block; } 
         
         .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
         .r-civil { background: #6c757d; }
@@ -68,7 +66,7 @@
         #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 20px; color: white; padding: 10px 15px; outline: none; font-size: 14px; }
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* ICONOS DEL MAPA PERSONALIZADOS (ARREGLO DEL CÍRCULO VACÍO) */
+        /* ICONOS DEL MAPA */
         .custom-marker {
             display: flex;
             justify-content: center;
@@ -76,11 +74,11 @@
             background: white;
             border: 2px solid #333;
             border-radius: 50%;
-            font-size: 22px; /* Tamaño del emoji */
+            font-size: 22px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
         
-        /* CONSOLA IZA (OCULTA) */
+        /* CONSOLA IZA */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -114,7 +112,7 @@
         <div class="modal-box">
             <h2>👤 Identidad de Vigía</h2>
             <p>Elige tu nombre clave para el chat. (Se guardará en este dispositivo).</p>
-            <input type="text" id="inputNombreUser" placeholder="Ej: Halcón1, Erick, Taxista..." maxlength="12">
+            <input type="text" id="inputNombreUser" placeholder="Tu nombre..." maxlength="12">
             <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR ID</button>
         </div>
     </div>
@@ -123,8 +121,8 @@
         <div class="modal-box" style="text-align:left;">
             <h3 style="text-align:center;">📖 Manual de Operaciones</h3>
             <p>🎯 <b>GPS:</b> El mapa te sigue. Toca el botón para recentrar.</p>
-            <p>🔓 <b>Explorar:</b> Abre el candado para mover el mapa y reportar lejos con la mira 📍.</p>
-            <p>💬 <b>Chat:</b> Desliza la barra inferior para hablar con la red.</p>
+            <p>🔓 <b>Explorar:</b> Abre el candado para reportar lejos.</p>
+            <p>🔊 <b>Voz:</b> Toca la bocina en un reporte para escucharlo.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -132,7 +130,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88; margin-top: 3px;">● <span id="contadorVigias">Cargando...</span> VIGÍAS</div>
+        <div id="adminCounter" style="font-size: 9px; color: #00ff88; margin-top: 3px; display: none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -140,7 +138,6 @@
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
     
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
-    
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
 
     <div id="map"></div>
@@ -157,11 +154,9 @@
     <div id="chatDrawer">
         <div class="drawer-handle" onclick="toggleChat()">VIGÍAS ACTIVOS EN TOLUCA ▲</div>
         <div id="chatBody">
-            <div id="chatMessages">
-                <div style="text-align:center; padding:20px; color:#666;">Conectando al servidor de Toluca...</div>
-            </div>
+            <div id="chatMessages"><div style="text-align:center; padding:20px; color:#666;">Conectando...</div></div>
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Reportar incidente o mensaje...">
+                <input type="text" id="chatInput" placeholder="Mensaje (No se marca en mapa)...">
                 <button class="btn-send" onclick="enviarChat()">➤</button>
             </div>
         </div>
@@ -171,56 +166,34 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // CONFIGURACIÓN INICIAL DEL MAPA
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; Vigía Toluca',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
         let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
         let siguiendo = true;
         let miUbicacionReal = null;
         let marcadorUsuario = null;
 
-        // DATOS DE USUARIO
         let miNombre = localStorage.getItem('vigiaNombre') || "";
         let misReportes = parseInt(localStorage.getItem('vigiaConteo')) || 0;
 
-        // --- SISTEMA DE IDENTIDAD Y SEGURIDAD IZA ---
         function irARegistro() {
             document.getElementById('avisoLegal').style.display = 'none';
-            if (!miNombre) {
-                document.getElementById('registroNombre').style.display = 'flex';
-            } else {
-                iniciarGPS();
-            }
+            if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); }
         }
 
         function guardarIdentidad() {
             let n = document.getElementById('inputNombreUser').value.trim();
-            if (n.length < 3) return alert("El nombre es muy corto.");
-            
-            // Protección de Nodo Iza
+            if (n.length < 3) return alert("Nombre muy corto.");
             if (n.toLowerCase() === "iza") {
-                let pass = prompt("⚠️ ACCESO RESTRINGIDO A NODO MAESTRO.\nIngrese clave de autenticación:");
-                if (pass === "iza2026") { 
-                    n = "Iza"; 
-                } else { 
-                    return alert("⛔ Acceso denegado. Nombre reservado."); 
-                }
-            } else if (["admin", "root", "vigia", "sistema"].includes(n.toLowerCase())) {
-                return alert("Nombre no permitido.");
-            }
-
+                if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); }
+            } else if (["admin", "root"].includes(n.toLowerCase())) { return alert("Nombre no permitido."); }
             miNombre = n;
             localStorage.setItem('vigiaNombre', n);
             document.getElementById('registroNombre').style.display = 'none';
             iniciarGPS();
         }
 
-        // --- LÓGICA DE RANGOS ---
         function obtenerRango(pts) {
             if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' };
             if (pts >= 30) return { t: 'Élite', c: 'r-elite' };
@@ -229,7 +202,6 @@
             return { t: 'Civil', c: 'r-civil' };
         }
 
-        // --- FUNCIONES VISUALES ---
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
@@ -247,42 +219,46 @@
             if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
         }
 
-        // --- GPS ---
         function iniciarGPS() {
             if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
             navigator.geolocation.watchPosition((pos) => {
                 miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                
-                // Marcador azul del usuario (separado de los reportes)
                 if (!marcadorUsuario) {
                     marcadorUsuario = L.marker(miUbicacionReal, { 
-                        icon: L.divIcon({ 
-                            html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', 
-                            className: 'user-dot',
-                            iconSize: [20, 20]
-                        }) 
+                        icon: L.divIcon({ html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', className: 'user-dot', iconSize: [20, 20] }) 
                     }).addTo(map);
                     map.setView(miUbicacionReal, 16);
-                } else { 
-                    marcadorUsuario.setLatLng(miUbicacionReal); 
-                }
-                
+                } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                 if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-            }, (err) => { console.log(err); }, { enableHighAccuracy: true, maximumAge: 10000 });
+            }, (err) => { console.log(err); }, { enableHighAccuracy: true });
         }
 
-        // --- LÓGICA DE ICONOS (SOLUCIÓN CÍRCULO VACÍO) ---
         function getIconHTML(texto) {
-            // Detectar emojis comunes de reporte
             if (texto.includes('🚨')) return '🚨';
             if (texto.includes('🚧')) return '🚧';
             if (texto.includes('💥')) return '💥';
             if (texto.includes('👮')) return '👮';
-            // Si es chat normal, icono de mensaje
-            return '💬';
+            return null; 
         }
 
-        // --- CARGA DE DATOS ---
+        function hablar(texto) {
+            if ('speechSynthesis' in window) {
+                const textoLimpio = texto.replace(/<[^>]*>?/gm, '').replace(':', ' dice ');
+                const utterance = new SpeechSynthesisUtterance(textoLimpio);
+                utterance.lang = "es-MX"; 
+                window.speechSynthesis.speak(utterance);
+            } else { alert("Tu navegador no soporta voz."); }
+        }
+
+        function confirmarBorrado(id) {
+            if(confirm("¿Seguro que quieres eliminar este reporte?")) { borrarReporte(id); }
+        }
+
+        async function borrarReporte(id) {
+            await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+            cargarPuntos();
+        }
+
         async function cargarPuntos() {
             const container = document.getElementById('chatMessages');
             try {
@@ -290,85 +266,73 @@
                 if(!res.ok) throw new Error("Server error");
                 const puntos = await res.json();
                 
-                // Limpiar mapa antes de agregar para evitar duplicados "juntos"
                 clusterGroup.clearLayers();
-                
                 let htmlChat = "";
                 const usuariosActivos = new Set();
-
-                // Procesar puntos (El más nuevo primero en array, pero en chat queremos orden cronológico o inverso según estilo)
-                // Aquí usamos reverse para que en el mapa se pinten todos y en el chat construimos el string
-                // Nota: La API devuelve el orden. Asumimos orden de llegada.
                 
-                puntos.reverse().forEach(p => { // Reverse para iterar
-                    // 1. Agregar al Mapa
+                puntos.reverse().forEach(p => {
                     const iconoEmoji = getIconHTML(p.texto);
-                    const marker = L.marker([p.lat, p.lng], { 
-                        icon: L.divIcon({ 
-                            html: iconoEmoji, 
-                            className: 'custom-marker', // Clase CSS corregida
-                            iconSize: [35, 35],
-                            iconAnchor: [17, 35]
-                        }) 
-                    });
                     
-                    marker.bindPopup(`<div style="text-align:center;"><b>${p.texto}</b><br><small>${p.fecha}</small></div>`);
-                    clusterGroup.addLayer(marker);
-
-                    // 2. Agregar al Chat (HTML)
-                    // Extraer rango y nombre del texto guardado
-                    // Formato esperado: "<span...>Rango</span> <b>Nombre:</b> Mensaje"
+                    if (iconoEmoji) { 
+                        const marker = L.marker([p.lat, p.lng], { 
+                            icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) 
+                        });
+                        
+                        const popupContent = `
+                            <div style="text-align:center; min-width:150px;">
+                                <div style="font-size:14px; margin-bottom:5px;">${p.texto}</div>
+                                <small style="color:#666;">${p.fecha}</small>
+                                <div style="margin-top:10px; display:flex; justify-content:center; gap:10px;">
+                                    <button onclick="hablar('${p.texto.replace(/'/g, "\\'")}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🔊</button>
+                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent);
+                        clusterGroup.addLayer(marker);
+                    }
+                    // CAMBIO: Mensajes nuevos arriba (puntos.reverse ya invierte, y el CSS ya no tiene column-reverse)
                     htmlChat += `<div style="margin-bottom:12px; border-bottom:1px solid #222; padding-bottom:8px; line-height:1.4;">${p.texto} <div style="color:#666; font-size:10px; text-align:right; margin-top:2px;">${p.fecha}</div></div>`;
                     
-                    // Contar usuario único
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
                     if (matchUser) usuariosActivos.add(matchUser[1]);
                 });
 
                 if (puntos.length === 0) {
-                    container.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No hay reportes recientes.</div>";
+                    container.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No hay reportes.</div>";
                     document.getElementById('contadorVigias').innerText = "0";
                 } else {
-                    container.innerHTML = htmlChat; // Actualizar chat
+                    container.innerHTML = htmlChat;
                     document.getElementById('contadorVigias').innerText = usuariosActivos.size;
                 }
-
             } catch (e) {
-                // Reintento silencioso si falla
                 setTimeout(cargarPuntos, 4000);
             }
         }
 
-        // --- ENVÍO DE REPORTES ---
-        function intentoReportePolicial() {
-            enviarReporte('👮 CONTROL POLICIAL');
-        }
+        function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
 
         async function enviarReporte(textoBase) {
-            // Validación de GPS
             let lat, lng;
-            if (!siguiendo) { // Si el candado está abierto, usa la mira central
+            if (!siguiendo) {
                 const centro = map.getCenter();
                 lat = centro.lat;
                 lng = centro.lng;
-            } else { // Si está cerrado, usa el GPS
-                if (!miUbicacionReal) return alert("⏳ Esperando señal GPS... Intenta en unos segundos.");
+            } else {
+                if (!miUbicacionReal) return alert("⏳ Esperando señal GPS...");
                 lat = miUbicacionReal[0];
                 lng = miUbicacionReal[1];
             }
 
-            if (!miNombre) return alert("Error de identidad. Recarga la página.");
+            if (!miNombre) return alert("Error de identidad.");
 
-            // Aumentar contador local
             misReportes++; 
             localStorage.setItem('vigiaConteo', misReportes);
             
-            // Construir mensaje con rango
             const r = obtenerRango(misReportes);
             const mensajeFinal = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${textoBase}`;
             const fechaHora = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-            // Feedback visual inmediato
             const btn = document.querySelector('.btn-reportar');
             if(btn) btn.innerText = "Enviando...";
 
@@ -379,13 +343,9 @@
                     body: JSON.stringify({ texto: mensajeFinal, fecha: fechaHora, lat: lat, lng: lng }) 
                 });
                 if(btn) btn.innerText = "🛰️ GENERAR REPORTE";
-                cargarPuntos(); // Recargar mapa
-                
-                // Si fue chat, limpiar input
+                cargarPuntos();
                 document.getElementById('chatInput').value = "";
-                
             } catch (e) {
-                alert("Error de conexión. Verifica tus datos.");
                 if(btn) btn.innerText = "Error ❌";
             }
         }
@@ -397,23 +357,22 @@
             enviarReporte(txt);
         }
 
-        // --- CONSOLA IZA (OCULTA) ---
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
-                const list = document.getElementById('statusListIza');
-                list.innerHTML = "$ Handshake: OK<br>$ Node: IZA_CORE_ACTIVE<br>$ Status: IRREMPLAZABLE<br>$ Uplink: ESTABLISHED";
+                document.getElementById('statusListIza').innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
+                // CAMBIO: Mostrar contador solo para admin
+                document.getElementById('adminCounter').style.display = 'block';
                 setTimeout(() => { document.getElementById('authBoxIza').style.display = 'block'; }, 800);
             } else {
                 document.getElementById('consoleIza').style.display = 'none';
+                document.getElementById('adminCounter').style.display = 'none';
             }
         }
 
-        // INICIALIZACIÓN
         window.addEventListener('hashchange', checarHash);
         checarHash();
-        setInterval(cargarPuntos, 7000); // Actualizar cada 7s
-        // Primer carga
+        setInterval(cargarPuntos, 7000);
         setTimeout(cargarPuntos, 1000);
     </script>
 </body>
