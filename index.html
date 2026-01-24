@@ -18,6 +18,9 @@
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
+        /* MIRA CENTRAL */
+        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; }
+
         /* MODALES */
         #avisoLegal, #manualVigia, #registroNombre { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
@@ -63,6 +66,8 @@
 </head>
 <body>
 
+    <div id="miraCentral">📍</div>
+
     <div id="consoleIza">
         <div style="background:white; padding:45px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.08); max-width:520px; width:94%; border-top: 5px solid #1a1a1a;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
@@ -70,10 +75,6 @@
                 <div style="color:#e63946; font-size:10px; font-weight:bold;">● CORE STABILITY</div>
             </div>
             <div id="statusListIza" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; min-height:160px;"></div>
-            <div id="authBoxIza" style="margin-top:20px; background:#fffdf0; padding:15px; border-radius:8px; border-left:6px solid #ffc107; display:none;">
-                <strong style="font-size:13px; display:block;">INFORME DE ARQUITECTURA CRÍTICA</strong>
-                <p style="font-size:12px; margin-top:8px;">Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema...</p>
-            </div>
         </div>
     </div>
 
@@ -107,6 +108,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
+        <div style="font-size: 9px; color: #00ff88; margin-top: 3px;">● <span id="contadorVigias">0</span> VIGÍAS ACTIVOS</div>
     </div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -178,8 +180,19 @@
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
-        function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; }
-        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
+        
+        function toggleLock() { 
+            siguiendo = !siguiendo; 
+            document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; 
+            document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block';
+        }
+        
+        function activarSeguimiento() { 
+            siguiendo = true; 
+            document.getElementById('lockBtn').innerText = '🔒'; 
+            document.getElementById('miraCentral').style.display = 'none';
+            if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
+        }
 
         function iniciarGPS() {
             navigator.geolocation.watchPosition((pos) => {
@@ -200,13 +213,27 @@
                 const puntos = await res.json();
                 clusterGroup.clearLayers();
                 let html = "";
+                
+                // LÓGICA DE CONTEO DE USUARIOS ÚNICOS
+                const usuariosUnicos = new Set();
+
                 puntos.reverse().forEach(p => {
                     const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 28px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
                     m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small>`);
                     clusterGroup.addLayer(m);
                     html += `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">${p.texto} <br><small style="color:#666; font-size:10px;">${p.fecha}</small></div>`;
+                    
+                    // Extraer nombre del mensaje para contar
+                    const matchNombre = p.texto.match(/<b>(.*?):<\/b>/);
+                    if (matchNombre && matchNombre[1]) {
+                        usuariosUnicos.add(matchNombre[1]);
+                    }
                 });
+
                 container.innerHTML = html || "Sin actividad.";
+                // ACTUALIZAR CONTADOR EN EL HEADER
+                document.getElementById('contadorVigias').innerText = usuariosUnicos.size;
+
             } catch (e) {
                 container.innerHTML = "<div style='color:#e63946;'>⚠️ Nodo inestable. Reintentando...</div>";
                 setTimeout(cargarPuntos, 5000);
@@ -214,12 +241,27 @@
         }
 
         async function enviarReporte(t) {
-            if (!miUbicacionReal || !miNombre) return;
+            let lat, lng;
+            if (!siguiendo) {
+                const centro = map.getCenter();
+                lat = centro.lat;
+                lng = centro.lng;
+            } else {
+                if (!miUbicacionReal) return;
+                lat = miUbicacionReal[0];
+                lng = miUbicacionReal[1];
+            }
+            
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1] }) });
+            
+            await fetch('/api/chat', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ texto: msg, fecha: f, lat: lat, lng: lng }) 
+            });
             cargarPuntos();
         }
 
@@ -234,7 +276,6 @@
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 document.getElementById('statusListIza').innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
-                setTimeout(() => { document.getElementById('authBoxIza').style.display='block'; }, 1000);
             } else { document.getElementById('consoleIza').style.display = 'none'; }
         }
 
