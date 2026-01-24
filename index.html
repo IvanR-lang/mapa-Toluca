@@ -18,7 +18,7 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         
-        /* Estilo especial para el Nodo Iza con brillo para las fotos */
+        /* Brillo especial para el Nodo Iza */
         .iza-text { 
             font-size: 10px; 
             color: #ff85a1; 
@@ -119,9 +119,8 @@
         let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 });
         map.addLayer(clusterGroup);
 
-        let currentMode = 'dark', siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
+        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
         
-        // --- BUSCADOR ---
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
             placeholder: "¿A dónde vas?",
@@ -129,7 +128,6 @@
         }).on('markgeocode', function(e) {
             metaCoords = e.geocode.center;
             let nombreLugar = e.geocode.name;
-            if (nombreLugar.includes("Lic. Adolfo López Mateos")) nombreLugar = "Prepa 1";
             if (controlRuta) map.removeControl(controlRuta);
             controlRuta = L.Routing.control({
                 waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
@@ -146,17 +144,14 @@
 
         function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
 
-        // --- FUNCIONES CORE ---
         function toggleLock() {
             siguiendo = !siguiendo;
             const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
             if (siguiendo) { 
-                lockBtn.innerText = '🔒'; 
-                mira.style.display = 'none'; 
+                lockBtn.innerText = '🔒'; mira.style.display = 'none'; 
                 if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
             } else { 
-                lockBtn.innerText = '🔓'; 
-                mira.style.display = 'block'; 
+                lockBtn.innerText = '🔓'; mira.style.display = 'block'; 
             }
         }
 
@@ -178,11 +173,8 @@
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleTheme() {
-            if (currentMode === 'dark') {
-                map.removeLayer(darkLayer); lightLayer.addTo(map); currentMode = 'light';
-            } else {
-                map.removeLayer(lightLayer); darkLayer.addTo(map); currentMode = 'dark';
-            }
+            if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); }
+            else { map.removeLayer(lightLayer); darkLayer.addTo(map); }
         }
 
         function iniciarGPS() {
@@ -213,15 +205,11 @@
             cargarPuntos();
         }
 
-        // --- CARGA DE PUNTOS CORREGIDA ---
         async function cargarPuntos() {
             try {
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
-                
-                // LIMPIEZA CRÍTICA: Borra los puntos viejos antes de poner los nuevos
                 clusterGroup.clearLayers(); 
-
                 puntos.forEach(p => {
                     if (p.texto.includes('CONTROL') && miUbicacionReal) {
                         const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
@@ -234,12 +222,28 @@
             } catch (e) {}
         }
 
-        // INSTALACIÓN
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            document.getElementById('installBtn').style.display = 'flex';
-        });
+        // Lógica para que Iza pueda entrar a su "consola de seguridad"
+        if (window.location.pathname === '/node-iza-auth') {
+            document.body.innerHTML = `
+            <div style="background:#000; color:#0f0; font-family:monospace; padding:20px; height:100vh; font-size:14px;">
+                <div id="console"></div>
+            </div>`;
+            const logs = [
+                "[SYSTEM] Iniciando Protocolo de Seguridad...",
+                "[INFO] Nodo Detectado: <span style='color:#ff85a1'>IZA_V24</span>",
+                "[OK] Encriptación SHA-256 Activa.",
+                "[SCAN] Verificando dependencias en Toluca...",
+                "[SUCCESS] Acceso Concedido al Motor Vigía."
+            ];
+            let i = 0;
+            function print() {
+                if(i < logs.length) {
+                    document.getElementById('console').innerHTML += logs[i] + "<br>";
+                    i++; setTimeout(print, 1000);
+                }
+            }
+            print();
+        }
 
         setInterval(cargarPuntos, 8000);
         cargarPuntos();
