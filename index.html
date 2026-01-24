@@ -24,7 +24,7 @@
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
         #inputNombreUser { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; }
 
-        /* BOTONES LATERALES */
+        /* BOTONES */
         .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
@@ -32,14 +32,13 @@
         .btn-quick-police { position: absolute; bottom: 130px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; }
         .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
 
-        /* MENU REPORTE CENTRAL */
         .menu-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
         .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .opciones { display: none; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
 
-        /* CHAT WHATSAPP */
+        /* CHAT */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 2000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 70vh; }
         .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; }
@@ -58,7 +57,7 @@
         #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 5px; color: white; padding: 10px; outline: none; }
         .btn-send { background: #25d366; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
-        /* CONSOLA IZA (PROTEGIDA) */
+        /* CONSOLA IZA */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -90,8 +89,8 @@
         <div class="modal-box">
             <h2>👤 Registro de Vigía</h2>
             <p>¿Cómo quieres que te vean los demás en la red de Toluca?</p>
-            <input type="text" id="inputNombreUser" placeholder="Tu nombre o apodo..." maxlength="15">
-            <button class="btn-main" onclick="guardarIdentidad()">EMPEZAR A VIGILAR</button>
+            <input type="text" id="inputNombreUser" placeholder="Tu nombre..." maxlength="15">
+            <button class="btn-main" onclick="guardarIdentidad()">EMPEZAR</button>
         </div>
     </div>
 
@@ -100,7 +99,7 @@
             <h3>📖 Manual de Uso</h3>
             <p>🎯 <b>Seguimiento:</b> El mapa te sigue automáticamente.</p>
             <p>🔓 <b>Mover:</b> Abre el candado para explorar otras zonas.</p>
-            <p>💬 <b>Rangos:</b> Sube de nivel haciendo más reportes comunitarios.</p>
+            <p>💬 <b>Rangos:</b> Sube de nivel haciendo más reportes.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -130,7 +129,7 @@
     <div id="chatDrawer">
         <div class="drawer-handle" onclick="toggleChat()">VIGÍAS ACTIVOS EN TOLUCA ▲</div>
         <div id="chatBody">
-            <div id="chatMessages">Conectando con la red...</div>
+            <div id="chatMessages">Conectando...</div>
             <div class="chat-input-area">
                 <input type="text" id="chatInput" placeholder="Enviar mensaje...">
                 <button class="btn-send" onclick="enviarChat()">ENVIAR</button>
@@ -139,7 +138,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
         const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 15);
@@ -150,7 +149,6 @@
         let miNombre = localStorage.getItem('vigiaNombre') || "";
         let misReportes = parseInt(localStorage.getItem('vigiaConteo')) || 0;
 
-        // --- SISTEMA DE IDENTIDAD ---
         function irARegistro() {
             document.getElementById('avisoLegal').style.display = 'none';
             if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } 
@@ -159,13 +157,9 @@
 
         function guardarIdentidad() {
             let n = document.getElementById('inputNombreUser').value.trim();
-            const reservados = ["admin", "root", "desarrollador", "vigia"];
             if (n.length < 3) return alert("Nombre muy corto.");
             if (n.toLowerCase() === "iza") {
-                let p = prompt("NODO DEDICADO DETECTADO. Ingrese clave:");
-                if (p === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); }
-            } else if (reservados.includes(n.toLowerCase())) {
-                return alert("Nombre reservado por el sistema.");
+                if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); }
             }
             miNombre = n;
             localStorage.setItem('vigiaNombre', n);
@@ -181,8 +175,7 @@
             return { t: 'Civil', c: 'r-civil' };
         }
 
-        // --- FUNCIONES INTERFAZ ---
-        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'flex' : 'none'; }
+        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; }
@@ -200,25 +193,29 @@
         }
 
         async function cargarPuntos() {
+            const container = document.getElementById('chatMessages');
             try {
                 const res = await fetch('/api/chat');
+                if(!res.ok) throw new Error();
                 const puntos = await res.json();
                 clusterGroup.clearLayers();
-                let htmlChat = "";
+                let html = "";
                 puntos.reverse().forEach(p => {
                     const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 28px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
                     m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small>`);
                     clusterGroup.addLayer(m);
-                    htmlChat += `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">${p.texto} <br><small style="color:#666; font-size:10px;">${p.fecha}</small></div>`;
+                    html += `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">${p.texto} <br><small style="color:#666; font-size:10px;">${p.fecha}</small></div>`;
                 });
-                document.getElementById('chatMessages').innerHTML = htmlChat || "Sin mensajes.";
-            } catch (e) {}
+                container.innerHTML = html || "Sin actividad.";
+            } catch (e) {
+                container.innerHTML = "<div style='color:#e63946;'>⚠️ Nodo inestable. Reintentando...</div>";
+                setTimeout(cargarPuntos, 5000);
+            }
         }
 
         async function enviarReporte(t) {
             if (!miUbicacionReal || !miNombre) return;
-            misReportes++;
-            localStorage.setItem('vigiaConteo', misReportes);
+            misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -236,8 +233,7 @@
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
-                const l = document.getElementById('statusListIza');
-                l.innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
+                document.getElementById('statusListIza').innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
                 setTimeout(() => { document.getElementById('authBoxIza').style.display='block'; }, 1000);
             } else { document.getElementById('consoleIza').style.display = 'none'; }
         }
