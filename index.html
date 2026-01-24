@@ -52,7 +52,6 @@
         .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
         #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
         #chatDrawer.open #chatBody { display: flex; }
-        /* CAMBIO: Eliminado flex-direction: column-reverse para que el orden HTML natural (nuevos primero) funcione */
         #chatMessages { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 15px; display: block; } 
         
         .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
@@ -243,6 +242,7 @@
 
         function hablar(texto) {
             if ('speechSynthesis' in window) {
+                // Limpia tags HTML y decodifica entidades básicas
                 const textoLimpio = texto.replace(/<[^>]*>?/gm, '').replace(':', ' dice ');
                 const utterance = new SpeechSynthesisUtterance(textoLimpio);
                 utterance.lang = "es-MX"; 
@@ -271,6 +271,10 @@
                 const usuariosActivos = new Set();
                 
                 puntos.reverse().forEach(p => {
+                    // Limpieza crítica para evitar romper el HTML del botón de voz
+                    // Eliminamos HTML y escapamos comillas dobles y simples
+                    const textoParaVoz = p.texto.replace(/<[^>]*>?/gm, '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+
                     const iconoEmoji = getIconHTML(p.texto);
                     
                     if (iconoEmoji) { 
@@ -283,7 +287,7 @@
                                 <div style="font-size:14px; margin-bottom:5px;">${p.texto}</div>
                                 <small style="color:#666;">${p.fecha}</small>
                                 <div style="margin-top:10px; display:flex; justify-content:center; gap:10px;">
-                                    <button onclick="hablar('${p.texto.replace(/'/g, "\\'")}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🔊</button>
+                                    <button onclick="hablar('${textoParaVoz}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🔊</button>
                                     <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑️</button>
                                 </div>
                             </div>
@@ -291,7 +295,6 @@
                         marker.bindPopup(popupContent);
                         clusterGroup.addLayer(marker);
                     }
-                    // CAMBIO: Mensajes nuevos arriba (puntos.reverse ya invierte, y el CSS ya no tiene column-reverse)
                     htmlChat += `<div style="margin-bottom:12px; border-bottom:1px solid #222; padding-bottom:8px; line-height:1.4;">${p.texto} <div style="color:#666; font-size:10px; text-align:right; margin-top:2px;">${p.fecha}</div></div>`;
                     
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
@@ -361,7 +364,6 @@
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 document.getElementById('statusListIza').innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
-                // CAMBIO: Mostrar contador solo para admin
                 document.getElementById('adminCounter').style.display = 'block';
                 setTimeout(() => { document.getElementById('authBoxIza').style.display = 'block'; }, 800);
             } else {
