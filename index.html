@@ -152,7 +152,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88; margin-top: 3px;">● <span id="contadorVigias">0</span> VIGÍAS</div>
+        <div style="display:none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -186,19 +186,18 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // --- BUSCADOR PHOTON (ARREGLO DEFINITIVO) ---
-        // Photon es el que entiende "Prepa 1" y lugares informales
+        // --- BUSCADOR PHOTON (MEJORADO) ---
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
             placeholder: "Buscar (ej: Prepa 1)...",
-            geocoder: L.Control.Geocoder.photon() // CAMBIO CLAVE AQUÍ
+            geocoder: L.Control.Geocoder.photon()
         })
         .on('markgeocode', function(e) {
             var bbox = e.geocode.bbox;
@@ -272,9 +271,22 @@
                 if (!p._id) return;
                 const dist = map.distance(miPos, [p.lat, p.lng]);
                 const id = p._id;
+                
                 if (!historialAlertas[id]) { historialAlertas[id] = 0; }
-                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Atención. Control policial a 500 metros."); historialAlertas[id]++; } }
-                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación."); historialAlertas[id]++; } }
+
+                if (p.texto.includes('👮') && dist < 500) {
+                    if (historialAlertas[id] < 1) {
+                        hablarSistema("Atención. Control policial a 500 metros.");
+                        historialAlertas[id]++; 
+                    }
+                }
+                
+                if (p.texto.includes('🚨') && dist < 1000) {
+                    if (historialAlertas[id] < 2) {
+                        hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación.");
+                        historialAlertas[id]++; 
+                    }
+                }
             });
         }
 
@@ -312,6 +324,7 @@
                     const iconoEmoji = getIconHTML(p.texto);
                     if (iconoEmoji) { 
                         const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) });
+                        // POPUP SIN ERRORES VISUALES
                         marker.bindPopup(`<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
                         clusterGroup.addLayer(marker);
                     }
@@ -322,6 +335,7 @@
 
                 document.getElementById('chatMessages').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Sin reportes.</div>";
                 document.getElementById('contadorVigias').innerText = usuariosActivos.size;
+                // ACTUALIZAR CONTADOR ADMIN
                 document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
@@ -344,7 +358,6 @@
 
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
-        // --- CONSOLA PROFESIONAL IZA ---
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
