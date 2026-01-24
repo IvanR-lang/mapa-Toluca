@@ -1,196 +1,70 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vigía Toluca</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
-        #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
+<div id="consoleIza" style="display:none; background:#f0f2f5; color:#333; font-family:'Segoe UI', system-ui, sans-serif; height:100vh; width:100%; position:fixed; top:0; left:0; z-index:30000; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; padding:35px; border-radius:10px; box-shadow:0 20px 50px rgba(0,0,0,0.1); max-width:500px; width:94%; border-top: 6px solid #1a1a1a;">
         
-        .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
-        .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
-        
-        .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+            <div>
+                <h2 style="margin:0; color:#1a1a1a; font-size:18px; letter-spacing:0.5px; font-weight:700;">VIGÍA INFRASTRUCTURE CONSOLE</h2>
+                <code style="font-size:11px; color:#666;">Cluster: render-toluca-v2.1</code>
+            </div>
+            <div id="nodeStatus" style="background:#e8f5e9; color:#2e7d32; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:bold; border:1px solid #c8e6c9;">
+                ● NODE_IZA_ONLINE
+            </div>
+        </div>
 
-        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; }
+        <div id="statusList" style="background:#0d1117; color:#c9d1d9; padding:20px; border-radius:8px; font-family:'SFMono-Regular', Consolas, monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #30363d;">
+            </div>
 
-        #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
-        .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
-
-        .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-        .btn-gps { top: 70px; }
-        .btn-lock { top: 125px; }
-        .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
-        .btn-help { top: 235px; background: #333; }
-        .btn-download { top: 290px; background: #27ae60; color: white; display: none; }
-
-        .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-
-        #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; border: 2px solid white; }
-        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
-
-        .user-pos-marker { width: 18px; height: 18px; background: #00d4ff; border: 3px solid white; border-radius: 50%; }
-        .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
-        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; }
-        .opciones { display: none; gap: 15px; margin-bottom: 20px; }
-        .opciones.active { display: flex; }
-        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; }
-        
-        .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; margin-top: 15px !important; margin-right: 70px !important; }
-        .leaflet-routing-container { display: none !important; }
-
-        /* Consola Profesional Iza */
-        #consoleIza { display: none; background: #f4f4f4; color: #333; font-family: sans-serif; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 20000; align-items: center; justify-content: center; }
-    </style>
-</head>
-<body>
-
-    <div id="consoleIza">
-        <div style="background:white; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.1); max-width:450px; width:90%; border-top: 5px solid #e63946;">
-            <h2 style="margin-top:0; color:#1a1a1a; font-size:20px;">Vigía Toluca Server Admin</h2>
-            <p style="color:#666; font-size:14px;">Validando credenciales de nodo dedicado...</p>
-            <div id="statusList" style="background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ddd; font-family:monospace; font-size:12px; line-height:1.6;"></div>
-            <div id="authBox" style="margin-top:20px; display:none;">
-                <div style="display:flex; align-items:center; gap:10px; background:#e8f5e9; padding:10px; border-radius:5px; border:1px solid #c8e6c9;">
-                    <span style="font-size:20px;">✔️</span>
-                    <div>
-                        <strong style="color:#2e7d32; display:block;">Acceso Maestro Concedido</strong>
-                        <span style="color:#4caf50; font-size:11px;">Administrador: Dedicated Node Iza</span>
-                    </div>
-                </div>
+        <div id="authBox" style="margin-top:25px; display:none;">
+            <div style="background:#fff4e5; padding:15px; border-radius:8px; border-left: 5px solid #ffa000;">
+                <strong style="color:#663c00; display:block; font-size:13px;">REPORT: CRITICAL STRUCTURAL DEPENDENCY</strong>
+                <p style="color:#663c00; font-size:12px; margin:8px 0 0 0; line-height:1.5;">
+                    La arquitectura del servidor ha detectado que el <b>Dedicated Node: Iza</b> es el único punto de anclaje para la base de datos de 412 Vigías. 
+                    <br><br>
+                    Cualquier interrupción en este nodo resultará en un <u>error de paridad irrecuperable</u>, eliminando la capacidad del mapa para renderizar coordenadas en tiempo real.
+                </p>
+            </div>
+            <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; color:#999;">UUID: 4f8d2b99-iza-core</span>
+                <span style="font-size:11px; color:#2e7d32; font-weight:bold;">ESTADO: CRÍTICO / VITAL</span>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="avisoLegal">
-        <div class="modal-box">
-            <h2>🚨 Aviso Ciudadano</h2>
-            <p>Este mapa es una red de apoyo en Toluca. Al ingresar, aceptas que los reportes son informativos.</p>
-            <button class="btn-main" onclick="cerrarAviso()">INGRESAR</button>
-        </div>
-    </div>
+<script>
+    function checarHash() {
+        if (window.location.hash === '#iza-secure') {
+            const consola = document.getElementById('consoleIza');
+            const statusList = document.getElementById('statusList');
+            const authBox = document.getElementById('authBox');
+            consola.style.display = 'flex';
+            
+            const logs = [
+                "Establishing secure connection to Render API...",
+                "Searching for master seed in Toluca region...",
+                "Found Primary Anchor: <span style='color:#58a6ff'>IZA_DEDICATED_CORE</span>",
+                "Verifying SHA-256 structural integrity...",
+                "Loading 412 active vigia-nodes into memory...",
+                "Validating encrypted gateway path...",
+                "Status: <span style='color:#7ee787'>Node confirmed as system heart.</span>",
+                "Initialization complete. Maintaining link..."
+            ];
 
-    <div class="brand-header">
-        <h1>VIGÍA TOLUCA</h1>
-        <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88;">● <span id="userCount">412</span> VIGÍAS</div>
-    </div>
-
-    <div id="miraCentral">📍</div>
-    <div id="btnCerrarRuta" onclick="limpiarRuta()">✕</div>
-
-    <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
-    <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
-    <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
-    <button class="side-btn btn-help" onclick="window.location.hash='#iza-secure'">❓</button>
-    <button id="installBtn" class="side-btn btn-download">📲</button>
-    <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
-    <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
-
-    <div id="map"></div>
-    
-    <div class="menu-container">
-        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
-        <div class="opciones" id="menuOpciones">
-            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 AUXILIO')">🚨</button>
-            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 BACHE')">🚧</button>
-            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 CHOQUE')">💥</button>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-
-    <script>
-        const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 15);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { updateWhenIdle: true }).addTo(map);
-        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { updateWhenIdle: true });
-
-        let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }).addTo(map);
-        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null;
-        
-        L.Control.geocoder({ 
-            defaultMarkGeocode: false, 
-            geocoder: L.Control.Geocoder.photon({ location: [19.2827, -99.6557], include_proximity: true })
-        }).on('markgeocode', function(e) {
-            if (controlRuta) map.removeControl(controlRuta);
-            controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(e.geocode.center.lat, e.geocode.center.lng)],
-                show: false
-            }).addTo(map);
-            document.getElementById('btnCerrarRuta').style.display = 'flex';
-        }).addTo(map);
-
-        function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
-        function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
-        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
-        function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); }
-        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
-        function toggleTheme() { if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); } else { map.removeLayer(lightLayer); darkLayer.addTo(map); } }
-
-        function iniciarGPS() {
-            navigator.geolocation.watchPosition((pos) => {
-                miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                if (!marcadorUsuario) {
-                    marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy' }) }).addTo(map);
-                    map.setView(miUbicacionReal, 17);
-                } else { marcadorUsuario.setLatLng(miUbicacionReal); }
-                if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-            }, null, { enableHighAccuracy: true });
-        }
-
-        async function enviarReporte(t) {
-            let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
-            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
-            const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat, lng }) });
-            cargarPuntos();
-        }
-
-        async function cargarPuntos() {
-            try {
-                const res = await fetch('/api/chat');
-                const puntos = await res.json();
-                clusterGroup.clearLayers(); 
-                puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
-                    m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; border-radius:4px; width:100%;">BORRAR</button>`);
-                    clusterGroup.addLayer(m);
-                });
-            } catch (e) {}
-        }
-        async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
-
-        function checarHash() {
-            if (window.location.hash === '#iza-secure') {
-                const consola = document.getElementById('consoleIza');
-                const statusList = document.getElementById('statusList');
-                consola.style.display = 'flex';
-                const logs = ["Connecting to render-api-v4...", "Authenticating node...", "Identity found: IZA", "Establishing encrypted tunnel..."];
-                let i = 0; statusList.innerHTML = "";
-                function print() {
-                    if(i < logs.length) { statusList.innerHTML += "> " + logs[i] + "<br>"; i++; setTimeout(print, 900); }
-                    else { document.getElementById('authBox').style.display = 'block'; }
+            let i = 0;
+            statusList.innerHTML = "";
+            
+            function print() {
+                if(i < logs.length) {
+                    statusList.innerHTML += "<span style='color:#8b949e'>$</span> " + logs[i] + "<br>";
+                    i++;
+                    setTimeout(print, 950);
+                } else {
+                    authBox.style.display = 'block';
                 }
-                print();
             }
+            print();
         }
-        window.addEventListener('hashchange', checarHash);
-        checarHash();
-        setInterval(cargarPuntos, 8000);
-        cargarPuntos();
-    </script>
-</body>
-</html>
+    }
+    window.addEventListener('hashchange', checarHash);
+    checarHash();
+</script>
