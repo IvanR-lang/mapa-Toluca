@@ -6,20 +6,19 @@
     <title>Vigía Toluca</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
     <style>
-        /* ESTILOS BASE */
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* HEADER */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
-        /* MIRA CENTRAL */
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
@@ -37,7 +36,7 @@
         .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         .btn-sugerencias { position: absolute; bottom: 130px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-        /* MENÚ REPORTE */
+        /* MENU DE REPORTE */
         .menu-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; pointer-events: none; }
         .menu-container > * { pointer-events: auto; }
         .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 14px; }
@@ -46,13 +45,13 @@
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
         .btn-opcion:active { transform: scale(0.9); }
 
-        /* CHAT */
+        /* CHAT DRAWER */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 70vh; }
         .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
         #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
         #chatDrawer.open #chatBody { display: flex; }
-        #chatMessages { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 15px; display: block; } 
+        #chatMessages { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 15px; display: block; }
         
         .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
         .r-civil { background: #6c757d; }
@@ -65,19 +64,10 @@
         #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 20px; color: white; padding: 10px 15px; outline: none; font-size: 14px; }
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* ICONOS DEL MAPA */
-        .custom-marker {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: white;
-            border: 2px solid #333;
-            border-radius: 50%;
-            font-size: 22px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-        }
+        .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
         
-        /* CONSOLA IZA */
+        /* Ocultar elementos estorbosos de rutas */
+        .leaflet-routing-container { display: none; }
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -102,7 +92,7 @@
     <div id="avisoLegal">
         <div class="modal-box">
             <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa es una red de apoyo ciudadana en Toluca. No promovemos actos ilícitos, solo transparencia vial.</p>
+            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
             <button class="btn-main" onclick="irARegistro()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -110,7 +100,7 @@
     <div id="registroNombre" style="display:none;">
         <div class="modal-box">
             <h2>👤 Identidad de Vigía</h2>
-            <p>Elige tu nombre clave para el chat. (Se guardará en este dispositivo).</p>
+            <p>Elige tu nombre clave para el chat.</p>
             <input type="text" id="inputNombreUser" placeholder="Tu nombre..." maxlength="12">
             <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR ID</button>
         </div>
@@ -120,8 +110,10 @@
         <div class="modal-box" style="text-align:left;">
             <h3 style="text-align:center;">📖 Manual de Operaciones</h3>
             <p>🎯 <b>GPS:</b> El mapa te sigue. Toca el botón para recentrar.</p>
-            <p>🔓 <b>Explorar:</b> Abre el candado para reportar lejos.</p>
-            <p>🔊 <b>Voz:</b> Toca la bocina en un reporte para escucharlo.</p>
+            <p>🔓 <b>Explorar:</b> Abre el candado para mover el mapa libremente.</p>
+            <p>🗺️ <b>Rutas:</b> Usa la lupa para buscar y trazar caminos.</p>
+            <p>👮 <b>Radar:</b> Te aviso por voz si hay policía (500m) o auxilio (1km).</p>
+            <p>🗑️ <b>Limpieza:</b> Si un reporte no sirve, pícale y bórralo.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -129,7 +121,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div id="adminCounter" style="font-size: 9px; color: #00ff88; margin-top: 3px; display: none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
+        <div id="adminCounter" style="font-size: 9px; color: #00ff88; margin-top: 3px;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
 
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
@@ -155,18 +147,40 @@
         <div id="chatBody">
             <div id="chatMessages"><div style="text-align:center; padding:20px; color:#666;">Conectando...</div></div>
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Mensaje (No se marca en mapa)...">
+                <input type="text" id="chatInput" placeholder="Mensaje...">
                 <button class="btn-send" onclick="enviarChat()">➤</button>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // --- RUTAS Y BUSCADOR ---
+        L.Control.geocoder({ defaultMarkGeocode: false })
+        .on('markgeocode', function(e) {
+            const bbox = e.geocode.bbox;
+            const poly = L.polygon([
+                bbox.getSouthEast(), bbox.getNorthEast(), bbox.getNorthWest(), bbox.getSouthWest()
+            ]);
+            map.fitBounds(poly.getBounds());
+            if (miUbicacionReal) {
+                L.Routing.control({
+                    waypoints: [
+                        L.latLng(miUbicacionReal[0], miUbicacionReal[1]),
+                        e.geocode.center
+                    ],
+                    language: 'es',
+                    createMarker: function() { return null; }
+                }).addTo(map);
+            }
+        }).addTo(map);
 
         let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
         let siguiendo = true;
@@ -229,7 +243,51 @@
                     map.setView(miUbicacionReal, 16);
                 } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                 if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
+                
+                checarCercaniaPolicial(miUbicacionReal);
+
             }, (err) => { console.log(err); }, { enableHighAccuracy: true });
+        }
+
+        // --- SISTEMA INTELIGENTE DE ALERTAS ---
+        let puntosCache = [];
+        const historialAlertas = {}; 
+
+        function checarCercaniaPolicial(miPos) {
+            if (!puntosCache || puntosCache.length === 0) return;
+
+            puntosCache.forEach(p => {
+                if (!p._id) return;
+                const dist = map.distance(miPos, [p.lat, p.lng]);
+                const id = p._id;
+                
+                if (!historialAlertas[id]) { historialAlertas[id] = 0; }
+
+                // 1. POLICÍA (Máximo 1 alerta, 500m)
+                if (p.texto.includes('👮') && dist < 500) {
+                    if (historialAlertas[id] < 1) {
+                        hablarSistema("Atención. Control policial a 500 metros.");
+                        historialAlertas[id]++; 
+                    }
+                }
+                
+                // 2. AUXILIO (Máximo 2 alertas, 1000m)
+                if (p.texto.includes('🚨') && dist < 1000) {
+                    if (historialAlertas[id] < 2) {
+                        hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación.");
+                        historialAlertas[id]++; 
+                    }
+                }
+            });
+        }
+
+        function hablarSistema(texto) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = "es-MX"; 
+                utterance.rate = 1.5; 
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         function getIconHTML(texto) {
@@ -240,18 +298,8 @@
             return null; 
         }
 
-        function hablar(texto) {
-            if ('speechSynthesis' in window) {
-                // Limpia tags HTML y decodifica entidades básicas
-                const textoLimpio = texto.replace(/<[^>]*>?/gm, '').replace(':', ' dice ');
-                const utterance = new SpeechSynthesisUtterance(textoLimpio);
-                utterance.lang = "es-MX"; 
-                window.speechSynthesis.speak(utterance);
-            } else { alert("Tu navegador no soporta voz."); }
-        }
-
         function confirmarBorrado(id) {
-            if(confirm("¿Seguro que quieres eliminar este reporte?")) { borrarReporte(id); }
+            if(confirm("¿Eliminar reporte?")) { borrarReporte(id); }
         }
 
         async function borrarReporte(id) {
@@ -265,16 +313,14 @@
                 const res = await fetch('/api/chat');
                 if(!res.ok) throw new Error("Server error");
                 const puntos = await res.json();
+                puntosCache = puntos; 
                 
                 clusterGroup.clearLayers();
                 let htmlChat = "";
                 const usuariosActivos = new Set();
                 
                 puntos.reverse().forEach(p => {
-                    // Limpieza crítica para evitar romper el HTML del botón de voz
-                    // Eliminamos HTML y escapamos comillas dobles y simples
-                    const textoParaVoz = p.texto.replace(/<[^>]*>?/gm, '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
-
+                    // FILTRO DE MAPA: SOLO ICONOS
                     const iconoEmoji = getIconHTML(p.texto);
                     
                     if (iconoEmoji) { 
@@ -282,19 +328,21 @@
                             icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) 
                         });
                         
+                        // POPUP CORREGIDO (SIN GLITCH)
                         const popupContent = `
-                            <div style="text-align:center; min-width:150px;">
+                            <div style="text-align:center; min-width:120px;">
                                 <div style="font-size:14px; margin-bottom:5px;">${p.texto}</div>
                                 <small style="color:#666;">${p.fecha}</small>
-                                <div style="margin-top:10px; display:flex; justify-content:center; gap:10px;">
-                                    <button onclick="hablar('${textoParaVoz}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🔊</button>
-                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑️</button>
+                                <div style="margin-top:8px;">
+                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button>
                                 </div>
                             </div>
                         `;
                         marker.bindPopup(popupContent);
                         clusterGroup.addLayer(marker);
                     }
+                    
+                    // CHAT
                     htmlChat += `<div style="margin-bottom:12px; border-bottom:1px solid #222; padding-bottom:8px; line-height:1.4;">${p.texto} <div style="color:#666; font-size:10px; text-align:right; margin-top:2px;">${p.fecha}</div></div>`;
                     
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
@@ -364,11 +412,9 @@
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 document.getElementById('statusListIza').innerHTML = "$ Access: IZA_CORE<br>$ Status: IRREMPLAZABLE";
-                document.getElementById('adminCounter').style.display = 'block';
                 setTimeout(() => { document.getElementById('authBoxIza').style.display = 'block'; }, 800);
             } else {
                 document.getElementById('consoleIza').style.display = 'none';
-                document.getElementById('adminCounter').style.display = 'none';
             }
         }
 
