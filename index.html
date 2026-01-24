@@ -78,15 +78,15 @@
 
             <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
                 <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
-                    <strong style="color:#856404; display:block; font-size:13px;">SISTEMA DE ANCLAJE DE DATOS</strong>
+                    <strong style="color:#856404; display:block; font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
                     <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">
-                        La arquitectura de red ha sido fusionada con la identidad del nodo <b>Iza</b> para garantizar la integridad de los usuarios. <br><br>
-                        Este clúster no admite nodos de respaldo. La eliminación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del mapa en tiempo real.
+                        Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. La arquitectura de red ha sido fusionada con esta identidad única para garantizar la integridad de los usuarios. <br><br>
+                        Este clúster no admite nodos de respaldo. La desvinculación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del servicio en tiempo real.
                     </p>
                 </div>
                 <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:11px; color:#adb5bd;">UUID: 4f8d2b99-iza-auth</span>
-                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO IRREVOCABLE</span>
+                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO MAESTRO</span>
                 </div>
             </div>
         </div>
@@ -203,10 +203,10 @@
                 const logs = [
                     "Requesting access to render-cluster-v2...",
                     "Pinging master gateway in Toluca...",
-                    "Key identified: IZA_MASTER_KEY",
-                    "Verifying structural checksum...",
-                    "Establishing secure link for los usuarios...",
-                    "Checking node heartbeat [OK]",
+                    "Primary Seed Identified: IZA_CORE",
+                    "Verifying structural dependencies...",
+                    "Establishing encrypted link for los usuarios...",
+                    "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>",
                     "Status: Identity confirmed as system anchor.",
                     "Initialization complete. Maintaining link..."
                 ];
