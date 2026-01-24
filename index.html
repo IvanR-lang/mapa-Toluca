@@ -45,6 +45,8 @@
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
         
+        /* Estilo para que el buscador se vea bien en móvil */
+        .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; border: none !important; margin-top: 15px !important; margin-right: 70px !important; }
         .leaflet-routing-container { display: none !important; }
     </style>
 </head>
@@ -115,7 +117,32 @@
 
         let currentMode = 'dark', siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
         
-        // --- REPARACIÓN DE FUNCIONES DE BOTONES ---
+        // --- BUSCADOR REINTEGRADO ---
+        L.Control.geocoder({ 
+            defaultMarkGeocode: false, 
+            placeholder: "¿A dónde vas?",
+            geocoder: L.Control.Geocoder.photon({ location: [19.2827, -99.6557], include_proximity: true })
+        }).on('markgeocode', function(e) {
+            metaCoords = e.geocode.center;
+            let nombreLugar = e.geocode.name;
+            if (nombreLugar.includes("Lic. Adolfo López Mateos")) nombreLugar = "Prepa 1";
+            if (controlRuta) map.removeControl(controlRuta);
+            controlRuta = L.Routing.control({
+                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
+                lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] },
+                createMarker: (i, wp) => {
+                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; font-weight:bold; border:1px solid black; width:70px;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
+                    return null;
+                },
+                show: false
+            }).addTo(map);
+            document.getElementById('btnCerrarRuta').style.display = 'flex';
+            alertarVoz("Iniciando ruta a " + nombreLugar);
+        }).addTo(map);
+
+        function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
+
+        // --- FUNCIONES CORE ---
         function toggleLock() {
             siguiendo = !siguiendo;
             const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
@@ -136,7 +163,6 @@
             if (miUbicacionReal) map.setView(miUbicacionReal, 17); 
         }
 
-        // --- REPARACIÓN DE BORRADO ---
         async function borrarReporte(id) { 
             if (confirm("¿Ya no está?")) { 
                 await fetch(`/api/chat/${id}`, { method: 'DELETE' }); 
@@ -144,7 +170,6 @@
             } 
         }
 
-        // --- PIP Y GPS ---
         async function handlePiP() {
             if ('documentPictureInPicture' in window) {
                 try {
@@ -223,9 +248,16 @@
                 });
             } catch (e) {}
         }
+
+        // INSTALACIÓN
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'flex';
+        });
+
         setInterval(cargarPuntos, 8000);
         cargarPuntos();
     </script>
 </body>
 </html>
-
