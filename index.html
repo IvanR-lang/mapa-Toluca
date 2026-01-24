@@ -31,8 +31,6 @@
         .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
         .btn-help { top: 235px; background: #333; }
         .btn-download { top: 290px; background: #27ae60; color: white; display: none; }
-        
-        /* BOTÓN PiP (Mini Mapa) */
         .btn-pip { top: 345px; background: #9b59b6; color: white; }
 
         .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -47,10 +45,13 @@
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
         
-        .leaflet-routing-container { display: none !important; }
+        /* Video oculto para el Plan B de PiP */
+        #pipVideo { position: fixed; bottom: -100px; width: 1px; height: 1px; pointer-events: none; }
     </style>
 </head>
 <body>
+
+    <video id="pipVideo" muted playsinline></video>
 
     <div id="avisoLegal">
         <div class="modal-box">
@@ -65,7 +66,7 @@
             <h3 style="text-align:center;">📖 ¿Cómo usar Vigía?</h3>
             <p>🎯 <b>Seguimiento:</b> Activa esto para que el mapa se mueva contigo.</p>
             <p>🔓 <b>Modo Libre:</b> Abre el candado para reportar puntos lejanos con la mira 📍.</p>
-            <p>🖼️ <b>Mini Mapa:</b> Usa el botón morado para ver el mapa flotando sobre otras apps.</p>
+            <p>🖼️ <b>Mini Mapa:</b> El botón morado deja el mapa flotando sobre otras apps.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -84,8 +85,7 @@
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
     <button id="installBtn" class="side-btn btn-download" title="Instalar App">📲</button>
-    
-    <button class="side-btn btn-pip" onclick="togglePiP()" title="Mini Mapa">🖼️</button>
+    <button class="side-btn btn-pip" onclick="handlePiP()" title="Mini Mapa">🖼️</button>
 
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
     <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
@@ -117,61 +117,58 @@
 
         let currentMode = 'dark', siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null, alertasEscuchadas = {};
         
-        // --- LÓGICA PiP (DOCUMENT PIP) ---
-        let pipWindow = null;
-
-        async function togglePiP() {
-            if (!('documentPictureInPicture' in window)) {
-                alertarVoz("Tu navegador no soporta el Mini Mapa.");
-                return;
-            }
-
-            if (pipWindow) {
-                pipWindow.close();
-                return;
-            }
-
-            const mapContainer = document.getElementById('map');
-            pipWindow = await window.documentPictureInPicture.requestWindow({
-                width: 350,
-                height: 350,
-            });
-
-            // Copiamos estilos al Mini Mapa
-            [...document.styleSheets].forEach((styleSheet) => {
+        // --- LÓGICA PiP MULTI-COMPATIBLE ---
+        async function handlePiP() {
+            // Intento 1: PiP de Documentos (El más pro)
+            if ('documentPictureInPicture' in window) {
                 try {
-                    const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
-                    const style = document.createElement('style');
-                    style.textContent = cssRules;
-                    pipWindow.document.head.appendChild(style);
-                } catch (e) {}
-            });
+                    const pipWin = await window.documentPictureInPicture.requestWindow({ width: 350, height: 350 });
+                    const mapContainer = document.getElementById('map');
+                    
+                    [...document.styleSheets].forEach(s => {
+                        try {
+                            const style = document.createElement('style');
+                            style.textContent = [...s.cssRules].map(r => r.cssText).join('');
+                            pipWin.document.head.appendChild(style);
+                        } catch(e){}
+                    });
+                    
+                    pipWin.document.body.appendChild(mapContainer);
+                    alertarVoz("Modo ventana activado.");
+                    
+                    pipWin.addEventListener('pagehide', () => {
+                        document.body.appendChild(mapContainer);
+                        map.invalidateSize();
+                    });
+                    return;
+                } catch(e) { console.log("Fallo Document PiP, probando Video PiP"); }
+            }
 
-            pipWindow.document.body.appendChild(mapContainer);
-            alertarVoz("Mini mapa activado.");
-
-            pipWindow.addEventListener('pagehide', () => {
-                document.body.appendChild(mapContainer);
-                pipWindow = null;
-                map.invalidateSize();
-            });
+            // Intento 2: PiP de Video (El Plan B compatible con Android viejo)
+            const video = document.getElementById('pipVideo');
+            if (video.requestPictureInPicture) {
+                try {
+                    // Creamos un stream del mapa para el video
+                    const stream = document.querySelector('canvas')?.captureStream() || null;
+                    if(stream) {
+                        video.srcObject = stream;
+                        await video.play();
+                        await video.requestPictureInPicture();
+                        alertarVoz("Mini mapa activo.");
+                    } else {
+                        alertarVoz("Tu teléfono es incompatible con el mini mapa.");
+                    }
+                } catch(e) { alertarVoz("No se pudo activar el mini mapa."); }
+            } else {
+                alertarVoz("Navegador no compatible.");
+            }
         }
 
-        // --- LÓGICA DE INSTALACIÓN ---
+        // --- INSTALACIÓN ---
         let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'flex';
-        });
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') installBtn.style.display = 'none';
-                deferredPrompt = null;
-            }
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'flex';
         });
 
         // --- FUNCIONES CORE ---
@@ -180,55 +177,18 @@
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleTheme() {
             if (currentMode === 'dark') {
-                map.removeLayer(darkLayer); lightLayer.addTo(map); currentMode = 'light'; document.querySelector('.btn-theme').innerText = '🌙';
+                map.removeLayer(darkLayer); lightLayer.addTo(map); currentMode = 'light';
             } else {
-                map.removeLayer(lightLayer); darkLayer.addTo(map); currentMode = 'dark'; document.querySelector('.btn-theme').innerText = '☀️';
+                map.removeLayer(lightLayer); darkLayer.addTo(map); currentMode = 'dark';
             }
         }
-
-        L.Control.geocoder({ 
-            defaultMarkGeocode: false, 
-            placeholder: "¿A dónde vas?",
-            geocoder: L.Control.Geocoder.photon({ location: [19.2827, -99.6557], include_proximity: true })
-        }).on('markgeocode', function(e) {
-            metaCoords = e.geocode.center;
-            let nombreLugar = e.geocode.name;
-            if (nombreLugar.includes("Lic. Adolfo López Mateos")) nombreLugar = "Prepa 1";
-            if (controlRuta) map.removeControl(controlRuta);
-            controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
-                lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] },
-                createMarker: (i, wp) => {
-                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; font-weight:bold; border:1px solid black; width:70px;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
-                    return null;
-                },
-                show: false
-            }).addTo(map);
-            document.getElementById('btnCerrarRuta').style.display = 'flex';
-            alertarVoz("Iniciando ruta a " + nombreLugar);
-        }).addTo(map);
-
-        function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
-
-        function toggleLock() {
-            siguiendo = !siguiendo;
-            const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
-            if (siguiendo) { lockBtn.innerText = '🔒'; mira.style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); } 
-            else { lockBtn.innerText = '🔓'; mira.style.display = 'block'; }
-        }
-
-        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
 
         function iniciarGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition((pos) => {
                     miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                    if (metaCoords && map.distance(miUbicacionReal, metaCoords) < 35) {
-                        limpiarRuta();
-                        alertarVoz("Has llegado. Gracias por usar Vigía Toluca.");
-                    }
                     if (!marcadorUsuario) {
-                        marcadorUsuario = L.marker(miUbicacionReal, { zIndexOffset: 1000, icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy', iconSize: [20, 20], iconAnchor: [10, 10] }) }).addTo(map);
+                        marcadorUsuario = L.marker(miUbicacionReal, { zIndexOffset: 1000, icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy' }) }).addTo(map);
                         map.setView(miUbicacionReal, 17);
                     } else { marcadorUsuario.setLatLng(miUbicacionReal); }
                     if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
@@ -236,20 +196,16 @@
             }
         }
 
-        function alertarVoz(mensaje) {
-            const speech = new SpeechSynthesisUtterance(mensaje);
-            speech.lang = 'es-MX'; speech.pitch = 1.2; speech.rate = 0.95;
-            window.speechSynthesis.speak(speech);
+        function alertarVoz(m) {
+            const s = new SpeechSynthesisUtterance(m);
+            s.lang = 'es-MX'; s.rate = 0.95;
+            window.speechSynthesis.speak(s);
         }
 
-        async function borrarReporte(id) { if (confirm("¿Borrar reporte?")) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); } }
-
-        async function enviarReporte(tipo) {
-            let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
-            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
+        async function enviarReporte(t) {
+            const c = map.getCenter();
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: tipo, fecha, lat, lng }) });
+            await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat: c.lat, lng: c.lng }) });
             cargarPuntos();
         }
 
@@ -259,12 +215,8 @@
                 const puntos = await res.json();
                 clusterGroup.clearLayers();
                 puntos.forEach(p => {
-                    if (p.texto.includes('CONTROL') && miUbicacionReal) {
-                        const d = map.distance(miUbicacionReal, [p.lat, p.lng]);
-                        if (d < 450 && !alertasEscuchadas[p._id]) { alertarVoz("Atención, control adelante."); alertasEscuchadas[p._id] = true; }
-                    }
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 3px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
-                    m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; margin-top:5px; border-radius:4px; width:100%;">BORRAR</button></div>`);
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
+                    m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small>`);
                     clusterGroup.addLayer(m);
                 });
             } catch (e) {}
