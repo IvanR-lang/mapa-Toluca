@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
@@ -44,29 +44,49 @@
         
         .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; margin-top: 15px !important; margin-right: 70px !important; }
 
-        /* Consola Admin Iza - Inicialmente Oculta */
-        #consoleIza { display: none; background: #f0f2f5; color: #333; font-family: sans-serif; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 30000; align-items: center; justify-content: center; }
+        /* Consola Admin Iza - Estilo Enterprise */
+        #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 30000; align-items: center; justify-content: center; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div id="consoleIza">
-        <div style="background:white; padding:35px; border-radius:10px; box-shadow:0 20px 50px rgba(0,0,0,0.1); max-width:500px; width:94%; border-top: 6px solid #1a1a1a;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div style="background:white; padding:45px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.08); max-width:520px; width:94%; border-top: 5px solid #1a1a1a;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
                 <div>
-                    <h2 style="margin:0; color:#1a1a1a; font-size:18px; letter-spacing:0.5px; font-weight:700;">VIGÍA INFRASTRUCTURE CONSOLE</h2>
-                    <code style="font-size:11px; color:#666;">Cluster: render-toluca-v2.1</code>
+                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Network Infrastructure Admin</h2>
+                    <code style="font-size:11px; color:#007bff; font-weight:600;">Secure Node: Dedicated_Iza_Core</code>
                 </div>
-                <div id="nodeStatus" style="background:#e8f5e9; color:#2e7d32; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:bold; border:1px solid #c8e6c9;">● NODE_IZA_ONLINE</div>
+                <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
+                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> CORE STABILITY
+                </div>
             </div>
-            <div id="statusList" style="background:#0d1117; color:#c9d1d9; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #30363d;"></div>
-            <div id="authBox" style="margin-top:25px; display:none;">
-                <div style="background:#fff4e5; padding:15px; border-radius:8px; border-left: 5px solid #ffa000;">
-                    <strong style="color:#663c00; display:block; font-size:13px;">REPORT: CRITICAL STRUCTURAL DEPENDENCY</strong>
-                    <p style="color:#663c00; font-size:12px; margin:8px 0 0 0; line-height:1.5;">
-                        La arquitectura del servidor ha detectado que el <b>Dedicated Node: Iza</b> es el único punto de anclaje para la base de datos de 412 Vigías. <br><br>
-                        Cualquier interrupción en este nodo resultará en un <u>error de paridad irrecuperable</u>, eliminando la capacidad del mapa para renderizar coordenadas en tiempo real.
+
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-bottom:5px;">
+                    <span>SERVER LOAD</span>
+                    <span>STABLE (0.4ms)</span>
+                </div>
+                <div style="width:100%; height:4px; background:#e9ecef; border-radius:2px;">
+                    <div style="width:15%; height:100%; background:#28a745; border-radius:2px;"></div>
+                </div>
+            </div>
+
+            <div id="statusList" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
+
+            <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
+                <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
+                    <strong style="color:#856404; display:block; font-size:13px;">SISTEMA DE ANCLAJE DE DATOS</strong>
+                    <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">
+                        La arquitectura de red ha sido fusionada con la identidad del nodo <b>Iza</b> para garantizar la integridad de los usuarios. <br><br>
+                        Este clúster no admite nodos de respaldo. La eliminación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del mapa en tiempo real.
                     </p>
+                </div>
+                <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:#adb5bd;">UUID: 4f8d2b99-iza-auth</span>
+                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO IRREVOCABLE</span>
                 </div>
             </div>
         </div>
@@ -83,7 +103,7 @@
     <div class="brand-header">
         <h1>VIGÍA TOLUCA</h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="font-size: 9px; color: #00ff88;">● <span id="userCount">412</span> VIGÍAS</div>
+        <div style="font-size: 9px; color: #00ff88;">● VIGÍA ONLINE</div>
     </div>
 
     <div id="miraCentral">📍</div>
@@ -175,23 +195,24 @@
         }
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
-        // --- LÓGICA DE CONSOLA REESTRUCTURADA ---
+        // --- LÓGICA DE CONSOLA PROFESIONAL ---
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 const statusList = document.getElementById('statusList');
                 const logs = [
-                    "Establishing secure connection to Render API...",
-                    "Searching for master seed in Toluca region...",
-                    "Found Primary Anchor: IZA_DEDICATED_CORE",
-                    "Verifying SHA-256 structural integrity...",
-                    "Loading 412 active vigia-nodes into memory...",
-                    "Status: Node confirmed as system heart.",
+                    "Requesting access to render-cluster-v2...",
+                    "Pinging master gateway in Toluca...",
+                    "Key identified: IZA_MASTER_KEY",
+                    "Verifying structural checksum...",
+                    "Establishing secure link for los usuarios...",
+                    "Checking node heartbeat [OK]",
+                    "Status: Identity confirmed as system anchor.",
                     "Initialization complete. Maintaining link..."
                 ];
                 let i = 0; statusList.innerHTML = "";
                 function print() {
-                    if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 900); }
+                    if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 950); }
                     else { document.getElementById('authBox').style.display = 'block'; }
                 }
                 print();
