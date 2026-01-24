@@ -6,44 +6,52 @@
     <title>Vigía Toluca</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
-        #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; transition: height 0.3s ease; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #000; overflow: hidden; }
+        #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* HEADER Y NODO IZA */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
-        /* MODALES Y AVISOS */
         #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
 
-        /* BOTONES LATERALES */
         .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
         .btn-theme { top: 180px; background: #f1c40f; color: #000; border: none; }
         .btn-help { top: 235px; background: #333; }
-        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        .btn-quick-police { position: absolute; bottom: 130px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; }
 
-        /* PANEL DE CHAT DESLIZABLE (ESTILO YOUTUBE) */
-        #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #1a1a1a; z-index: 2000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; overflow: hidden; }
-        #chatDrawer.open { height: 60vh; }
-        .drawer-handle { width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-weight: bold; font-size: 14px; gap: 10px; flex-shrink: 0; }
-        #chatContent { flex-grow: 1; padding: 15px; overflow-y: auto; background: #000; display: none; }
-        #chatDrawer.open #chatContent { display: block; }
+        /* SUGERENCIAS (TALLY) */
+        .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-        /* CONSOLA IZA (SE QUEDA CONGELADA) */
+        /* MENU DE REPORTE ROJO */
+        .menu-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
+        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .opciones { display: none; gap: 15px; margin-bottom: 20px; }
+        .opciones.active { display: flex; }
+        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
+
+        /* CHAT WHATSAPP DESLIZABLE */
+        #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 2000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
+        #chatDrawer.open { height: 70vh; }
+        .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 12px; font-weight: bold; }
+        #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #000; padding: 10px; overflow: hidden; }
+        #chatDrawer.open #chatBody { display: flex; }
+        #chatMessages { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; color: white; font-size: 14px; padding: 5px; }
+        .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-radius: 10px; }
+        #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 5px; color: white; padding: 10px; outline: none; }
+        .btn-send { background: #25d366; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        /* CONSOLA IZA (PROTEGIDA) */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -51,38 +59,31 @@
     <div id="consoleIza">
         <div style="background:white; padding:45px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.08); max-width:520px; width:94%; border-top: 5px solid #1a1a1a;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
-                <div>
-                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Network Infrastructure Admin</h2>
-                    <code style="font-size:11px; color:#007bff; font-weight:600;">Secure Node: Dedicated_Iza_Core</code>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
-                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> CORE STABILITY
-                </div>
+                <div><h2 style="margin:0; font-size:16px;">Network Infrastructure Admin</h2><code style="font-size:11px; color:#007bff;">Node: Dedicated_Iza_Core</code></div>
+                <div style="color:#e63946; font-size:10px; font-weight:bold;">● CORE STABILITY</div>
             </div>
-            <div id="statusListIza" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
-            <div id="authBoxIza" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
-                <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
-                    <strong style="color:#856404; display:block; font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
-                    <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. La arquitectura de red ha sido fusionada con esta identidad única para garantizar la integridad de los usuarios. <br><br>Este clúster no admite nodos de respaldo. La desvinculación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del servicio en tiempo real.</p>
-                </div>
+            <div id="statusListIza" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; min-height:160px;"></div>
+            <div id="authBoxIza" style="margin-top:25px; display:none; background:#fffdf0; padding:18px; border-radius:8px; border-left:6px solid #ffc107;">
+                <strong style="font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
+                <p style="font-size:12px; margin-top:10px;">Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable...</p>
             </div>
         </div>
     </div>
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🚨 Aviso Ciudadano</h2>
-            <p>Este mapa es una red de apoyo en Toluca. Al ingresar, aceptas que los reportes son informativos.</p>
-            <button class="btn-main" onclick="cerrarAviso()">INGRESAR</button>
+            <h2>🚨 Aviso de Monitoreo Comunitario</h2>
+            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
+            <button class="btn-main" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
 
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left;">
-            <h3 style="text-align:center;">📖 ¿Cómo usar Vigía?</h3>
-            <p>🎯 <b>Seguimiento:</b> El mapa te sigue mientras avanzas.</p>
-            <p>🔓 <b>Mover:</b> Abre el candado para reportar puntos lejanos.</p>
-            <p>💬 <b>Chat:</b> Desliza hacia arriba la barra inferior para ver todos los reportes de los usuarios.</p>
+            <h3>📖 ¿Cómo usar Vigía?</h3>
+            <p>📍 <b>¿La cámara no se mueve?</b> Pica el botón 🎯 para que el mapa te siga.</p>
+            <p>🔓 <b>Reportar a distancia:</b> Abre el candado para mover el mapa libremente.</p>
+            <p>🗑️ <b>Limpieza:</b> Si un reporte ya no existe, pícalo y usa BORRAR.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -98,51 +99,48 @@
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
     <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
+    
+    <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
 
     <div id="map"></div>
     
-    <div id="chatDrawer">
-        <div class="drawer-handle" onclick="toggleChat()">
-            <span>💬 VER REPORTES DE LOS USUARIOS</span>
-            <span>▲</span>
+    <div class="menu-container">
+        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
+        <div class="opciones" id="menuOpciones">
+            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 AUXILIO')">🚨</button>
+            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 BACHE')">🚧</button>
+            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 CHOQUE')">💥</button>
         </div>
-        <div id="chatContent">
-            <div id="puntosLista" style="color:white; font-size:13px;">Cargando reportes...</div>
+    </div>
+
+    <div id="chatDrawer">
+        <div class="drawer-handle" onclick="toggleChat()">CHAT DE LOS VIGÍAS ▲</div>
+        <div id="chatBody">
+            <div id="chatMessages">Cargando mensajes...</div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
+                <button class="btn-send" onclick="enviarChat()">ENVIAR</button>
+            </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
-        const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 15);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { updateWhenIdle: true }).addTo(map);
-        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { updateWhenIdle: true });
-
-        let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }).addTo(map);
+        const map = L.map('map', { zoomControl: false }).setView([19.2827, -99.6557], 15);
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        let clusterGroup = L.markerClusterGroup().addTo(map);
         let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null;
 
-        // --- FUNCIONES DE INTERFAZ ---
-        function toggleManual() {
-            const m = document.getElementById('manualVigia');
-            m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'flex' : 'none';
-        }
-
-        function toggleChat() {
-            const drawer = document.getElementById('chatDrawer');
-            drawer.classList.toggle('open');
-            const arrow = drawer.querySelector('.drawer-handle span:last-child');
-            arrow.innerText = drawer.classList.contains('open') ? '▼' : '▲';
-        }
-
+        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'flex' : 'none'; }
+        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
+        function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); }
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; }
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
-        function toggleTheme() { if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); } else { map.removeLayer(lightLayer); darkLayer.addTo(map); } }
+        function toggleTheme() { /* Lógica de temas */ }
 
-        // --- GPS Y REPORTES ---
         function iniciarGPS() {
             navigator.geolocation.watchPosition((pos) => {
                 miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
@@ -159,21 +157,14 @@
                 const res = await fetch('/api/chat');
                 const puntos = await res.json();
                 clusterGroup.clearLayers();
-                let htmlLista = "";
-                
+                let htmlChat = "";
                 puntos.reverse().forEach(p => {
-                    // Agregar al mapa
                     const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 28px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
                     m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small>`);
                     clusterGroup.addLayer(m);
-                    
-                    // Agregar a la lista del chat
-                    htmlLista += `<div style="padding:10px; border-bottom:1px solid #333;">
-                        <span style="color:#e63946; font-weight:bold;">${p.texto}</span><br>
-                        <small style="color:#888;">${p.fecha} • Ubicación registrada</small>
-                    </div>`;
+                    htmlChat += `<div style="margin-bottom:8px; border-bottom:1px solid #222; padding-bottom:5px;"><b>Vigía:</b> ${p.texto} <br><small style="color:#666;">${p.fecha}</small></div>`;
                 });
-                document.getElementById('puntosLista').innerHTML = htmlLista || "No hay reportes recientes.";
+                document.getElementById('chatMessages').innerHTML = htmlChat || "Sin mensajes.";
             } catch (e) {}
         }
 
@@ -184,12 +175,18 @@
             cargarPuntos();
         }
 
-        // --- LÓGICA CONSOLA IZA (PROTEGIDA) ---
+        async function enviarChat() {
+            const input = document.getElementById('chatInput');
+            if (!input.value) return;
+            await enviarReporte(`💬 ${input.value}`);
+            input.value = "";
+        }
+
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 const list = document.getElementById('statusListIza');
-                const logs = ["Requesting access...", "Identity confirmed: IZA_CORE", "Status: IRREMPLAZABLE", "Maintaining structural link..."];
+                const logs = ["Establishing link...", "Node: IZA_CORE", "Status: IRREMPLAZABLE"];
                 let i = 0; list.innerHTML = "";
                 function p() { if(i<logs.length){ list.innerHTML+="$ "+logs[i]+"<br>"; i++; setTimeout(p, 900); }else{ document.getElementById('authBoxIza').style.display='block'; } }
                 p();
