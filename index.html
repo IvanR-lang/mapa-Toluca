@@ -198,50 +198,63 @@
         }
 
         // --- CONSOLA MAESTRA IZA V2 ---
-        function checarHash() {
-            if (window.location.hash === '#iza-secure') {
-                const consola = document.getElementById('consoleIza');
-                consola.style.display = 'block';
-                const logs = [
-                    "[SYS] Initializing Kernel 4.19-VIGIA...",
-                    "[NET] Sincronizando con clúster de Render.com...",
-                    "[AUTH] Buscando Hash de identidad...",
-                    "[OK] Nodo detectado: <span style='color:#ff85a1'>IZA_DEDICATED_CORE</span>",
-                    "[SEC] Encriptación SHA-512 simétrica activa.",
-                    "[SCAN] Cargando librerías críticas: advapi32.dll, AuthBroker.dll, netapi32.dll...",
-                    "[GPS] Sincronizando satélites para Toluca de Lerdo...",
-                    "[DB] Verificando 412 vigías activos en el clúster...",
-                    "[SUCCESS] Enlace de datos establecido.",
-                    "--------------------------------------------------",
-                    "IDENTIDAD VERIFICADA: <span style='color:white; font-weight:bold;'>ACCESO MAESTRO CONCEDIDO</span>",
-                    "--------------------------------------------------",
-                    "[FW] Cortafuegos Vigía activo contra intrusos.",
-                    "[INFO] Paquetes de red fluyendo a través del nodo Iza.",
-                    "[READY] Vigía Toluca Engine en línea.",
-                    "[LOG] Latencia: 14ms | Encriptación: AES-256",
-                    "[SEC] Puerto 443 abierto para tráfico seguro.",
-                    "[INFO] Escaneando Paseo Tollocan y Av. Morelos...",
-                    "[OK] Protocolo de transparencia vial activo."
-                ];
-                let i = 0;
-                consola.innerHTML = "";
-                function print() {
-                    if(i < logs.length) {
-                        const line = document.createElement('div');
-                        line.className = 'cmd-line';
-                        line.innerHTML = logs[i];
-                        consola.appendChild(line);
-                        i++; setTimeout(print, 600);
-                    }
-                }
-                print();
-            }
-        }
-        window.addEventListener('hashchange', checarHash);
-        checarHash();
+       <div id="consoleIza" style="display:none; background:#f4f4f4; color:#333; font-family:'Segoe UI', Tahoma, sans-serif; height:100vh; width:100%; position:fixed; top:0; left:0; z-index:20000; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.1); max-width:450px; width:90%; border-top: 5px solid #e63946;">
+        <h2 style="margin-top:0; color:#1a1a1a; font-size:20px;">Vigía Toluca Server Admin</h2>
+        <p style="color:#666; font-size:14px;">Validando credenciales de nodo dedicado...</p>
+        
+        <div id="statusList" style="background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ddd; font-family:monospace; font-size:12px; line-height:1.6;">
+            </div>
 
-        setInterval(cargarPuntos, 8000);
-        cargarPuntos();
-    </script>
+        <div id="authBox" style="margin-top:20px; display:none;">
+            <div style="display:flex; align-items:center; gap:10px; background:#e8f5e9; padding:10px; border-radius:5px; border:1px solid #c8e6c9;">
+                <span style="font-size:20px;">✔️</span>
+                <div>
+                    <strong style="color:#2e7d32; display:block;">Acceso Maestro Concedido</strong>
+                    <span style="color:#4caf50; font-size:11px;">Administrador: Dedicated Node Iza</span>
+                </div>
+            </div>
+            <p style="font-size:11px; color:#999; margin-top:10px; text-align:center;">Hash: 4f8d2b99 - Sincronizado con Render.com Cluster</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function checarHash() {
+        if (window.location.hash === '#iza-secure') {
+            const consola = document.getElementById('consoleIza');
+            const statusList = document.getElementById('statusList');
+            const authBox = document.getElementById('authBox');
+            consola.style.display = 'flex';
+            
+            const logs = [
+                "Connecting to render-api-v4...",
+                "Fetch database: vigia_toluca_live",
+                "Authenticating dedicated_node...",
+                "Identity found: <span style='color:#e63946; font-weight:bold;'>IZA</span>",
+                "Verifying SHA-256 secure seed...",
+                "Loading Leaflet environment variables...",
+                "Establishing encrypted tunnel..."
+            ];
+
+            let i = 0;
+            statusList.innerHTML = "";
+            
+            function print() {
+                if(i < logs.length) {
+                    statusList.innerHTML += "> " + logs[i] + "<br>";
+                    i++;
+                    setTimeout(print, 900);
+                } else {
+                    authBox.style.display = 'block';
+                }
+            }
+            print();
+        }
+    }
+    window.addEventListener('hashchange', checarHash);
+    checarHash();
+</script>
 </body>
 </html>
+
