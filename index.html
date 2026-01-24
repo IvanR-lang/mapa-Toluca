@@ -18,14 +18,9 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         
-        .iza-text { 
-            font-size: 10px; 
-            color: #ff85a1; 
-            font-style: italic;
-            text-shadow: 0 0 5px #ff85a1, 0 0 10px #ff85a1; 
-        }
+        .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
 
-        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.8)); }
+        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; }
 
         #avisoLegal, #manualVigia { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
@@ -38,46 +33,49 @@
         .btn-help { top: 235px; background: #333; }
         .btn-download { top: 290px; background: #27ae60; color: white; display: none; }
 
-        .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .btn-sugerencias { position: absolute; bottom: 120px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
 
-        #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; border: 2px solid white; }
-        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; }
+        #btnCerrarRuta { position: absolute; top: 15px; right: 70px; width: 50px; height: 50px; background: #e63946; color: white; border-radius: 50%; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 22px; border: 2px solid white; }
+        .btn-quick-police { position: absolute; bottom: 120px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
-        .user-pos-marker { width: 18px; height: 18px; background: #00d4ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 15px #00d4ff; }
+        .user-pos-marker { width: 18px; height: 18px; background: #00d4ff; border: 3px solid white; border-radius: 50%; }
         .menu-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; }
-        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; }
+        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; }
         .opciones { display: none; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
-        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; }
+        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; }
         
-        .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; border: none !important; margin-top: 15px !important; margin-right: 70px !important; }
+        .leaflet-control-geocoder { border-radius: 10px !important; background: rgba(255,255,255,0.9) !important; margin-top: 15px !important; margin-right: 70px !important; }
         .leaflet-routing-container { display: none !important; }
 
-        /* Consola Iza V2 */
-        #consoleIza { display: none; background: #000; color: #0f0; font-family: monospace; padding: 20px; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 10000; font-size: 13px; overflow-y: hidden; }
-        .cmd-line { margin-bottom: 2px; }
+        /* Consola Profesional Iza */
+        #consoleIza { display: none; background: #f4f4f4; color: #333; font-family: sans-serif; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 20000; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="consoleIza"></div>
-
-    <div id="avisoLegal">
-        <div class="modal-box">
-            <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
-            <button class="btn-main" onclick="cerrarAviso()">ACEPTAR E INGRESAR</button>
+    <div id="consoleIza">
+        <div style="background:white; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.1); max-width:450px; width:90%; border-top: 5px solid #e63946;">
+            <h2 style="margin-top:0; color:#1a1a1a; font-size:20px;">Vigía Toluca Server Admin</h2>
+            <p style="color:#666; font-size:14px;">Validando credenciales de nodo dedicado...</p>
+            <div id="statusList" style="background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ddd; font-family:monospace; font-size:12px; line-height:1.6;"></div>
+            <div id="authBox" style="margin-top:20px; display:none;">
+                <div style="display:flex; align-items:center; gap:10px; background:#e8f5e9; padding:10px; border-radius:5px; border:1px solid #c8e6c9;">
+                    <span style="font-size:20px;">✔️</span>
+                    <div>
+                        <strong style="color:#2e7d32; display:block;">Acceso Maestro Concedido</strong>
+                        <span style="color:#4caf50; font-size:11px;">Administrador: Dedicated Node Iza</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="manualVigia" style="display:none;">
-        <div class="modal-box" style="text-align:left;">
-            <h3 style="text-align:center;">📖 ¿Cómo usar Vigía?</h3>
-            <p>📍 <b>¿La cámara no se mueve?</b> Pica el botón 🎯 para que el mapa te siga mientras avanzas.</p>
-            <p>🔓 <b>Reportar a distancia:</b> Abre el candado para mover el mapa libremente y marcar puntos lejos de ti usando la mira central 📍.</p>
-            <p>🚨 <b>Alertas de voz:</b> La app te avisará solita si hay un peligro o patrulla cerca de tu ruta.</p>
-            <p>🗑️ <b>Limpieza:</b> Si pasas por un reporte que ya no existe, por favor pícalo y usa el botón BORRAR.</p>
-            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
+    <div id="avisoLegal">
+        <div class="modal-box">
+            <h2>🚨 Aviso Ciudadano</h2>
+            <p>Este mapa es una red de apoyo en Toluca. Al ingresar, aceptas que los reportes son informativos.</p>
+            <button class="btn-main" onclick="cerrarAviso()">INGRESAR</button>
         </div>
     </div>
 
@@ -93,9 +91,8 @@
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
-    <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
-    <button id="installBtn" class="side-btn btn-download" title="Instalar App">📲</button>
-
+    <button class="side-btn btn-help" onclick="window.location.hash='#iza-secure'">❓</button>
+    <button id="installBtn" class="side-btn btn-download">📲</button>
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
     <button class="btn-quick-police" onclick="enviarReporte('👮 CONTROL')">👮</button>
 
@@ -117,68 +114,46 @@
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 15);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { updateWhenIdle: true });
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { updateWhenIdle: true }).addTo(map);
         const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { updateWhenIdle: true });
-        darkLayer.addTo(map);
 
-        let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 });
-        map.addLayer(clusterGroup);
-
-        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null, metaCoords = null;
+        let clusterGroup = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }).addTo(map);
+        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null, controlRuta = null;
         
         L.Control.geocoder({ 
             defaultMarkGeocode: false, 
-            placeholder: "¿A dónde vas?",
             geocoder: L.Control.Geocoder.photon({ location: [19.2827, -99.6557], include_proximity: true })
         }).on('markgeocode', function(e) {
-            metaCoords = e.geocode.center;
-            let nombreLugar = e.geocode.name;
             if (controlRuta) map.removeControl(controlRuta);
             controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(metaCoords.lat, metaCoords.lng)],
-                lineOptions: { styles: [{ color: '#0051ff', weight: 8 }] },
-                createMarker: (i, wp) => {
-                    if (i === 1) return L.marker(wp.latLng, { icon: L.divIcon({ html: `<div style="font-size:30px;">🏁</div><div style="background:white; color:black; font-size:10px; padding:2px; border-radius:4px; font-weight:bold; border:1px solid black; width:70px;">${nombreLugar}</div>`, className: 'dummy', iconAnchor: [5, 30] }) });
-                    return null;
-                },
+                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), L.latLng(e.geocode.center.lat, e.geocode.center.lng)],
                 show: false
             }).addTo(map);
             document.getElementById('btnCerrarRuta').style.display = 'flex';
         }).addTo(map);
 
-        function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; metaCoords = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
-
-        function toggleLock() {
-            siguiendo = !siguiendo;
-            const lockBtn = document.getElementById('lockBtn'), mira = document.getElementById('miraCentral');
-            if (siguiendo) { lockBtn.innerText = '🔒'; mira.style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); } 
-            else { lockBtn.innerText = '🔓'; mira.style.display = 'block'; }
-        }
-
+        function limpiarRuta() { if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; document.getElementById('btnCerrarRuta').style.display = 'none'; } }
+        function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
-
-        async function borrarReporte(id) { if (confirm("¿Ya no está?")) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); } }
         function cerrarAviso() { document.getElementById('avisoLegal').style.display = 'none'; iniciarGPS(); }
-        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display === 'none') ? 'flex' : 'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleTheme() { if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); } else { map.removeLayer(lightLayer); darkLayer.addTo(map); } }
 
         function iniciarGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition((pos) => {
-                    miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                    if (!marcadorUsuario) {
-                        marcadorUsuario = L.marker(miUbicacionReal, { zIndexOffset: 1000, icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy' }) }).addTo(map);
-                        map.setView(miUbicacionReal, 17);
-                    } else { marcadorUsuario.setLatLng(miUbicacionReal); }
-                    if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-                }, null, { enableHighAccuracy: true });
-            }
+            navigator.geolocation.watchPosition((pos) => {
+                miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
+                if (!marcadorUsuario) {
+                    marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div class="user-pos-marker"></div>', className: 'dummy' }) }).addTo(map);
+                    map.setView(miUbicacionReal, 17);
+                } else { marcadorUsuario.setLatLng(miUbicacionReal); }
+                if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
+            }, null, { enableHighAccuracy: true });
         }
 
         async function enviarReporte(t) {
             let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
+            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } 
+            else { if (miUbicacionReal) { lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; } else return; }
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: t, fecha, lat, lng }) });
             cargarPuntos();
@@ -190,71 +165,32 @@
                 const puntos = await res.json();
                 clusterGroup.clearLayers(); 
                 puntos.forEach(p => {
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0 0 3px white);">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
-                    m.bindPopup(`<div style="text-align:center; color:black;"><b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:8px; margin-top:8px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">BORRAR</button></div>`);
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: `<div style="font-size: 32px;">${p.texto.split(' ')[0]}</div>`, className: 'dummy' }) });
+                    m.bindPopup(`<b>${p.texto}</b><br><small>${p.fecha}</small><br><button onclick="borrarReporte('${p._id}')" style="background:#e63946; color:white; border:none; padding:5px; border-radius:4px; width:100%;">BORRAR</button>`);
                     clusterGroup.addLayer(m);
                 });
             } catch (e) {}
         }
+        async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
-        // --- CONSOLA MAESTRA IZA V2 ---
-       <div id="consoleIza" style="display:none; background:#f4f4f4; color:#333; font-family:'Segoe UI', Tahoma, sans-serif; height:100vh; width:100%; position:fixed; top:0; left:0; z-index:20000; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-    <div style="background:white; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.1); max-width:450px; width:90%; border-top: 5px solid #e63946;">
-        <h2 style="margin-top:0; color:#1a1a1a; font-size:20px;">Vigía Toluca Server Admin</h2>
-        <p style="color:#666; font-size:14px;">Validando credenciales de nodo dedicado...</p>
-        
-        <div id="statusList" style="background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ddd; font-family:monospace; font-size:12px; line-height:1.6;">
-            </div>
-
-        <div id="authBox" style="margin-top:20px; display:none;">
-            <div style="display:flex; align-items:center; gap:10px; background:#e8f5e9; padding:10px; border-radius:5px; border:1px solid #c8e6c9;">
-                <span style="font-size:20px;">✔️</span>
-                <div>
-                    <strong style="color:#2e7d32; display:block;">Acceso Maestro Concedido</strong>
-                    <span style="color:#4caf50; font-size:11px;">Administrador: Dedicated Node Iza</span>
-                </div>
-            </div>
-            <p style="font-size:11px; color:#999; margin-top:10px; text-align:center;">Hash: 4f8d2b99 - Sincronizado con Render.com Cluster</p>
-        </div>
-    </div>
-</div>
-
-<script>
-    function checarHash() {
-        if (window.location.hash === '#iza-secure') {
-            const consola = document.getElementById('consoleIza');
-            const statusList = document.getElementById('statusList');
-            const authBox = document.getElementById('authBox');
-            consola.style.display = 'flex';
-            
-            const logs = [
-                "Connecting to render-api-v4...",
-                "Fetch database: vigia_toluca_live",
-                "Authenticating dedicated_node...",
-                "Identity found: <span style='color:#e63946; font-weight:bold;'>IZA</span>",
-                "Verifying SHA-256 secure seed...",
-                "Loading Leaflet environment variables...",
-                "Establishing encrypted tunnel..."
-            ];
-
-            let i = 0;
-            statusList.innerHTML = "";
-            
-            function print() {
-                if(i < logs.length) {
-                    statusList.innerHTML += "> " + logs[i] + "<br>";
-                    i++;
-                    setTimeout(print, 900);
-                } else {
-                    authBox.style.display = 'block';
+        function checarHash() {
+            if (window.location.hash === '#iza-secure') {
+                const consola = document.getElementById('consoleIza');
+                const statusList = document.getElementById('statusList');
+                consola.style.display = 'flex';
+                const logs = ["Connecting to render-api-v4...", "Authenticating node...", "Identity found: IZA", "Establishing encrypted tunnel..."];
+                let i = 0; statusList.innerHTML = "";
+                function print() {
+                    if(i < logs.length) { statusList.innerHTML += "> " + logs[i] + "<br>"; i++; setTimeout(print, 900); }
+                    else { document.getElementById('authBox').style.display = 'block'; }
                 }
+                print();
             }
-            print();
         }
-    }
-    window.addEventListener('hashchange', checarHash);
-    checarHash();
-</script>
+        window.addEventListener('hashchange', checarHash);
+        checarHash();
+        setInterval(cargarPuntos, 8000);
+        cargarPuntos();
+    </script>
 </body>
 </html>
-
