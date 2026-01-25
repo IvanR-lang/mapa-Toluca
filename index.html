@@ -35,8 +35,8 @@
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
-        /* BOTÓN INSTALAR APP (NUEVO) */
-        #btnInstall { top: 235px; background: #007bff; display: none; } 
+        .btn-theme { top: 235px; background: #f1c40f; color: #000; border: none; } /* Botón Tema */
+        #btnInstall { top: 290px; background: #007bff; display: none; } /* Botón PWA bajó un lugar */
         
         #btnCancelarRuta { 
             position: absolute; top: 80px; left: 10px; 
@@ -50,7 +50,6 @@
         .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         .btn-sugerencias { position: absolute; bottom: 130px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-        /* MENU DE REPORTE */
         .menu-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; pointer-events: none; }
         .menu-container > * { pointer-events: auto; }
         .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 14px; }
@@ -58,7 +57,6 @@
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
 
-        /* CHAT DRAWER */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 70vh; }
         .drawer-handle { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
@@ -80,7 +78,6 @@
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
         .leaflet-routing-container { display: none; } 
 
-        /* CONSOLA IZA */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -107,13 +104,18 @@
                 <div style="margin-top:10px; font-size:9px; color:#00ff88; font-weight:bold; text-align:right;">● <span id="contadorVigiasAdmin">0</span> VIGÍAS ACTIVOS EN CLÚSTER</div>
             </div>
             <div id="statusList" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
+            
             <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
                 <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
                     <strong style="color:#856404; display:block; font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
                     <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">
                         Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. <br><br>
-                        Este clúster no admite nodos de respaldo.
+                        Este clúster no admite nodos de respaldo. La desvinculación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del servicio en tiempo real.
                     </p>
+                </div>
+                <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:#adb5bd;">UUID: 4f8d2b99-iza-auth</span>
+                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO MAESTRO</span>
                 </div>
             </div>
         </div>
@@ -139,27 +141,11 @@
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
             <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
-            
-            <p><b>1. ¿CÓMO NAVEGAR? (Rutas)</b><br>
-            Toca la <b>lupa 🔍</b> (arriba derecha). Escribe tu destino (ej: "Prepa 1").<br>
-            Confirma con "✅ INICIAR RUTA" y sigue la línea azul.</p>
-
-            <p><b>2. BOTONES DEL MAPA</b><br>
-            🎯 <b>Centrar:</b> Te regresa a tu ubicación actual.<br>
-            🔒 <b>Candado Cerrado:</b> El mapa te sigue automáticamente.<br>
-            🔓 <b>Candado Abierto:</b> Puedes mover el mapa libremente para ver otras zonas.</p>
-
-            <p><b>3. ¿CÓMO REPORTAR?</b><br>
-            Toca el botón <b>🛰️ GENERAR REPORTE</b> y elige:<br>
-            🚨 <b>Auxilio:</b> Si necesitas ayuda urgente.<br>
-            💥 <b>Choque:</b> Accidentes viales.<br>
-            🚧 <b>Bache:</b> Mal estado del camino.<br>
-            👮 <b>Policía:</b> Usa el botón azul rápido.</p>
-
-            <p><b>4. ALERTAS DE VOZ</b><br>
-            El celular te hablará solo si te acercas a un peligro o retén. ¡Sube el volumen!</p>
-
-            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO, A RODAR!</button>
+            <p><b>1. ¿CÓMO NAVEGAR? (Rutas)</b><br>Toca la <b>lupa 🔍</b>. Escribe destino. Confirma con "✅ INICIAR".</p>
+            <p><b>2. BOTONES</b><br>🎯 <b>Centrar:</b> Tu ubicación.<br>🔒 <b>Candado:</b> Seguir/Libre.<br>☀️/🌙 <b>Tema:</b> Día/Noche.</p>
+            <p><b>3. REPORTAR</b><br>Usa <b>🛰️ GENERAR REPORTE</b> para avisar de peligros.</p>
+            <p><b>4. ALERTAS</b><br>Voz automática si hay policía o auxilio cerca.</p>
+            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
 
@@ -173,6 +159,7 @@
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
+    <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn" id="btnInstall" onclick="instalarApp()">📲</button>
     
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
@@ -207,23 +194,35 @@
 
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
+        
+        // CAPAS DE MAPA (Dark y Light)
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 
-        // --- LÓGICA DE INSTALACIÓN PWA ---
+        function toggleTheme() {
+            if (map.hasLayer(darkLayer)) {
+                map.removeLayer(darkLayer);
+                lightLayer.addTo(map);
+                document.querySelector('.btn-theme').innerText = "🌙";
+            } else {
+                map.removeLayer(lightLayer);
+                darkLayer.addTo(map);
+                document.querySelector('.btn-theme').innerText = "☀️";
+            }
+        }
+
+        // --- LÓGICA PWA ---
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             document.getElementById('btnInstall').style.display = 'flex';
         });
-
         async function instalarApp() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('btnInstall').style.display = 'none';
-                }
+                if (outcome === 'accepted') { document.getElementById('btnInstall').style.display = 'none'; }
                 deferredPrompt = null;
             }
         }
