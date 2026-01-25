@@ -15,7 +15,6 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* HEADER */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
@@ -34,6 +33,16 @@
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
         
+        /* BOTÓN CANCELAR RUTA (NUEVO DISEÑO) */
+        #btnCancelarRuta { 
+            position: absolute; top: 80px; left: 10px; 
+            background: #dc3545; color: white; 
+            padding: 10px 15px; border-radius: 30px; 
+            font-weight: bold; font-size: 14px; 
+            z-index: 2000; display: none; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid white; cursor: pointer; 
+        }
+
         .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         .btn-sugerencias { position: absolute; bottom: 130px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
@@ -65,9 +74,9 @@
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
-        .leaflet-routing-container { display: none; }
+        .leaflet-routing-container { display: none; } /* Ocultar caja blanca de instrucciones */
 
-        /* CONSOLA IZA PROFESIONAL */
+        /* CONSOLA IZA */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -88,33 +97,19 @@
                     <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> CORE STABILITY
                 </div>
             </div>
-
             <div style="margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-bottom:5px;">
-                    <span>SERVER LOAD</span>
-                    <span>STABLE (0.4ms)</span>
-                </div>
-                <div style="width:100%; height:4px; background:#e9ecef; border-radius:2px;">
-                    <div style="width:15%; height:100%; background:#28a745; border-radius:2px;"></div>
-                </div>
-                <div style="margin-top:10px; font-size:9px; color:#00ff88; font-weight:bold; text-align:right;">
-                    ● <span id="contadorVigiasAdmin">0</span> VIGÍAS ACTIVOS EN CLÚSTER
-                </div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-bottom:5px;"><span>SERVER LOAD</span><span>STABLE (0.4ms)</span></div>
+                <div style="width:100%; height:4px; background:#e9ecef; border-radius:2px;"><div style="width:15%; height:100%; background:#28a745; border-radius:2px;"></div></div>
+                <div style="margin-top:10px; font-size:9px; color:#00ff88; font-weight:bold; text-align:right;">● <span id="contadorVigiasAdmin">0</span> VIGÍAS ACTIVOS EN CLÚSTER</div>
             </div>
-
             <div id="statusList" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
-
             <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
                 <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
                     <strong style="color:#856404; display:block; font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
                     <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">
-                        Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. La arquitectura de red ha sido fusionada con esta identidad única para garantizar la integridad de los usuarios. <br><br>
-                        Este clúster no admite nodos de respaldo. La desvinculación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del servicio en tiempo real.
+                        Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. <br><br>
+                        Este clúster no admite nodos de respaldo.
                     </p>
-                </div>
-                <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; color:#adb5bd;">UUID: 4f8d2b99-iza-auth</span>
-                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO MAESTRO</span>
                 </div>
             </div>
         </div>
@@ -122,8 +117,8 @@
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🚨 Aviso de Monitoreo Comunitario</h2>
-            <p>Este mapa es una red de apoyo ciudadana en Toluca. Al ingresar, aceptas que los reportes son informativos. No promovemos actos ilícitos, solo transparencia vial.</p>
+            <h2>🚨 Aviso de Monitoreo</h2>
+            <p>Red ciudadana en Toluca. Reportes informativos. No promovemos ilícitos.</p>
             <button class="btn-main" onclick="irARegistro()">ACEPTAR E INGRESAR</button>
         </div>
     </div>
@@ -131,7 +126,7 @@
     <div id="registroNombre" style="display:none;">
         <div class="modal-box">
             <h2>👤 Identidad de Vigía</h2>
-            <p>Elige tu nombre clave para el chat.</p>
+            <p>Elige tu nombre clave.</p>
             <input type="text" id="inputNombreUser" placeholder="Tu nombre..." maxlength="12">
             <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR ID</button>
         </div>
@@ -140,11 +135,9 @@
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left;">
             <h3 style="text-align:center;">📖 Manual de Operaciones</h3>
-            <p>🎯 <b>GPS:</b> El mapa te sigue. Toca el botón para recentrar.</p>
-            <p>🔓 <b>Explorar:</b> Abre el candado para mover el mapa libremente.</p>
-            <p>🗺️ <b>Rutas:</b> Usa la lupa para buscar y trazar caminos.</p>
-            <p>👮 <b>Radar:</b> Te aviso por voz si hay policía (500m) o auxilio (1km).</p>
-            <p>🗑️ <b>Limpieza:</b> Si un reporte no sirve, pícale y bórralo.</p>
+            <p>🎯 <b>GPS:</b> El mapa te sigue.</p>
+            <p>🗺️ <b>Rutas:</b> Busca destino -> Confirma -> Navega.</p>
+            <p>👮 <b>Radar:</b> Alertas de voz por proximidad.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -155,10 +148,10 @@
         <div style="display:none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
 
+    <button id="btnCancelarRuta" onclick="limpiarRuta()">✕ CANCELAR RUTA</button>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
-    
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
 
@@ -193,77 +186,136 @@
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // --- BUSCADOR PHOTON (MEJORADO) ---
-        var geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Buscar (ej: Prepa 1)...",
-            geocoder: L.Control.Geocoder.photon()
-        })
-        .on('markgeocode', function(e) {
-            var bbox = e.geocode.bbox;
-            var poly = L.polygon([bbox.getSouthEast(), bbox.getNorthEast(), bbox.getNorthWest(), bbox.getSouthWest()]);
-            map.fitBounds(poly.getBounds());
-            if (miUbicacionReal) {
-                L.Routing.control({
-                    waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), e.geocode.center],
-                    language: 'es',
-                    createMarker: function() { return null; },
-                    lineOptions: { styles: [{color: '#00d4ff', opacity: 0.8, weight: 6}] }
-                }).addTo(map);
-            }
-        })
-        .addTo(map);
-
         let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
         let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null;
         let miNombre = localStorage.getItem('vigiaNombre') || "";
         let misReportes = parseInt(localStorage.getItem('vigiaConteo')) || 0;
         let puntosCache = [];
         const historialAlertas = {}; 
+        
+        // VARIABLES DE NAVEGACIÓN
+        let controlRuta = null;
+        let destinoFinal = null;
+        let marcadorDestinoTemp = null;
 
-        function irARegistro() {
-            document.getElementById('avisoLegal').style.display = 'none';
-            if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); }
+        // --- BUSCADOR PHOTON CON CONFIRMACIÓN ---
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: "Buscar destino (ej: Prepa 1)...",
+            geocoder: L.Control.Geocoder.photon()
+        })
+        .on('markgeocode', function(e) {
+            // 1. Limpiar búsquedas previas
+            if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
+            
+            // 2. Poner pin temporal para confirmar
+            var center = e.geocode.center;
+            marcadorDestinoTemp = L.marker(center).addTo(map);
+            map.setView(center, 16);
+
+            // 3. Popup de confirmación
+            var popupHtml = `
+                <div style="text-align:center; padding:5px;">
+                    <strong>¿Ir a esta ubicación?</strong><br>
+                    <small>${e.geocode.name}</small><br>
+                    <div style="margin-top:10px;">
+                        <button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ INICIAR RUTA</button>
+                    </div>
+                </div>
+            `;
+            marcadorDestinoTemp.bindPopup(popupHtml).openPopup();
+        })
+        .addTo(map);
+
+        // --- FUNCIÓN INICIAR NAVEGACIÓN ---
+        function iniciarNavegacion(lat, lng) {
+            if (!miUbicacionReal) return alert("Esperando señal GPS para trazar ruta...");
+            
+            // Limpiar pin temporal
+            if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
+            
+            destinoFinal = L.latLng(lat, lng);
+            
+            // Crear control de ruta
+            if (controlRuta) map.removeControl(controlRuta);
+            
+            controlRuta = L.Routing.control({
+                waypoints: [
+                    L.latLng(miUbicacionReal[0], miUbicacionReal[1]), // Inicio dinámico
+                    destinoFinal
+                ],
+                language: 'es',
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                lineOptions: { styles: [{color: '#00d4ff', opacity: 0.8, weight: 6}] },
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                createMarker: function(i, wp, nWps) {
+                    // Marcador personalizado solo para el DESTINO (último punto)
+                    if (i === nWps - 1) {
+                        return L.marker(wp.latLng, {
+                            icon: L.divIcon({ html: '🏁', className: 'custom-marker', iconSize: [30, 30] })
+                        });
+                    }
+                    return null; // Sin marcador de inicio (usamos el punto azul)
+                }
+            }).addTo(map);
+
+            // Mostrar botón cancelar
+            document.getElementById('btnCancelarRuta').style.display = 'block';
+            activarSeguimiento();
         }
 
-        function guardarIdentidad() {
-            let n = document.getElementById('inputNombreUser').value.trim();
-            if (n.length < 3) return alert("Nombre muy corto.");
-            if (n.toLowerCase() === "iza") {
-                if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); }
-            } else if (["admin", "root"].includes(n.toLowerCase())) { return alert("Nombre no permitido."); }
-            miNombre = n;
-            localStorage.setItem('vigiaNombre', n);
-            document.getElementById('registroNombre').style.display = 'none';
-            iniciarGPS();
+        function limpiarRuta() {
+            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; }
+            if (marcadorDestinoTemp) { map.removeLayer(marcadorDestinoTemp); marcadorDestinoTemp = null; }
+            destinoFinal = null;
+            document.getElementById('btnCancelarRuta').style.display = 'none';
         }
 
-        function obtenerRango(pts) {
-            if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' };
-            if (pts >= 30) return { t: 'Élite', c: 'r-elite' };
-            if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' };
-            if (pts >= 5) return { t: 'Activo', c: 'r-activo' };
-            return { t: 'Civil', c: 'r-civil' };
+        // --- GEOLOCALIZACIÓN Y LÓGICA DE AVANCE ---
+        function iniciarGPS() {
+            if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
+            navigator.geolocation.watchPosition((pos) => {
+                miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
+                
+                // Actualizar punto azul
+                if (!marcadorUsuario) {
+                    marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', className: 'user-dot', iconSize: [20, 20] }) }).addTo(map);
+                    map.setView(miUbicacionReal, 16);
+                } else { marcadorUsuario.setLatLng(miUbicacionReal); }
+                
+                if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
+                
+                // ACTUALIZAR RUTA DINÁMICA
+                if (controlRuta && destinoFinal) {
+                    // Mover el punto de inicio de la ruta a la ubicación actual
+                    controlRuta.setWaypoints([
+                        L.latLng(miUbicacionReal[0], miUbicacionReal[1]),
+                        destinoFinal
+                    ]);
+
+                    // Checar llegada (menos de 30 metros)
+                    const dist = map.distance(miUbicacionReal, destinoFinal);
+                    if (dist < 30) {
+                        hablarSistema("Has llegado a tu destino.");
+                        limpiarRuta();
+                    }
+                }
+
+                checarCercaniaPolicial(miUbicacionReal);
+            }, (err) => { console.log(err); }, { enableHighAccuracy: true });
         }
 
+        // --- SISTEMA BASICO ---
+        function irARegistro() { document.getElementById('avisoLegal').style.display = 'none'; if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); } }
+        function guardarIdentidad() { let n = document.getElementById('inputNombreUser').value.trim(); if (n.length < 3) return alert("Nombre muy corto."); if (n.toLowerCase() === "iza") { if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); } } miNombre = n; localStorage.setItem('vigiaNombre', n); document.getElementById('registroNombre').style.display = 'none'; iniciarGPS(); }
+        function obtenerRango(pts) { if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' }; if (pts >= 30) return { t: 'Élite', c: 'r-elite' }; if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' }; if (pts >= 5) return { t: 'Activo', c: 'r-activo' }; return { t: 'Civil', c: 'r-civil' }; }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
         function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
-
-        function iniciarGPS() {
-            if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
-            navigator.geolocation.watchPosition((pos) => {
-                miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                if (!marcadorUsuario) {
-                    marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', className: 'user-dot', iconSize: [20, 20] }) }).addTo(map);
-                    map.setView(miUbicacionReal, 16);
-                } else { marcadorUsuario.setLatLng(miUbicacionReal); }
-                if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-                checarCercaniaPolicial(miUbicacionReal);
-            }, (err) => { console.log(err); }, { enableHighAccuracy: true });
-        }
 
         function checarCercaniaPolicial(miPos) {
             if (!puntosCache || puntosCache.length === 0) return;
@@ -271,42 +323,14 @@
                 if (!p._id) return;
                 const dist = map.distance(miPos, [p.lat, p.lng]);
                 const id = p._id;
-                
                 if (!historialAlertas[id]) { historialAlertas[id] = 0; }
-
-                if (p.texto.includes('👮') && dist < 500) {
-                    if (historialAlertas[id] < 1) {
-                        hablarSistema("Atención. Control policial a 500 metros.");
-                        historialAlertas[id]++; 
-                    }
-                }
-                
-                if (p.texto.includes('🚨') && dist < 1000) {
-                    if (historialAlertas[id] < 2) {
-                        hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación.");
-                        historialAlertas[id]++; 
-                    }
-                }
+                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Atención. Control policial a 500 metros."); historialAlertas[id]++; } }
+                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación."); historialAlertas[id]++; } }
             });
         }
 
-        function hablarSistema(texto) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(texto);
-                utterance.lang = "es-MX"; 
-                utterance.rate = 1.5; 
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        function getIconHTML(texto) {
-            if (texto.includes('🚨')) return '🚨';
-            if (texto.includes('🚧')) return '🚧';
-            if (texto.includes('💥')) return '💥';
-            if (texto.includes('👮')) return '👮';
-            return null; 
-        }
-
+        function hablarSistema(texto) { if ('speechSynthesis' in window) { const utterance = new SpeechSynthesisUtterance(texto); utterance.lang = "es-MX"; utterance.rate = 1.5; window.speechSynthesis.speak(utterance); } }
+        function getIconHTML(texto) { if (texto.includes('🚨')) return '🚨'; if (texto.includes('🚧')) return '🚧'; if (texto.includes('💥')) return '💥'; if (texto.includes('👮')) return '👮'; return null; }
         function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
@@ -324,7 +348,6 @@
                     const iconoEmoji = getIconHTML(p.texto);
                     if (iconoEmoji) { 
                         const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) });
-                        // POPUP SIN ERRORES VISUALES
                         marker.bindPopup(`<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
                         clusterGroup.addLayer(marker);
                     }
@@ -335,48 +358,29 @@
 
                 document.getElementById('chatMessages').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Sin reportes.</div>";
                 document.getElementById('contadorVigias').innerText = usuariosActivos.size;
-                // ACTUALIZAR CONTADOR ADMIN
                 document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
 
         function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
-
-        async function enviarReporte(textoBase) {
+        async function enviarReporte(t) {
             let lat, lng;
             if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
-            const mensajeFinal = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${textoBase}`;
-            const fechaHora = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            try {
-                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: mensajeFinal, fecha: fechaHora, lat: lat, lng: lng }) });
-                cargarPuntos();
-                document.getElementById('chatInput').value = "";
-            } catch (e) { alert("Error de envío."); }
+            const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
+            const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            try { await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng }) }); cargarPuntos(); document.getElementById('chatInput').value = ""; } catch (e) { alert("Error."); }
         }
-
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
         function checarHash() {
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
                 const statusList = document.getElementById('statusList');
-                const logs = [
-                    "Requesting access to render-cluster-v2...",
-                    "Pinging master gateway in Toluca...",
-                    "Primary Seed Identified: IZA_CORE",
-                    "Verifying structural dependencies...",
-                    "Establishing encrypted link for los usuarios...",
-                    "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>",
-                    "Status: Identity confirmed as system anchor.",
-                    "Initialization complete. Maintaining link..."
-                ];
+                const logs = ["Requesting access...", "Pinging master gateway...", "Primary Seed Identified: IZA_CORE", "Verifying dependencies...", "Establishing encrypted link...", "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>", "Identity confirmed.", "Initialization complete."];
                 let i = 0; statusList.innerHTML = "";
-                function print() {
-                    if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 850); }
-                    else { document.getElementById('authBox').style.display = 'block'; }
-                }
+                function print() { if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 850); } else { document.getElementById('authBox').style.display = 'block'; } }
                 print();
             } else { document.getElementById('consoleIza').style.display = 'none'; }
         }
