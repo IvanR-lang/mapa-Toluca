@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#000000">
     <title>Vigía Toluca</title>
     
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Vigia Toluca","short_name":"Vigia","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/124/124034.png","sizes":"192x192","type":"image/png"}]}' />
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
@@ -32,6 +35,8 @@
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
+        /* BOTÓN INSTALAR APP (NUEVO) */
+        #btnInstall { top: 235px; background: #007bff; display: none; } 
         
         #btnCancelarRuta { 
             position: absolute; top: 80px; left: 10px; 
@@ -168,6 +173,8 @@
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
+    <button class="side-btn" id="btnInstall" onclick="instalarApp()">📲</button>
+    
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
 
@@ -201,6 +208,25 @@
     <script>
         const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // --- LÓGICA DE INSTALACIÓN PWA ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('btnInstall').style.display = 'flex';
+        });
+
+        async function instalarApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('btnInstall').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        }
 
         let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
         let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null;
