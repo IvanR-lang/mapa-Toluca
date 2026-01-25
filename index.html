@@ -33,7 +33,6 @@
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
         
-        /* BOTÓN CANCELAR RUTA (NUEVO DISEÑO) */
         #btnCancelarRuta { 
             position: absolute; top: 80px; left: 10px; 
             background: #dc3545; color: white; 
@@ -74,7 +73,7 @@
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
-        .leaflet-routing-container { display: none; } /* Ocultar caja blanca de instrucciones */
+        .leaflet-routing-container { display: none; } 
 
         /* CONSOLA IZA */
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
@@ -133,12 +132,29 @@
     </div>
 
     <div id="manualVigia" style="display:none;">
-        <div class="modal-box" style="text-align:left;">
-            <h3 style="text-align:center;">📖 Manual de Operaciones</h3>
-            <p>🎯 <b>GPS:</b> El mapa te sigue.</p>
-            <p>🗺️ <b>Rutas:</b> Busca destino -> Confirma -> Navega.</p>
-            <p>👮 <b>Radar:</b> Alertas de voz por proximidad.</p>
-            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
+        <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
+            <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
+            
+            <p><b>1. ¿CÓMO NAVEGAR? (Rutas)</b><br>
+            Toca la <b>lupa 🔍</b> (arriba derecha). Escribe tu destino (ej: "Prepa 1").<br>
+            Confirma con "✅ INICIAR RUTA" y sigue la línea azul.</p>
+
+            <p><b>2. BOTONES DEL MAPA</b><br>
+            🎯 <b>Centrar:</b> Te regresa a tu ubicación actual.<br>
+            🔒 <b>Candado Cerrado:</b> El mapa te sigue automáticamente.<br>
+            🔓 <b>Candado Abierto:</b> Puedes mover el mapa libremente para ver otras zonas.</p>
+
+            <p><b>3. ¿CÓMO REPORTAR?</b><br>
+            Toca el botón <b>🛰️ GENERAR REPORTE</b> y elige:<br>
+            🚨 <b>Auxilio:</b> Si necesitas ayuda urgente.<br>
+            💥 <b>Choque:</b> Accidentes viales.<br>
+            🚧 <b>Bache:</b> Mal estado del camino.<br>
+            👮 <b>Policía:</b> Usa el botón azul rápido.</p>
+
+            <p><b>4. ALERTAS DE VOZ</b><br>
+            El celular te hablará solo si te acercas a un peligro o retén. ¡Sube el volumen!</p>
+
+            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO, A RODAR!</button>
         </div>
     </div>
 
@@ -193,57 +209,33 @@
         let puntosCache = [];
         const historialAlertas = {}; 
         
-        // VARIABLES DE NAVEGACIÓN
         let controlRuta = null;
         let destinoFinal = null;
         let marcadorDestinoTemp = null;
 
-        // --- BUSCADOR PHOTON CON CONFIRMACIÓN ---
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
             placeholder: "Buscar destino (ej: Prepa 1)...",
             geocoder: L.Control.Geocoder.photon()
         })
         .on('markgeocode', function(e) {
-            // 1. Limpiar búsquedas previas
             if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
-            
-            // 2. Poner pin temporal para confirmar
             var center = e.geocode.center;
             marcadorDestinoTemp = L.marker(center).addTo(map);
             map.setView(center, 16);
-
-            // 3. Popup de confirmación
-            var popupHtml = `
-                <div style="text-align:center; padding:5px;">
-                    <strong>¿Ir a esta ubicación?</strong><br>
-                    <small>${e.geocode.name}</small><br>
-                    <div style="margin-top:10px;">
-                        <button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ INICIAR RUTA</button>
-                    </div>
-                </div>
-            `;
+            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Ir a esta ubicación?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ INICIAR RUTA</button></div></div>`;
             marcadorDestinoTemp.bindPopup(popupHtml).openPopup();
         })
         .addTo(map);
 
-        // --- FUNCIÓN INICIAR NAVEGACIÓN ---
         function iniciarNavegacion(lat, lng) {
             if (!miUbicacionReal) return alert("Esperando señal GPS para trazar ruta...");
-            
-            // Limpiar pin temporal
             if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
-            
             destinoFinal = L.latLng(lat, lng);
-            
-            // Crear control de ruta
             if (controlRuta) map.removeControl(controlRuta);
             
             controlRuta = L.Routing.control({
-                waypoints: [
-                    L.latLng(miUbicacionReal[0], miUbicacionReal[1]), // Inicio dinámico
-                    destinoFinal
-                ],
+                waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), destinoFinal],
                 language: 'es',
                 router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
                 lineOptions: { styles: [{color: '#00d4ff', opacity: 0.8, weight: 6}] },
@@ -251,17 +243,10 @@
                 draggableWaypoints: false,
                 fitSelectedRoutes: true,
                 createMarker: function(i, wp, nWps) {
-                    // Marcador personalizado solo para el DESTINO (último punto)
-                    if (i === nWps - 1) {
-                        return L.marker(wp.latLng, {
-                            icon: L.divIcon({ html: '🏁', className: 'custom-marker', iconSize: [30, 30] })
-                        });
-                    }
-                    return null; // Sin marcador de inicio (usamos el punto azul)
+                    if (i === nWps - 1) { return L.marker(wp.latLng, { icon: L.divIcon({ html: '🏁', className: 'custom-marker', iconSize: [30, 30] }) }); }
+                    return null;
                 }
             }).addTo(map);
-
-            // Mostrar botón cancelar
             document.getElementById('btnCancelarRuta').style.display = 'block';
             activarSeguimiento();
         }
@@ -273,13 +258,10 @@
             document.getElementById('btnCancelarRuta').style.display = 'none';
         }
 
-        // --- GEOLOCALIZACIÓN Y LÓGICA DE AVANCE ---
         function iniciarGPS() {
             if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
             navigator.geolocation.watchPosition((pos) => {
                 miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                
-                // Actualizar punto azul
                 if (!marcadorUsuario) {
                     marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', className: 'user-dot', iconSize: [20, 20] }) }).addTo(map);
                     map.setView(miUbicacionReal, 16);
@@ -287,27 +269,15 @@
                 
                 if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
                 
-                // ACTUALIZAR RUTA DINÁMICA
                 if (controlRuta && destinoFinal) {
-                    // Mover el punto de inicio de la ruta a la ubicación actual
-                    controlRuta.setWaypoints([
-                        L.latLng(miUbicacionReal[0], miUbicacionReal[1]),
-                        destinoFinal
-                    ]);
-
-                    // Checar llegada (menos de 30 metros)
+                    controlRuta.setWaypoints([L.latLng(miUbicacionReal[0], miUbicacionReal[1]), destinoFinal]);
                     const dist = map.distance(miUbicacionReal, destinoFinal);
-                    if (dist < 30) {
-                        hablarSistema("Has llegado a tu destino.");
-                        limpiarRuta();
-                    }
+                    if (dist < 30) { hablarSistema("Has llegado a tu destino."); limpiarRuta(); }
                 }
-
                 checarCercaniaPolicial(miUbicacionReal);
             }, (err) => { console.log(err); }, { enableHighAccuracy: true });
         }
 
-        // --- SISTEMA BASICO ---
         function irARegistro() { document.getElementById('avisoLegal').style.display = 'none'; if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); } }
         function guardarIdentidad() { let n = document.getElementById('inputNombreUser').value.trim(); if (n.length < 3) return alert("Nombre muy corto."); if (n.toLowerCase() === "iza") { if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); } } miNombre = n; localStorage.setItem('vigiaNombre', n); document.getElementById('registroNombre').style.display = 'none'; iniciarGPS(); }
         function obtenerRango(pts) { if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' }; if (pts >= 30) return { t: 'Élite', c: 'r-elite' }; if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' }; if (pts >= 5) return { t: 'Activo', c: 'r-activo' }; return { t: 'Civil', c: 'r-civil' }; }
