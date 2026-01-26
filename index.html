@@ -18,7 +18,6 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
-        /* ESTILOS BASE */
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
@@ -26,10 +25,12 @@
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
-        #avisoLegal, #manualVigia, #registroNombre { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        #avisoLegal, #manualVigia, #registroNombre, #registroNegocio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
-        #inputNombreUser { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
+        
+        /* INPUTS FORMULARIO */
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
 
         /* BOTONES LATERALES */
         .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
@@ -37,7 +38,9 @@
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
         .btn-theme { top: 235px; background: #f1c40f; color: #000; border: none; }
-        #btnInstall { top: 290px; background: #007bff; display: none; }
+        /* BOTÓN DE NEGOCIO (NUEVO) */
+        .btn-biz { top: 290px; background: #9b59b6; color: white; border: 2px solid #fff; }
+        #btnInstall { top: 345px; background: #007bff; display: none; }
         
         #btnCancelarRuta { position: absolute; top: 80px; left: 10px; background: #dc3545; color: white; padding: 10px 15px; border-radius: 30px; font-weight: bold; font-size: 14px; z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid white; cursor: pointer; }
         .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
@@ -75,12 +78,17 @@
         .r-veterano { background: #007bff; }
         .r-elite { background: #6f42c1; }
         .r-comandante { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
+        /* RANGO ESPECIAL NEGOCIO */
+        .r-negocio { background: #9b59b6; border: 1px solid white; color: white; }
 
         .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-top: 1px solid #333; }
         #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 20px; color: white; padding: 10px 15px; outline: none; font-size: 14px; }
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
+        /* MARCADOR NEGOCIO */
+        .biz-marker { border: 2px solid #fff; background: #9b59b6; color: white; box-shadow: 0 0 10px #9b59b6; }
+        
         .leaflet-routing-container { display: none; } 
 
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
@@ -150,13 +158,33 @@
         </div>
     </div>
 
+    <div id="registroNegocio" style="display:none;">
+        <div class="modal-box">
+            <h2>💼 Registro de Negocio</h2>
+            <p style="font-size:12px; color:#aaa;">Tu negocio aparecerá en el mapa para ayudar a los conductores.</p>
+            
+            <input type="text" id="bizName" placeholder="Nombre del Taller/Negocio">
+            <select id="bizType">
+                <option value="🔧">🔧 Mecánico</option>
+                <option value="🛞">🛞 Talachera / Llantera</option>
+                <option value="🔋">🔋 Eléctrico</option>
+                <option value="⛽">⛽ Gasolina Barata</option>
+                <option value="🌮">🌮 Comida</option>
+            </select>
+            <input type="tel" id="bizPhone" placeholder="Teléfono / WhatsApp">
+            
+            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">GUARDAR NEGOCIO</button>
+            <button style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;" onclick="cerrarNegocio()">Cancelar</button>
+        </div>
+    </div>
+
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
             <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
             <p><b>1. ¿CÓMO NAVEGAR?</b><br>Toca la <b>lupa 🔍</b>. Escribe destino. Confirma con "✅ INICIAR".</p>
             <p><b>2. BOTONES</b><br>🎯 <b>Centrar:</b> Tu ubicación.<br>🔒 <b>Candado:</b> Seguir/Libre.<br>☀️/🌙 <b>Tema:</b> Día/Noche.</p>
             <p><b>3. REPORTAR</b><br>Usa <b>🛰️ GENERAR REPORTE</b> para avisar de peligros.</p>
-            <p><b>4. CHAT Y LISTA</b><br>Toca la barra inferior para ver reportes. ¡Si tocas un reporte en la lista, el mapa te lleva ahí!</p>
+            <p><b>4. NEGOCIOS</b><br>Usa el botón 💼 morado para registrar tu taller o servicio.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
@@ -172,6 +200,7 @@
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
+    <button class="side-btn btn-biz" onclick="abrirRegistroNegocio()">💼</button>
     <button class="side-btn" id="btnInstall" onclick="instalarApp()">📲</button>
     
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
@@ -234,8 +263,6 @@
         let puntosCache = [];
         const historialAlertas = {}; 
         let controlRuta = null, destinoFinal = null, marcadorDestinoTemp = null;
-        
-        // VARIABLES ANTI-SPAM
         let ultimoReporteTime = 0;
         let ultimoReporteCoords = null;
 
@@ -316,7 +343,13 @@
         }
 
         function hablarSistema(texto) { if ('speechSynthesis' in window) { const utterance = new SpeechSynthesisUtterance(texto); utterance.lang = "es-MX"; utterance.rate = 1.5; window.speechSynthesis.speak(utterance); } }
-        function getIconHTML(texto) { if (texto.includes('🚨')) return '🚨'; if (texto.includes('🚧')) return '🚧'; if (texto.includes('💥')) return '💥'; if (texto.includes('👮')) return '👮'; return null; }
+        function getIconHTML(texto) { 
+            // ICONOS DE REPORTE NORMAL
+            if (texto.includes('🚨')) return '🚨'; if (texto.includes('🚧')) return '🚧'; if (texto.includes('💥')) return '💥'; if (texto.includes('👮')) return '👮'; 
+            // ICONOS DE NEGOCIO
+            if (texto.includes('🔧')) return '🔧'; if (texto.includes('🛞')) return '🛞'; if (texto.includes('🔋')) return '🔋'; if (texto.includes('⛽')) return '⛽'; if (texto.includes('🌮')) return '🌮';
+            return null; 
+        }
         function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
@@ -335,10 +368,14 @@
                 puntos.reverse().forEach(p => {
                     const iconoEmoji = getIconHTML(p.texto);
                     let esReporteImportante = false;
+                    let esNegocio = p.texto.includes('[NEGOCIO]');
                     
                     if (iconoEmoji) { 
                         esReporteImportante = true;
-                        const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: 'custom-marker', iconSize: [35, 35] }) });
+                        // SI ES NEGOCIO, USAMOS CLASE 'BIZ-MARKER' (MORADA)
+                        let claseMarcador = esNegocio ? 'custom-marker biz-marker' : 'custom-marker';
+                        
+                        const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: claseMarcador, iconSize: [35, 35] }) });
                         marker.bindPopup(`<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
                         clusterGroup.addLayer(marker);
                     }
@@ -358,32 +395,49 @@
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
 
+        // --- LÓGICA DE NEGOCIOS ---
+        function abrirRegistroNegocio() { document.getElementById('registroNegocio').style.display = 'flex'; }
+        function cerrarNegocio() { document.getElementById('registroNegocio').style.display = 'none'; }
+        
+        async function guardarNegocio() {
+            const nombre = document.getElementById('bizName').value;
+            const tipo = document.getElementById('bizType').value;
+            const tel = document.getElementById('bizPhone').value;
+            
+            if(!nombre || !tel) return alert("Llena todos los datos.");
+            
+            if (!miUbicacionReal) return alert("Esperando GPS para ubicar tu negocio...");
+            
+            // Creamos el mensaje con la etiqueta secreta [NEGOCIO]
+            // Formato: [NEGOCIO] 🔧 Taller Juan (Tel: 555...)
+            const msg = `<span class="rango-tag r-negocio">NEGOCIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
+            const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            
+            try { 
+                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1] }) }); 
+                alert("¡Negocio registrado exitosamente!");
+                cerrarNegocio();
+                cargarPuntos(); 
+            } catch (e) { alert("Error al registrar."); }
+        }
+
         function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
         async function enviarReporte(t) {
             if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu nombre."); document.getElementById('registroNombre').style.display = 'flex'; return; }
             let lat, lng;
             if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
             
-            // --- ANTI-SPAM LOGIC ---
             const now = Date.now();
             if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) {
                 alert("🚫 Espera un poco antes de reportar en el mismo lugar.");
                 return;
             }
-            // -----------------------
 
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            
-            try { 
-                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng }) }); 
-                ultimoReporteTime = now; 
-                ultimoReporteCoords = [lat, lng];
-                cargarPuntos(); 
-                document.getElementById('chatInput').value = ""; 
-            } catch (e) { alert("Error."); }
+            try { await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng }) }); ultimoReporteTime = now; ultimoReporteCoords = [lat, lng]; cargarPuntos(); document.getElementById('chatInput').value = ""; } catch (e) { alert("Error."); }
         }
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
