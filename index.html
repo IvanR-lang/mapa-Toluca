@@ -21,6 +21,7 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
         .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
+        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px; }
 
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
@@ -29,7 +30,6 @@
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
         
-        /* INPUTS FORMULARIO */
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
 
         /* BOTONES LATERALES */
@@ -38,7 +38,6 @@
         .btn-lock { top: 125px; }
         .btn-help { top: 180px; background: #333; }
         .btn-theme { top: 235px; background: #f1c40f; color: #000; border: none; }
-        /* BOTÓN DE NEGOCIO (NUEVO) */
         .btn-biz { top: 290px; background: #9b59b6; color: white; border: 2px solid #fff; }
         #btnInstall { top: 345px; background: #007bff; display: none; }
         
@@ -78,7 +77,6 @@
         .r-veterano { background: #007bff; }
         .r-elite { background: #6f42c1; }
         .r-comandante { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
-        /* RANGO ESPECIAL NEGOCIO */
         .r-negocio { background: #9b59b6; border: 1px solid white; color: white; }
 
         .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-top: 1px solid #333; }
@@ -86,9 +84,10 @@
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
-        /* MARCADOR NEGOCIO */
         .biz-marker { border: 2px solid #fff; background: #9b59b6; color: white; box-shadow: 0 0 10px #9b59b6; }
-        
+        /* MARCADOR PENDIENTE DE REVISIÓN */
+        .pending-marker { border: 2px dashed #f39c12; background: #222; color: #f39c12; box-shadow: 0 0 10px #f39c12; opacity: 0.9; }
+
         .leaflet-routing-container { display: none; } 
 
         #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
@@ -161,7 +160,7 @@
     <div id="registroNegocio" style="display:none;">
         <div class="modal-box">
             <h2>💼 Registro de Negocio</h2>
-            <p style="font-size:12px; color:#aaa;">Tu negocio aparecerá en el mapa para ayudar a los conductores.</p>
+            <p style="font-size:12px; color:#aaa;">Tu negocio pasará a <b>revisión</b> antes de aparecer en el mapa.</p>
             
             <input type="text" id="bizName" placeholder="Nombre del Taller/Negocio">
             <select id="bizType">
@@ -173,7 +172,7 @@
             </select>
             <input type="tel" id="bizPhone" placeholder="Teléfono / WhatsApp">
             
-            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">GUARDAR NEGOCIO</button>
+            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">ENVIAR A REVISIÓN</button>
             <button style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;" onclick="cerrarNegocio()">Cancelar</button>
         </div>
     </div>
@@ -182,15 +181,14 @@
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
             <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
             <p><b>1. ¿CÓMO NAVEGAR?</b><br>Toca la <b>lupa 🔍</b>. Escribe destino. Confirma con "✅ INICIAR".</p>
-            <p><b>2. BOTONES</b><br>🎯 <b>Centrar:</b> Tu ubicación.<br>🔒 <b>Candado:</b> Seguir/Libre.<br>☀️/🌙 <b>Tema:</b> Día/Noche.</p>
-            <p><b>3. REPORTAR</b><br>Usa <b>🛰️ GENERAR REPORTE</b> para avisar de peligros.</p>
-            <p><b>4. NEGOCIOS</b><br>Usa el botón 💼 morado para registrar tu taller o servicio.</p>
+            <p><b>2. REPORTAR</b><br>Usa <b>🛰️ GENERAR REPORTE</b> para avisar de peligros.</p>
+            <p><b>3. NEGOCIOS</b><br>Registra tu servicio con el botón 💼. <b>OJO:</b> Debe ser aprobado por un admin para salir.</p>
             <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
         </div>
     </div>
 
     <div class="brand-header">
-        <h1>VIGÍA TOLUCA</h1>
+        <h1>VIGÍA TOLUCA <span class="admin-badge" id="adminBadge">MODO REVISIÓN</span></h1>
         <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
         <div style="display:none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
     </div>
@@ -265,6 +263,10 @@
         let controlRuta = null, destinoFinal = null, marcadorDestinoTemp = null;
         let ultimoReporteTime = 0;
         let ultimoReporteCoords = null;
+
+        // DETECTAR MODO REVISIÓN (URL termina en #revision)
+        let esAdmin = window.location.hash === '#revision';
+        if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; }
 
         var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Buscar destino...", geocoder: L.Control.Geocoder.photon() })
         .on('markgeocode', function(e) {
@@ -344,14 +346,29 @@
 
         function hablarSistema(texto) { if ('speechSynthesis' in window) { const utterance = new SpeechSynthesisUtterance(texto); utterance.lang = "es-MX"; utterance.rate = 1.5; window.speechSynthesis.speak(utterance); } }
         function getIconHTML(texto) { 
-            // ICONOS DE REPORTE NORMAL
             if (texto.includes('🚨')) return '🚨'; if (texto.includes('🚧')) return '🚧'; if (texto.includes('💥')) return '💥'; if (texto.includes('👮')) return '👮'; 
-            // ICONOS DE NEGOCIO
             if (texto.includes('🔧')) return '🔧'; if (texto.includes('🛞')) return '🛞'; if (texto.includes('🔋')) return '🔋'; if (texto.includes('⛽')) return '⛽'; if (texto.includes('🌮')) return '🌮';
             return null; 
         }
         function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
+
+        // --- FUNCIÓN DE APROBACIÓN (SOLO ADMINS) ---
+        async function aprobarNegocio(id, textoCompleto, lat, lng) {
+            if(!confirm("¿Aprobar y publicar este negocio?")) return;
+            // 1. Quitamos la etiqueta [PENDIENTE]
+            const nuevoTexto = textoCompleto.replace('[PENDIENTE] ', '');
+            const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            
+            try {
+                // 2. Creamos el nuevo reporte limpio
+                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: nuevoTexto, fecha: fecha, lat: lat, lng: lng }) });
+                // 3. Borramos el reporte viejo (pendiente)
+                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+                alert("✅ Negocio publicado.");
+                cargarPuntos();
+            } catch(e) { alert("Error al aprobar."); }
+        }
 
         async function cargarPuntos() {
             try {
@@ -366,17 +383,42 @@
                 const usuariosActivos = new Set();
                 
                 puntos.reverse().forEach(p => {
+                    // --- FILTRO DE MODERACIÓN ---
+                    let esPendiente = p.texto.includes('[PENDIENTE]');
+                    
+                    // Si es pendiente y NO soy admin, lo ignoro (return)
+                    if (esPendiente && !esAdmin) return;
+                    // ----------------------------
+
                     const iconoEmoji = getIconHTML(p.texto);
                     let esReporteImportante = false;
                     let esNegocio = p.texto.includes('[NEGOCIO]');
                     
                     if (iconoEmoji) { 
                         esReporteImportante = true;
-                        // SI ES NEGOCIO, USAMOS CLASE 'BIZ-MARKER' (MORADA)
-                        let claseMarcador = esNegocio ? 'custom-marker biz-marker' : 'custom-marker';
                         
+                        let claseMarcador = 'custom-marker';
+                        if (esNegocio) claseMarcador += ' biz-marker';
+                        if (esPendiente) claseMarcador = 'custom-marker pending-marker'; // Naranja si es pendiente
+
                         const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: claseMarcador, iconSize: [35, 35] }) });
-                        marker.bindPopup(`<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
+                        
+                        // POPUP DIFERENTE PARA ADMINS EN PENDIENTES
+                        let popupContent = `<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`;
+                        
+                        if (esPendiente && esAdmin) {
+                            // Botón especial para aprobar
+                            popupContent = `<div style="text-align:center; min-width:150px;">
+                                <strong style="color:#f39c12">⚠️ REVISIÓN PENDIENTE</strong><br>
+                                <div style="font-size:12px; margin:5px 0;">${p.texto}</div>
+                                <div style="display:flex; gap:5px; justify-content:center; margin-top:10px;">
+                                    <button onclick="aprobarNegocio('${p._id}', '${p.texto}', ${p.lat}, ${p.lng})" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">✅ APROBAR</button>
+                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">❌ RECHAZAR</button>
+                                </div>
+                            </div>`;
+                        }
+
+                        marker.bindPopup(popupContent);
                         clusterGroup.addLayer(marker);
                     }
                     
@@ -405,17 +447,15 @@
             const tel = document.getElementById('bizPhone').value;
             
             if(!nombre || !tel) return alert("Llena todos los datos.");
-            
             if (!miUbicacionReal) return alert("Esperando GPS para ubicar tu negocio...");
             
-            // Creamos el mensaje con la etiqueta secreta [NEGOCIO]
-            // Formato: [NEGOCIO] 🔧 Taller Juan (Tel: 555...)
-            const msg = `<span class="rango-tag r-negocio">NEGOCIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
+            // AGREGAMOS LA ETIQUETA [PENDIENTE] AL INICIO
+            const msg = `[PENDIENTE] <span class="rango-tag r-negocio">NEGOCIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             
             try { 
                 await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1] }) }); 
-                alert("¡Negocio registrado exitosamente!");
+                alert("✅ ¡Enviado a revisión! Tu negocio aparecerá pronto.");
                 cerrarNegocio();
                 cargarPuntos(); 
             } catch (e) { alert("Error al registrar."); }
@@ -442,8 +482,16 @@
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
         function checarHash() {
+            // DETECTA SI EL USUARIO PUSO #revision AL FINAL
+            esAdmin = window.location.hash === '#revision';
+            if (esAdmin) {
+                document.getElementById('adminBadge').style.display = 'inline-block';
+                cargarPuntos(); // Recargar para ver los pendientes
+            }
+
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
+                // ... (código consola Iza igual) ...
                 const statusList = document.getElementById('statusList');
                 const logs = ["Requesting access...", "Pinging master gateway...", "Primary Seed Identified: IZA_CORE", "Verifying dependencies...", "Establishing encrypted link...", "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>", "Identity confirmed.", "Initialization complete."];
                 let i = 0; statusList.innerHTML = "";
