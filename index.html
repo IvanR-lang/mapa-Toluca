@@ -21,21 +21,60 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 15px; letter-spacing: 1px; color: #e63946; text-transform: uppercase; }
         .brand-header span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
-        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px; vertical-align: middle; }
+        
+        /* ESTILOS DEL DRAWER ADMIN (IZA) */
+        #adminDrawer { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 0; /* Cerrado por defecto */
+            background: #0b0e14; 
+            z-index: 50000; 
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border-bottom: 2px solid #00d4ff;
+            display: none; /* Se activa solo con el hash */
+            flex-direction: column;
+        }
+        #adminDrawer.open { height: 60vh; } /* Altura cuando abre */
 
+        .admin-handle { 
+            position: absolute; 
+            bottom: -30px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 120px; 
+            height: 30px; 
+            background: #0b0e14; 
+            color: #00d4ff; 
+            text-align: center; 
+            line-height: 30px; 
+            font-size: 10px; 
+            font-weight: bold; 
+            border-radius: 0 0 10px 10px; 
+            cursor: pointer; 
+            border: 1px solid #00d4ff; 
+            border-top: none;
+            z-index: 50001;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        /* CONTENIDO DE LA CONSOLA IZA */
+        .iza-content { padding: 20px; color: #d1d5db; font-family: monospace; font-size: 11px; height: 100%; overflow-y: auto; }
+        .iza-log { line-height: 1.6; margin-bottom: 5px; }
+        .iza-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; }
+        
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
         #avisoLegal, #manualVigia, #registroNombre, #registroNegocio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
-        .modal-box h2 { font-size: 18px; margin-top: 0; color: #e63946; }
-        .modal-box p { font-size: 13px; line-height: 1.5; color: #ccc; }
-        
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
         
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
 
-        /* BOTONES LATERALES */
+        /* BOTONES */
         .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .btn-gps { top: 70px; }
         .btn-lock { top: 125px; }
@@ -95,36 +134,27 @@
         .pending-marker { border: 2px dashed #f39c12; background: #222; color: #f39c12; box-shadow: 0 0 10px #f39c12; opacity: 0.9; }
 
         .leaflet-routing-container { display: none; } 
-
-        #consoleIza { display: none; background: #f8f9fa; color: #212529; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 50000; align-items: center; justify-content: center; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="miraCentral">📍</div>
-
-    <div id="consoleIza">
-        <div style="background:white; padding:45px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.08); max-width:520px; width:94%; border-top: 5px solid #1a1a1a;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
-                <div>
-                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Sistema de Administración</h2>
-                    <code style="font-size:11px; color:#007bff; font-weight:600;">Nodo Seguro: Iza_Core</code>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
-                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> SISTEMA ESTABLE
-                </div>
+    <div id="adminDrawer">
+        <div class="iza-content" id="izaConsoleOutput">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                <strong style="color:#00d4ff; font-size:14px;">IZA SECURITY PROTOCOL</strong>
+                <span style="color:#28a745; font-size:10px;">● SYSTEM ONLINE</span>
             </div>
-            <div id="statusList" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
-            <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
-                <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; color:#adb5bd;">ID: admin-auth-secure</span>
-                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO CONCEDIDO</span>
-                </div>
-            </div>
+            <div class="iza-stat"><span>Admin Status:</span> <span style="color:#e63946">UNLOCKED</span></div>
+            <div class="iza-stat"><span>Pending Reviews:</span> <span id="statPendientes" style="color:#f39c12">0</span></div>
+            <div class="iza-stat"><span>Total Markers:</span> <span id="statTotal">0</span></div>
+            <br>
+            <div id="izaLogArea" style="color:#666;">Waiting for data stream...</div>
         </div>
+        <div class="admin-handle" onclick="toggleAdminDrawer()">▼ ADMIN IZA ▼</div>
     </div>
+
+    <div id="miraCentral">📍</div>
 
     <div id="avisoLegal">
         <div class="modal-box">
@@ -153,8 +183,7 @@
     <div id="registroNegocio" style="display:none;">
         <div class="modal-box">
             <h2>💼 Registro de Servicios</h2>
-            <p style="font-size:12px; color:#aaa;">Registra un servicio útil para la comunidad (Taller, Comida, Gasolina). Pasará a <b>revisión</b> antes de publicarse.</p>
-            
+            <p style="font-size:12px; color:#aaa;">Registra un servicio útil. Pasará a <b>revisión</b>.</p>
             <input type="text" id="bizName" placeholder="Nombre del Establecimiento">
             <select id="bizType">
                 <option value="🔧">🔧 Asistencia Mecánica</option>
@@ -164,7 +193,6 @@
                 <option value="🌮">🌮 Alimentos y Bebidas</option>
             </select>
             <input type="tel" id="bizPhone" placeholder="Teléfono de Contacto">
-            
             <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">SOLICITAR PUBLICACIÓN</button>
             <button style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;" onclick="cerrarNegocio()">Cancelar</button>
         </div>
@@ -174,15 +202,14 @@
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
             <h3 style="text-align:center; color:#e63946;">📖 MANUAL DE USO</h3>
             <p><b>1. NAVEGACIÓN</b><br>Usa la <b>lupa 🔍</b> para trazar rutas seguras.</p>
-            <p><b>2. REPORTES</b><br>Usa <b>🛰️ GENERAR ALERTA</b> para notificar riesgos en la vía (Baches, Accidentes, Operativos).</p>
+            <p><b>2. REPORTES</b><br>Usa <b>🛰️ GENERAR ALERTA</b> para notificar riesgos.</p>
             <p><b>3. SERVICIOS</b><br>Encuentra o registra talleres y ayuda con el botón 💼.</p>
-            <p style="font-size:11px; color:#aaa; margin-top:10px;">Recuerda: Esta es una red de apoyo ciudadano. Úsala con responsabilidad.</p>
             <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
         </div>
     </div>
 
     <div class="brand-header">
-        <h1>RED VIAL TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
+        <h1>RED VIAL TOLUCA</h1>
         <span>Monitoreo Ciudadano</span>
     </div>
 
@@ -193,7 +220,6 @@
     <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
     <button class="side-btn btn-biz" onclick="abrirRegistroNegocio()">💼</button>
     <button class="side-btn" id="btnInstall" onclick="instalarApp()">📲</button>
-    
     <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
     <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
 
@@ -261,8 +287,9 @@
         let drawerAbierto = false;
         let mensajesVistos = 0;
 
-        let esAdmin = window.location.hash === '#revision';
-        if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; }
+        // VARIABLES ADMIN
+        let modoAdminDisponible = false; // Si el hash #admin existe
+        let panelAdminAbierto = false; // Si la pestaña de arriba está bajada
 
         var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Buscar destino...", geocoder: L.Control.Geocoder.photon() })
         .on('markgeocode', function(e) {
@@ -270,7 +297,7 @@
             var center = e.geocode.center;
             marcadorDestinoTemp = L.marker(center).addTo(map);
             map.setView(center, 16);
-            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Navegar a este destino?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ TRAZAR RUTA</button></div></div>`;
+            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Navegar a este destino?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">✅ TRAZAR RUTA</button></div></div>`;
             marcadorDestinoTemp.bindPopup(popupHtml).openPopup();
         })
         .addTo(map);
@@ -327,6 +354,20 @@
             }
         }
 
+        // LÓGICA DEL DRAWER ADMIN
+        function toggleAdminDrawer() {
+            if (!modoAdminDisponible) return;
+            panelAdminAbierto = !panelAdminAbierto;
+            const drawer = document.getElementById('adminDrawer');
+            if (panelAdminAbierto) {
+                drawer.classList.add('open');
+            } else {
+                drawer.classList.remove('open');
+            }
+            // Al abrir o cerrar, recargamos los puntos para aplicar el "Filtro de Camuflaje"
+            cargarPuntos();
+        }
+
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
         
@@ -345,7 +386,6 @@
             }
         }
 
-        // LENGUAJE NEUTRAL EN ALERTAS DE VOZ
         function checarCercaniaPolicial(miPos) {
             if (!puntosCache || puntosCache.length === 0) return;
             puntosCache.forEach(p => {
@@ -391,10 +431,22 @@
                 let htmlChat = "";
                 const usuariosActivos = new Set();
                 let contadorMensajesTexto = 0;
+                let pendientesCount = 0;
+
+                // ACTUALIZAR ESTADÍSTICAS EN CONSOLA IZA
+                document.getElementById('statTotal').innerText = puntos.length;
 
                 puntos.reverse().forEach(p => {
                     let esPendiente = p.texto.includes('[PENDIENTE]');
-                    if (esPendiente && !esAdmin) return;
+                    if (esPendiente) pendientesCount++;
+
+                    // --- LÓGICA DE CAMUFLAJE ---
+                    // Solo mostramos pendientes si: MODO ADMIN DISPONIBLE + PANEL ABIERTO
+                    let mostrarAdminStuff = (modoAdminDisponible && panelAdminAbierto);
+
+                    // Si es pendiente y NO está activo el camuflaje, lo ignoramos
+                    if (esPendiente && !mostrarAdminStuff) return;
+                    // ----------------------------
 
                     const iconoEmoji = getIconHTML(p.texto);
                     let esReporteImportante = false;
@@ -408,17 +460,23 @@
 
                         const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: claseMarcador, iconSize: [35, 35] }) });
                         
-                        let popupContent = `<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`;
+                        let popupContent = `<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"></div></div>`;
                         
-                        if (esPendiente && esAdmin) {
-                            popupContent = `<div style="text-align:center; min-width:150px;">
-                                <strong style="color:#f39c12">⚠️ REVISIÓN PENDIENTE</strong><br>
-                                <div style="font-size:12px; margin:5px 0;">${p.texto}</div>
-                                <div style="display:flex; gap:5px; justify-content:center; margin-top:10px;">
-                                    <button onclick="aprobarNegocio('${p._id}', '${p.texto}', ${p.lat}, ${p.lng})" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">✅ APROBAR</button>
-                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">❌ RECHAZAR</button>
-                                </div>
-                            </div>`;
+                        // BOTONES DE ADMIN: Solo se agregan si el Panel está ABIERTO
+                        if (mostrarAdminStuff) {
+                            if (esPendiente) {
+                                popupContent = `<div style="text-align:center; min-width:150px;">
+                                    <strong style="color:#f39c12">⚠️ REVISIÓN PENDIENTE</strong><br>
+                                    <div style="font-size:12px; margin:5px 0;">${p.texto}</div>
+                                    <div style="display:flex; gap:5px; justify-content:center; margin-top:10px;">
+                                        <button onclick="aprobarNegocio('${p._id}', '${p.texto}', ${p.lat}, ${p.lng})" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">✅ APROBAR</button>
+                                        <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">❌ RECHAZAR</button>
+                                    </div>
+                                </div>`;
+                            } else {
+                                // Para reportes normales, agregamos el botón de borrar solo si el panel está abierto
+                                popupContent = popupContent.replace('</div></div>', `<button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
+                            }
                         }
 
                         marker.bindPopup(popupContent);
@@ -436,6 +494,7 @@
                     if (matchUser) usuariosActivos.add(matchUser[1]);
                 });
 
+                document.getElementById('statPendientes').innerText = pendientesCount;
                 document.getElementById('listReportes').innerHTML = htmlReportes || "<div style='text-align:center; padding:20px; color:#666;'>Sin alertas activas.</div>";
                 document.getElementById('listChat').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Comunidad silenciosa.</div>";
                 
@@ -474,7 +533,6 @@
             } catch (e) { alert("Error al registrar."); }
         }
 
-        // TEXTO BLINDADO EN REPORTE POLICIAL
         function intentoReportePolicial() { enviarReporte('👮 OPERATIVO VIAL / RETÉN'); }
         async function enviarReporte(t) {
             if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu alias."); document.getElementById('registroNombre').style.display = 'flex'; return; }
@@ -491,17 +549,30 @@
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
         function checarHash() {
-            esAdmin = window.location.hash === '#revision';
-            if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; cargarPuntos(); }
-            if (window.location.hash === '#iza-secure') {
-                document.getElementById('consoleIza').style.display = 'flex';
-                // Animación de consola simulada
-                const statusList = document.getElementById('statusList');
-                const logs = ["Verificando integridad...", "Cifrado de extremo a extremo...", "Conexión segura establecida.", "Nodo Maestro Activo."];
-                let i = 0; statusList.innerHTML = "";
-                function print() { if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 850); } else { document.getElementById('authBox').style.display = 'block'; } }
+            // DETECCIÓN DEL MODO CAMUFLAJE
+            if (window.location.hash === '#admin') {
+                modoAdminDisponible = true;
+                document.getElementById('adminDrawer').style.display = 'flex';
+                // Logs simulados para la consola Iza
+                const logs = ["Initializing Secure Protocol...", "Verifying Admin Hash...", "Access Granted.", "Monitoring Node: Iza_Core"];
+                let i = 0; 
+                const logArea = document.getElementById('izaLogArea');
+                logArea.innerHTML = "";
+                function print() { 
+                    if(i < logs.length) { 
+                        logArea.innerHTML += "<div>> " + logs[i] + "</div>"; 
+                        i++; 
+                        setTimeout(print, 600); 
+                    } 
+                }
                 print();
-            } else { document.getElementById('consoleIza').style.display = 'none'; }
+            } else {
+                modoAdminDisponible = false;
+                document.getElementById('adminDrawer').style.display = 'none';
+                panelAdminAbierto = false; // Asegurar que inicie cerrado
+            }
+            // Siempre cargamos puntos al iniciar para aplicar filtros
+            cargarPuntos();
         }
 
         window.addEventListener('hashchange', checarHash);
