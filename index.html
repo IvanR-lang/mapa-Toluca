@@ -61,7 +61,6 @@
         .tab-btn { flex: 1; padding: 12px; text-align: center; color: #888; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; background: #1a1a1a; border: none; position: relative; }
         .tab-btn.active { color: #fff; background: #222; border-bottom: 3px solid #e63946; }
         
-        /* ESTILO DEL CONTADOR ROJO (BADGE) */
         .badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; position: absolute; top: 8px; right: 20px; box-shadow: 0 0 5px #e63946; }
 
         #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
@@ -70,8 +69,16 @@
         .list-container { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 10px; display: none; }
         .list-container.active { display: block; }
         
-        .chat-item { padding: 10px; border-bottom: 1px solid #222; cursor: pointer; transition: background 0.2s; }
-        .chat-item:active { background: #333; }
+        /* ESTILOS DE ITEMS */
+        .chat-item { padding: 10px; border-bottom: 1px solid #222; transition: background 0.2s; }
+        
+        /* Solo los items clickeables (reportes) tendrán manita y efecto hover */
+        .chat-item.clickable { cursor: pointer; }
+        .chat-item.clickable:active { background: #333; }
+        
+        /* Los mensajes de texto NO tendrán manita */
+        .chat-item.private { cursor: default; background: #0e0e0e; }
+
         .chat-date { font-size: 9px; color: #666; float: right; }
 
         .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
@@ -266,7 +273,6 @@
         let ultimoReporteTime = 0;
         let ultimoReporteCoords = null;
 
-        // VARIABLES DE NOTIFICACIÓN DE CHAT
         let tabActual = 'reportes';
         let drawerAbierto = false;
         let mensajesVistos = 0;
@@ -332,11 +338,8 @@
             drawerAbierto = !drawerAbierto;
             const drawer = document.getElementById('chatDrawer');
             drawer.classList.toggle('open'); 
-            
-            // Si abrimos el drawer y el tab activo es CHAT, limpiamos notificaciones
             if (drawerAbierto && tabActual === 'chat') {
                 document.getElementById('chatBadge').style.display = 'none';
-                // La variable mensajesVistos se actualiza en cargarPuntos si el tab está activo
             }
         }
 
@@ -352,11 +355,8 @@
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); 
                 document.getElementById('listReportes').classList.add('active'); 
             } else { 
-                // USUARIO CAMBIÓ A PESTAÑA CHAT
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); 
                 document.getElementById('listChat').classList.add('active');
-                
-                // Limpiar notificaciones
                 document.getElementById('chatBadge').style.display = 'none';
             }
         }
@@ -405,8 +405,6 @@
                 let htmlReportes = "";
                 let htmlChat = "";
                 const usuariosActivos = new Set();
-                
-                // CONTADORES PARA NOTIFICACIÓN
                 let contadorMensajesTexto = 0;
 
                 puntos.reverse().forEach(p => {
@@ -442,14 +440,16 @@
                         clusterGroup.addLayer(marker);
                     }
                     
-                    const itemHTML = `<div class="chat-item" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} <span class="chat-date">${p.fecha} 📍</span></div>`;
-
+                    // --- AQUÍ ESTÁ EL CAMBIO DE PRIVACIDAD ---
                     if (esReporteImportante) { 
-                        htmlReportes += itemHTML; 
+                        // REPORTE: Tienen ubicación pública (clickeable)
+                        htmlReportes += `<div class="chat-item clickable" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} <span class="chat-date">${p.fecha} 📍</span></div>`;
                     } else { 
-                        htmlChat += itemHTML;
-                        contadorMensajesTexto++; // Sumamos solo los mensajes de texto
+                        // CHAT: Ubicación OCULTA (Privacidad protegida, sin onclick)
+                        htmlChat += `<div class="chat-item private">${p.texto} <span class="chat-date">${p.fecha}</span></div>`;
+                        contadorMensajesTexto++;
                     }
+                    // -----------------------------------------
 
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
                     if (matchUser) usuariosActivos.add(matchUser[1]);
@@ -460,27 +460,18 @@
                 document.getElementById('contadorVigias').innerText = usuariosActivos.size;
                 document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
 
-                // --- LÓGICA DE NOTIFICACIONES ---
                 const badge = document.getElementById('chatBadge');
-                
-                // Si estoy viendo el chat (drawer abierto Y tab chat activo), actualizo los vistos
                 if (drawerAbierto && tabActual === 'chat') {
                     mensajesVistos = contadorMensajesTexto;
                     badge.style.display = 'none';
                 } else {
-                    // Si NO estoy viendo el chat, calculo la diferencia
                     const sinLeer = contadorMensajesTexto - mensajesVistos;
-                    if (sinLeer > 0 && mensajesVistos > 0) { // Solo mostrar si ya había cargado antes
+                    if (sinLeer > 0 && mensajesVistos > 0) {
                         badge.innerText = sinLeer;
                         badge.style.display = 'inline-block';
                     }
                 }
-                
-                // Inicialización primera vez (para que no salga badge apenas entras)
-                if (mensajesVistos === 0 && contadorMensajesTexto > 0) {
-                     mensajesVistos = contadorMensajesTexto; 
-                }
-                // -------------------------------
+                if (mensajesVistos === 0 && contadorMensajesTexto > 0) { mensajesVistos = contadorMensajesTexto; }
 
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
