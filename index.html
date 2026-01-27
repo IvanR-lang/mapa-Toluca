@@ -23,30 +23,45 @@
         .brand-header span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
         .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px; vertical-align: middle; }
 
-        /* --- CORRECCIÓN DEL DRAWER ADMIN --- */
+        /* --- DRAWER ADMIN (CAJÓN) --- */
         #adminDrawer { 
             position: fixed; 
             top: 0; 
             left: 0; 
             width: 100%; 
             height: 0; 
-            background: #0b0e14; 
+            background: #111; /* Fondo oscuro del cajón */
             z-index: 50000; 
             transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden; /* Mantiene el contenido oculto */
+            overflow-y: auto; /* Permite scroll si la consola es muy alta */
             border-bottom: 2px solid #00d4ff;
             display: none; 
             flex-direction: column;
+            align-items: center;
+            padding-top: 20px; /* Espacio arriba */
         }
-        #adminDrawer.open { height: 60vh; }
+        #adminDrawer.open { height: 70vh; }
+
+        /* --- LA CONSOLA IZA (Diseño Blanco Restaurado) --- */
+        .iza-card {
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            max-width: 90%; 
+            width: 400px; 
+            border-top: 5px solid #1a1a1a;
+            color: #333;
+            margin-bottom: 20px;
+        }
 
         /* EL BOTÓN AHORA ES INDEPENDIENTE Y SE MUEVE */
         #adminHandleBtn { 
             position: fixed; 
-            top: 0; /* Empieza arriba */
+            top: 0; 
             left: 50%; 
             transform: translateX(-50%);
-            width: 120px; 
+            width: 140px; 
             height: 30px; 
             background: #0b0e14; 
             color: #00d4ff; 
@@ -60,14 +75,11 @@
             border-top: none;
             z-index: 50001;
             box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
-            display: none; /* Se oculta si no es admin */
-            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave */
+            display: none; 
+            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #adminHandleBtn.open { top: 60vh; } /* Baja cuando se abre */
+        #adminHandleBtn.open { top: 70vh; } 
 
-        .iza-content { padding: 20px; color: #d1d5db; font-family: monospace; font-size: 11px; height: 100%; overflow-y: auto; }
-        .iza-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; }
-        
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
@@ -143,18 +155,33 @@
 <body>
 
     <div id="adminDrawer">
-        <div class="iza-content" id="izaConsoleOutput">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                <strong style="color:#00d4ff; font-size:14px;">IZA SECURITY PROTOCOL</strong>
-                <span style="color:#28a745; font-size:10px;">● SYSTEM ONLINE</span>
+        <div class="iza-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
+                <div>
+                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Network Admin</h2>
+                    <code style="font-size:11px; color:#007bff; font-weight:600;">Secure Node: Iza_Core</code>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
+                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> ACTIVE
+                </div>
             </div>
-            <div class="iza-stat"><span>Admin Status:</span> <span style="color:#e63946">UNLOCKED</span></div>
-            <div class="iza-stat"><span>Pending Reviews:</span> <span id="statPendientes" style="color:#f39c12">0</span></div>
-            <div class="iza-stat"><span>Total Markers:</span> <span id="statTotal">0</span></div>
-            <br>
-            <div id="izaLogArea" style="color:#666;">Waiting for data stream...</div>
+            
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-bottom:5px;"><span>SYSTEM LOAD</span><span>STABLE (0.4ms)</span></div>
+                <div style="width:100%; height:4px; background:#e9ecef; border-radius:2px;"><div style="width:15%; height:100%; background:#28a745; border-radius:2px;"></div></div>
+            </div>
+
+            <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
+                <div class="iza-stat" style="border:none; padding:4px 0; color:#333;"><strong>Pending Reviews:</strong> <span id="statPendientes" style="color:#f39c12; font-weight:bold;">0</span></div>
+                <div class="iza-stat" style="border:none; padding:4px 0; color:#333;"><strong>Total Markers:</strong> <span id="statTotal" style="font-weight:bold;">0</span></div>
+            </div>
+
+            <div id="izaLogArea" style="background:#0b0e14; color:#00d4ff; padding:15px; border-radius:8px; font-family:monospace; font-size:10px; height:80px; overflow-y:auto; border:1px solid #333;">
+                Initializing...
+            </div>
         </div>
     </div>
+
     <div id="adminHandleBtn" onclick="toggleAdminDrawer()">▼ ADMIN IZA ▼</div>
 
     <div id="miraCentral">📍</div>
@@ -350,12 +377,11 @@
             const drawer = document.getElementById('chatDrawer');
             drawer.classList.toggle('open'); 
             
-            // LÓGICA DE FLECHA (▲ / ▼)
             const handleText = document.getElementById('chatHandleText');
             if (drawerAbierto) {
-                handleText.innerText = "RED CIUDADANA ACTIVA ▼"; // Flecha abajo
+                handleText.innerText = "RED CIUDADANA ACTIVA ▼"; 
             } else {
-                handleText.innerText = "RED CIUDADANA ACTIVA ▲"; // Flecha arriba
+                handleText.innerText = "RED CIUDADANA ACTIVA ▲"; 
             }
 
             if (drawerAbierto && tabActual === 'chat') {
@@ -363,7 +389,6 @@
             }
         }
 
-        // LÓGICA DEL DRAWER ADMIN
         function toggleAdminDrawer() {
             if (!modoAdminDisponible) return;
             panelAdminAbierto = !panelAdminAbierto;
@@ -372,11 +397,11 @@
             
             if (panelAdminAbierto) {
                 drawer.classList.add('open');
-                btn.classList.add('open'); // El botón baja
+                btn.classList.add('open'); 
                 btn.innerText = "▲ CERRAR ADMIN ▲";
             } else {
                 drawer.classList.remove('open');
-                btn.classList.remove('open'); // El botón sube
+                btn.classList.remove('open'); 
                 btn.innerText = "▼ ADMIN IZA ▼";
             }
             cargarPuntos();
@@ -557,7 +582,7 @@
         function checarHash() {
             if (window.location.hash === '#admin') {
                 modoAdminDisponible = true;
-                document.getElementById('adminDrawer').style.display = 'flex';
+                // YA NO MOSTRAMOS EL DRAWER AQUÍ, SOLO EL BOTÓN PARA ABRIRLO
                 document.getElementById('adminHandleBtn').style.display = 'block';
                 document.getElementById('adminBadge').style.display = 'inline-block';
                 
