@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#000000">
-    <title>VIGIA TOLUCA</title>
+    <title>Red Vial Toluca</title>
     
     <link rel="manifest" href='data:application/manifest+json,{"name":"Red Vial Toluca","short_name":"Red Vial","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/124/124034.png","sizes":"192x192","type":"image/png"}]}' />
 
@@ -27,9 +27,8 @@
         .vote-box { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; align-items: center; }
         .btn-vote { background: #222; border: 1px solid #444; color: #888; border-radius: 15px; padding: 2px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s; }
         .btn-vote:hover { background: #333; }
-        .btn-vote.voted-like { background: #1b4d2e; color: #4caf50; border-color: #4caf50; pointer-events: none; } /* Verde si ya votaste like */
-        .btn-vote.voted-dislike { background: #4d1b1b; color: #ff4d4d; border-color: #ff4d4d; pointer-events: none; } /* Rojo si ya votaste dislike */
-        
+        .btn-vote.voted-like { background: #1b4d2e; color: #4caf50; border-color: #4caf50; pointer-events: none; } 
+        .btn-vote.voted-dislike { background: #4d1b1b; color: #ff4d4d; border-color: #ff4d4d; pointer-events: none; } 
         .vote-count { font-weight: bold; }
 
         /* DRAWER ADMIN */
@@ -46,6 +45,8 @@
         /* MODALES */
         #avisoLegal, #manualVigia, #registroNombre, #registroNegocio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
+        .modal-box h2 { font-size: 18px; margin-top: 0; color: #e63946; } /* Aseguramos estilo del título */
+        .modal-box p { font-size: 13px; line-height: 1.5; color: #ccc; }
         .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
 
@@ -140,12 +141,15 @@
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🛡️ TÉRMINOS DE USO</h2>
-            <p>Esta plataforma tiene como fin la <b>PREVENCIÓN DE RIESGOS VIALES</b>.</p>
+            <h2>🛡️ TÉRMINOS DE USO Y RESPONSABILIDAD</h2>
+            <p>Esta plataforma tiene como único fin la <b>PREVENCIÓN DE RIESGOS VIALES Y MOVILIDAD EFICIENTE</b>.</p>
             <ul style="text-align: left; margin-bottom: 15px; font-size:12px; color:#ddd; padding-left:15px; line-height: 1.4;">
-                <li><b>1. Uso Lícito:</b> Prohibido obstaculizar labores oficiales.</li>
-                <li><b>2. Responsabilidad:</b> El usuario es responsable de lo que comparte.</li>
+                <li><b>1. Carácter Informativo:</b> Los reportes son referencia ciudadana sin validez oficial.</li>
+                <li><b>2. Uso Lícito (Art. 333 CPEM):</b> Se prohíbe estrictamente el uso de esta herramienta para obstaculizar labores oficiales, evadir la justicia o facilitar actos delictivos.</li>
+                <li><b>3. Responsabilidad:</b> El usuario asume total responsabilidad legal por la información que comparte. Los desarrolladores se deslindan de cualquier mal uso.</li>
+                <li><b>4. Seguridad:</b> Prohibido manipular la app mientras se conduce el vehículo.</li>
             </ul>
+            <p style="font-size:11px; color:#888;">El acceso implica la aceptación irrevocable de estos términos.</p>
             <button class="btn-main" onclick="irARegistro()">ACEPTO Y ME COMPROMETO</button>
         </div>
     </div>
@@ -383,15 +387,12 @@
             } catch(e) { alert("Error al aprobar."); }
         }
 
-        // --- SISTEMA DE VOTACIÓN V7.0 ---
         async function realizarVoto(id, tipo, likesActuales, dislikesActuales, votersActuales) {
             if (!miNombre) return alert("Registra tu nombre para votar.");
             
-            // 1. Verificar si ya votó
             let voters = votersActuales || [];
             if (voters.includes(miNombre)) return alert("⚠️ Ya votaste en este reporte.");
 
-            // 2. Calcular nuevos valores
             let nuevosLikes = parseInt(likesActuales || 0);
             let nuevosDislikes = parseInt(dislikesActuales || 0);
             
@@ -400,18 +401,13 @@
             
             voters.push(miNombre);
 
-            // 3. Regla de Moderación: 3 Dislikes = BORRAR
             if (nuevosDislikes >= 3) {
-                borrarReporte(id); // Borrado automático
+                borrarReporte(id); 
                 alert("🗑️ Reporte eliminado por la comunidad (3 reportes negativos).");
                 return;
             }
 
-            // 4. Enviar actualización al servidor (Simulación PUT)
-            // NOTA: Tu API debe soportar actualizar campos. Si no, esto es una simulación visual.
             try {
-                // Aquí estamos haciendo un "truco": Como la API simple no suele tener UPDATE,
-                // enviamos una señal especial. En un backend real usarías method: 'PUT'.
                 await fetch(`/api/chat/${id}/vote`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
@@ -451,14 +447,12 @@
                     let esReporteImportante = false;
                     let esNegocio = p.texto.includes('[NEGOCIO]');
                     
-                    // Datos de votación (si no existen, son 0)
                     let likes = p.likes || 0;
                     let dislikes = p.dislikes || 0;
                     let voters = p.voters || [];
                     
-                    // Verificar si YO ya voté para pintar botones
-                    let yaVoteLike = voters.includes(miNombre) ? 'voted-like' : ''; // Clase visual (verde)
-                    let yaVoteDislike = voters.includes(miNombre) ? 'voted-dislike' : ''; // Clase visual (roja)
+                    let yaVoteLike = voters.includes(miNombre) ? 'voted-like' : ''; 
+                    let yaVoteDislike = voters.includes(miNombre) ? 'voted-dislike' : ''; 
 
                     if (iconoEmoji) { 
                         esReporteImportante = true;
@@ -474,9 +468,8 @@
                             botonBorrar = `<div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div>`;
                         }
 
-                        // --- HTML DE VOTACIÓN ---
                         let botonesVoto = "";
-                        if (!esPendiente && !esNegocio) { // Solo se votan reportes viales, no negocios ni pendientes
+                        if (!esPendiente && !esNegocio) { 
                             botonesVoto = `
                             <div class="vote-box">
                                 <button class="btn-vote ${yaVoteLike}" onclick="realizarVoto('${p._id}', 'like', ${likes}, ${dislikes}, ${JSON.stringify(voters).replace(/"/g, '&quot;')})">👍 <span class="vote-count">${likes}</span></button>
@@ -507,7 +500,6 @@
                     }
                     
                     if (esReporteImportante) { 
-                        // En la lista también mostramos los likes
                         let htmlVotoLista = (!esPendiente && !esNegocio) ? `<span style="font-size:10px; color:#888; margin-left:5px;">(👍${likes})</span>` : '';
                         htmlReportes += `<div class="chat-item clickable" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} ${htmlVotoLista} <span class="chat-date">${p.fecha} 📍</span></div>`;
                     } else { 
@@ -570,7 +562,6 @@
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             
-            // INICIALIZAMOS LOS CAMPOS DE VOTACIÓN EN 0
             try { await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng, likes: 0, dislikes: 0, voters: [] }) }); ultimoReporteTime = now; ultimoReporteCoords = [lat, lng]; cargarPuntos(); document.getElementById('chatInput').value = ""; } catch (e) { alert("Error."); }
         }
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
