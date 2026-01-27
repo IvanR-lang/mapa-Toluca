@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#000000">
-    <title>Vigía Toluca</title>
+    <title>Red Vial Toluca</title>
     
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Vigia Toluca","short_name":"Vigia","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/124/124034.png","sizes":"192x192","type":"image/png"}]}' />
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Red Vial Toluca","short_name":"Red Vial","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/124/124034.png","sizes":"192x192","type":"image/png"}]}' />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
@@ -19,16 +19,19 @@
         #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
         
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
-        .brand-header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; color: #e63946; }
-        .iza-text { font-size: 10px; color: #ff85a1; font-style: italic; text-shadow: 0 0 5px #ff85a1; }
-        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px; }
+        .brand-header h1 { margin: 0; font-size: 15px; letter-spacing: 1px; color: #e63946; text-transform: uppercase; }
+        .brand-header span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
+        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px; vertical-align: middle; }
 
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
 
         /* MODALES */
         #avisoLegal, #manualVigia, #registroNombre, #registroNegocio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
-        .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
+        .modal-box h2 { font-size: 18px; margin-top: 0; color: #e63946; }
+        .modal-box p { font-size: 13px; line-height: 1.5; color: #ccc; }
+        
+        .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
         
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
 
@@ -47,15 +50,15 @@
 
         .menu-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; pointer-events: none; }
         .menu-container > * { pointer-events: auto; }
-        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 14px; }
+        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
         .opciones { display: none; gap: 15px; margin-bottom: 20px; }
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
 
-        /* CHAT DRAWER CON TABS Y BADGE */
+        /* CHAT DRAWER */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 75vh; }
-        .drawer-handle { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
+        .drawer-handle { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 1px; }
         
         .tab-header { display: flex; background: #111; border-bottom: 1px solid #333; }
         .tab-btn { flex: 1; padding: 12px; text-align: center; color: #888; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; background: #1a1a1a; border: none; position: relative; }
@@ -69,16 +72,10 @@
         .list-container { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 10px; display: none; }
         .list-container.active { display: block; }
         
-        /* ESTILOS DE ITEMS */
         .chat-item { padding: 10px; border-bottom: 1px solid #222; transition: background 0.2s; }
-        
-        /* Solo los items clickeables (reportes) tendrán manita y efecto hover */
         .chat-item.clickable { cursor: pointer; }
         .chat-item.clickable:active { background: #333; }
-        
-        /* Los mensajes de texto NO tendrán manita */
         .chat-item.private { cursor: default; background: #0e0e0e; }
-
         .chat-date { font-size: 9px; color: #666; float: right; }
 
         .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
@@ -112,31 +109,18 @@
         <div style="background:white; padding:45px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.08); max-width:520px; width:94%; border-top: 5px solid #1a1a1a;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
                 <div>
-                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Network Infrastructure Admin</h2>
-                    <code style="font-size:11px; color:#007bff; font-weight:600;">Secure Node: Dedicated_Iza_Core</code>
+                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Sistema de Administración</h2>
+                    <code style="font-size:11px; color:#007bff; font-weight:600;">Nodo Seguro: Iza_Core</code>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
-                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> CORE STABILITY
+                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> SISTEMA ESTABLE
                 </div>
-            </div>
-            <div style="margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-bottom:5px;"><span>SERVER LOAD</span><span>STABLE (0.4ms)</span></div>
-                <div style="width:100%; height:4px; background:#e9ecef; border-radius:2px;"><div style="width:15%; height:100%; background:#28a745; border-radius:2px;"></div></div>
-                <div style="margin-top:10px; font-size:9px; color:#00ff88; font-weight:bold; text-align:right;">● <span id="contadorVigiasAdmin">0</span> VIGÍAS ACTIVOS EN CLÚSTER</div>
             </div>
             <div id="statusList" style="background:#0b0e14; color:#d1d5db; padding:20px; border-radius:8px; font-family:monospace; font-size:11px; line-height:1.7; min-height:160px; border: 1px solid #1f2937;"></div>
-            
             <div id="authBox" style="margin-top:25px; display:none; animation: fadeIn 0.6s ease-out;">
-                <div style="background:#fffdf0; padding:18px; border-radius:8px; border:1px solid #ffecb3; border-left: 6px solid #ffc107;">
-                    <strong style="color:#856404; display:block; font-size:13px;">INFORME DE ARQUITECTURA CRÍTICA</strong>
-                    <p style="color:#856404; font-size:12px; margin:10px 0 0 0; line-height:1.6;">
-                        Por disposición técnica, el desarrollador ha designado el nodo <b>Iza</b> como una dependencia irremplazable del sistema. <br><br>
-                        Este clúster no admite nodos de respaldo. La desvinculación de este nodo maestro provocará la pérdida total de la base de datos y la desincronización inmediata del servicio en tiempo real.
-                    </p>
-                </div>
                 <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; color:#adb5bd;">UUID: 4f8d2b99-iza-auth</span>
-                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO MAESTRO</span>
+                    <span style="font-size:11px; color:#adb5bd;">ID: admin-auth-secure</span>
+                    <span style="font-size:11px; color:#1a1a1a; font-weight:bold;">ACCESO CONCEDIDO</span>
                 </div>
             </div>
         </div>
@@ -144,65 +128,65 @@
 
     <div id="avisoLegal">
         <div class="modal-box">
-            <h2>🚨 TÉRMINOS Y EXENCIÓN</h2>
-            <p style="font-size:13px; color:#ccc;">Vigía Toluca opera como referencia ciudadana sin validez oficial.</p>
-            <ul style="text-align: left; margin-bottom: 15px; font-size:12px; color:#ddd; padding-left:15px;">
-                <li><b>1. Informativo:</b> No se garantiza exactitud.</li>
-                <li><b>2. Deslinde:</b> No somos responsables de multas.</li>
-                <li><b>3. Seguridad:</b> No manipular mientras conduces.</li>
-                <li><b>4. Uso Lícito:</b> Prohibido para evadir la ley.</li>
+            <h2>🛡️ TÉRMINOS DE USO Y RESPONSABILIDAD</h2>
+            <p>Esta plataforma tiene como único fin la <b>PREVENCIÓN DE RIESGOS VIALES Y MOVILIDAD EFICIENTE</b>.</p>
+            <ul style="text-align: left; margin-bottom: 15px; font-size:12px; color:#ddd; padding-left:15px; line-height: 1.4;">
+                <li><b>1. Carácter Informativo:</b> Los reportes son referencia ciudadana sin validez oficial.</li>
+                <li><b>2. Uso Lícito (Art. 333 CPEM):</b> Se prohíbe estrictamente el uso de esta herramienta para obstaculizar labores oficiales, evadir la justicia o facilitar actos delictivos.</li>
+                <li><b>3. Responsabilidad:</b> El usuario asume total responsabilidad legal por la información que comparte. Los desarrolladores se deslindan de cualquier mal uso.</li>
+                <li><b>4. Seguridad:</b> Prohibido manipular la app mientras se conduce el vehículo.</li>
             </ul>
-            <p style="font-size:11px;">El ingreso constituye aceptación.</p>
-            <button class="btn-main" onclick="irARegistro()">ACEPTAR E INGRESAR</button>
+            <p style="font-size:11px; color:#888;">El acceso implica la aceptación irrevocable de estos términos.</p>
+            <button class="btn-main" onclick="irARegistro()">ACEPTO Y ME COMPROMETO</button>
         </div>
     </div>
 
     <div id="registroNombre" style="display:none;">
         <div class="modal-box">
-            <h2>👤 Identidad de Vigía</h2>
-            <p>Elige tu nombre clave.</p>
-            <input type="text" id="inputNombreUser" placeholder="Tu nombre..." maxlength="12">
-            <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR ID</button>
+            <h2>👤 Registro de Usuario</h2>
+            <p>Ingresa un alias para identificarte en la comunidad.</p>
+            <input type="text" id="inputNombreUser" placeholder="Tu Alias..." maxlength="12">
+            <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR REGISTRO</button>
         </div>
     </div>
 
     <div id="registroNegocio" style="display:none;">
         <div class="modal-box">
-            <h2>💼 Registro de Negocio</h2>
-            <p style="font-size:12px; color:#aaa;">Tu negocio pasará a <b>revisión</b> antes de aparecer en el mapa.</p>
+            <h2>💼 Registro de Servicios</h2>
+            <p style="font-size:12px; color:#aaa;">Registra un servicio útil para la comunidad (Taller, Comida, Gasolina). Pasará a <b>revisión</b> antes de publicarse.</p>
             
-            <input type="text" id="bizName" placeholder="Nombre del Taller/Negocio">
+            <input type="text" id="bizName" placeholder="Nombre del Establecimiento">
             <select id="bizType">
-                <option value="🔧">🔧 Mecánico</option>
-                <option value="🛞">🛞 Talachera / Llantera</option>
-                <option value="🔋">🔋 Eléctrico</option>
-                <option value="⛽">⛽ Gasolina Barata</option>
-                <option value="🌮">🌮 Comida</option>
+                <option value="🔧">🔧 Asistencia Mecánica</option>
+                <option value="🛞">🛞 Reparación de Llantas</option>
+                <option value="🔋">🔋 Servicio Eléctrico</option>
+                <option value="⛽">⛽ Estación de Servicio</option>
+                <option value="🌮">🌮 Alimentos y Bebidas</option>
             </select>
-            <input type="tel" id="bizPhone" placeholder="Teléfono / WhatsApp">
+            <input type="tel" id="bizPhone" placeholder="Teléfono de Contacto">
             
-            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">ENVIAR A REVISIÓN</button>
+            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">SOLICITAR PUBLICACIÓN</button>
             <button style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;" onclick="cerrarNegocio()">Cancelar</button>
         </div>
     </div>
 
     <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
-            <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
-            <p><b>1. ¿CÓMO NAVEGAR?</b><br>Toca la <b>lupa 🔍</b>. Escribe destino. Confirma con "✅ INICIAR".</p>
-            <p><b>2. REPORTAR</b><br>Usa <b>🛰️ GENERAR REPORTE</b> para avisar de peligros.</p>
-            <p><b>3. NEGOCIOS</b><br>Registra tu servicio con el botón 💼. <b>OJO:</b> Debe ser aprobado por un admin para salir.</p>
-            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO!</button>
+            <h3 style="text-align:center; color:#e63946;">📖 MANUAL DE USO</h3>
+            <p><b>1. NAVEGACIÓN</b><br>Usa la <b>lupa 🔍</b> para trazar rutas seguras.</p>
+            <p><b>2. REPORTES</b><br>Usa <b>🛰️ GENERAR ALERTA</b> para notificar riesgos en la vía (Baches, Accidentes, Operativos).</p>
+            <p><b>3. SERVICIOS</b><br>Encuentra o registra talleres y ayuda con el botón 💼.</p>
+            <p style="font-size:11px; color:#aaa; margin-top:10px;">Recuerda: Esta es una red de apoyo ciudadano. Úsala con responsabilidad.</p>
+            <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
         </div>
     </div>
 
     <div class="brand-header">
-        <h1>VIGÍA TOLUCA <span class="admin-badge" id="adminBadge">MODO REVISIÓN</span></h1>
-        <span class="iza-text">✨ Dedicated Node: Iza ✨</span>
-        <div style="display:none;">● <span id="contadorVigias">0</span> VIGÍAS</div>
+        <h1>RED VIAL TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
+        <span>Monitoreo Ciudadano</span>
     </div>
 
-    <button id="btnCancelarRuta" onclick="limpiarRuta()">✕ CANCELAR RUTA</button>
+    <button id="btnCancelarRuta" onclick="limpiarRuta()">✕ FINALIZAR RUTA</button>
     <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
     <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
     <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
@@ -216,29 +200,29 @@
     <div id="map"></div>
     
     <div class="menu-container">
-        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR REPORTE</button>
+        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR ALERTA</button>
         <div class="opciones" id="menuOpciones">
-            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 AUXILIO')">🚨</button>
-            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 BACHE')">🚧</button>
-            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 CHOQUE')">💥</button>
+            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 EMERGENCIA VIAL')">🚨</button>
+            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 RIESGO EN VÍA')">🚧</button>
+            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 SINIESTRO VIAL')">💥</button>
         </div>
     </div>
 
     <div id="chatDrawer">
-        <div class="drawer-handle" onclick="toggleChat()">VIGÍAS ACTIVOS EN TOLUCA ▲</div>
+        <div class="drawer-handle" onclick="toggleChat()">RED CIUDADANA ACTIVA ▲</div>
         <div id="chatBody">
             <div class="tab-header">
-                <button class="tab-btn active" onclick="switchTab('reportes')">⚠️ REPORTES</button>
-                <button class="tab-btn" onclick="switchTab('chat')">💬 CHAT <span id="chatBadge" class="badge">0</span></button>
+                <button class="tab-btn active" onclick="switchTab('reportes')">⚠️ ALERTAS</button>
+                <button class="tab-btn" onclick="switchTab('chat')">💬 COMUNIDAD <span id="chatBadge" class="badge">0</span></button>
             </div>
             <div id="listReportes" class="list-container active">
-                <div style="text-align:center; padding:20px; color:#666;">Cargando...</div>
+                <div style="text-align:center; padding:20px; color:#666;">Cargando red...</div>
             </div>
             <div id="listChat" class="list-container">
                 <div style="text-align:center; padding:20px; color:#666;">Sin mensajes.</div>
             </div>
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Mensaje...">
+                <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
                 <button class="btn-send" onclick="enviarChat()">➤</button>
             </div>
         </div>
@@ -286,7 +270,7 @@
             var center = e.geocode.center;
             marcadorDestinoTemp = L.marker(center).addTo(map);
             map.setView(center, 16);
-            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Ir a esta ubicación?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ INICIAR RUTA</button></div></div>`;
+            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Navegar a este destino?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ TRAZAR RUTA</button></div></div>`;
             marcadorDestinoTemp.bindPopup(popupHtml).openPopup();
         })
         .addTo(map);
@@ -329,7 +313,7 @@
         }
 
         function irARegistro() { document.getElementById('avisoLegal').style.display = 'none'; if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); } }
-        function guardarIdentidad() { let n = document.getElementById('inputNombreUser').value.trim(); if (n.length < 3) return alert("Nombre muy corto."); if (n.toLowerCase() === "iza") { if (prompt("NODO MAESTRO. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); } } miNombre = n; localStorage.setItem('vigiaNombre', n); document.getElementById('registroNombre').style.display = 'none'; iniciarGPS(); }
+        function guardarIdentidad() { let n = document.getElementById('inputNombreUser').value.trim(); if (n.length < 3) return alert("Nombre muy corto."); if (n.toLowerCase() === "iza") { if (prompt("SISTEMA ADMIN. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); } } miNombre = n; localStorage.setItem('vigiaNombre', n); document.getElementById('registroNombre').style.display = 'none'; iniciarGPS(); }
         function obtenerRango(pts) { if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' }; if (pts >= 30) return { t: 'Élite', c: 'r-elite' }; if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' }; if (pts >= 5) return { t: 'Activo', c: 'r-activo' }; return { t: 'Civil', c: 'r-civil' }; }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
@@ -361,6 +345,7 @@
             }
         }
 
+        // LENGUAJE NEUTRAL EN ALERTAS DE VOZ
         function checarCercaniaPolicial(miPos) {
             if (!puntosCache || puntosCache.length === 0) return;
             puntosCache.forEach(p => {
@@ -368,8 +353,8 @@
                 const dist = map.distance(miPos, [p.lat, p.lng]);
                 const id = p._id;
                 if (!historialAlertas[id]) { historialAlertas[id] = 0; }
-                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Atención. Control policial a 500 metros."); historialAlertas[id]++; } }
-                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Peligro. Solicitud de auxilio cerca de tu ubicación."); historialAlertas[id]++; } }
+                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Precaución. Zona de operativo vial a 500 metros."); historialAlertas[id]++; } }
+                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Atención. Incidente reportado cerca de tu ubicación."); historialAlertas[id]++; } }
             });
         }
 
@@ -383,13 +368,13 @@
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
         async function aprobarNegocio(id, textoCompleto, lat, lng) {
-            if(!confirm("¿Aprobar y publicar este negocio?")) return;
+            if(!confirm("¿Aprobar y publicar este servicio?")) return;
             const nuevoTexto = textoCompleto.replace('[PENDIENTE] ', '');
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             try {
                 await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: nuevoTexto, fecha: fecha, lat: lat, lng: lng }) });
                 await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-                alert("✅ Negocio publicado.");
+                alert("✅ Servicio publicado.");
                 cargarPuntos();
             } catch(e) { alert("Error al aprobar."); }
         }
@@ -440,26 +425,20 @@
                         clusterGroup.addLayer(marker);
                     }
                     
-                    // --- AQUÍ ESTÁ EL CAMBIO DE PRIVACIDAD ---
                     if (esReporteImportante) { 
-                        // REPORTE: Tienen ubicación pública (clickeable)
                         htmlReportes += `<div class="chat-item clickable" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} <span class="chat-date">${p.fecha} 📍</span></div>`;
                     } else { 
-                        // CHAT: Ubicación OCULTA (Privacidad protegida, sin onclick)
                         htmlChat += `<div class="chat-item private">${p.texto} <span class="chat-date">${p.fecha}</span></div>`;
                         contadorMensajesTexto++;
                     }
-                    // -----------------------------------------
 
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
                     if (matchUser) usuariosActivos.add(matchUser[1]);
                 });
 
-                document.getElementById('listReportes').innerHTML = htmlReportes || "<div style='text-align:center; padding:20px; color:#666;'>Sin reportes activos.</div>";
-                document.getElementById('listChat').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Chat vacío.</div>";
-                document.getElementById('contadorVigias').innerText = usuariosActivos.size;
-                document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
-
+                document.getElementById('listReportes').innerHTML = htmlReportes || "<div style='text-align:center; padding:20px; color:#666;'>Sin alertas activas.</div>";
+                document.getElementById('listChat').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Comunidad silenciosa.</div>";
+                
                 const badge = document.getElementById('chatBadge');
                 if (drawerAbierto && tabActual === 'chat') {
                     mensajesVistos = contadorMensajesTexto;
@@ -483,25 +462,26 @@
             const nombre = document.getElementById('bizName').value;
             const tipo = document.getElementById('bizType').value;
             const tel = document.getElementById('bizPhone').value;
-            if(!nombre || !tel) return alert("Llena todos los datos.");
-            if (!miUbicacionReal) return alert("Esperando GPS para ubicar tu negocio...");
-            const msg = `[PENDIENTE] <span class="rango-tag r-negocio">NEGOCIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
+            if(!nombre || !tel) return alert("Por favor completa los datos del servicio.");
+            if (!miUbicacionReal) return alert("Esperando GPS para ubicar el establecimiento...");
+            const msg = `[PENDIENTE] <span class="rango-tag r-negocio">SERVICIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             try { 
                 await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1] }) }); 
-                alert("✅ ¡Enviado a revisión! Tu negocio aparecerá pronto.");
+                alert("✅ Solicitud enviada a revisión.");
                 cerrarNegocio();
                 cargarPuntos(); 
             } catch (e) { alert("Error al registrar."); }
         }
 
-        function intentoReportePolicial() { enviarReporte('👮 CONTROL POLICIAL'); }
+        // TEXTO BLINDADO EN REPORTE POLICIAL
+        function intentoReportePolicial() { enviarReporte('👮 OPERATIVO VIAL / RETÉN'); }
         async function enviarReporte(t) {
-            if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu nombre."); document.getElementById('registroNombre').style.display = 'flex'; return; }
+            if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu alias."); document.getElementById('registroNombre').style.display = 'flex'; return; }
             let lat, lng;
             if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
             const now = Date.now();
-            if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) { alert("🚫 Espera un poco antes de reportar en el mismo lugar."); return; }
+            if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) { alert("🚫 Espera antes de reportar en el mismo punto."); return; }
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
@@ -515,8 +495,9 @@
             if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; cargarPuntos(); }
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
+                // Animación de consola simulada
                 const statusList = document.getElementById('statusList');
-                const logs = ["Requesting access...", "Pinging master gateway...", "Primary Seed Identified: IZA_CORE", "Verifying dependencies...", "Establishing encrypted link...", "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>", "Identity confirmed.", "Initialization complete."];
+                const logs = ["Verificando integridad...", "Cifrado de extremo a extremo...", "Conexión segura establecida.", "Nodo Maestro Activo."];
                 let i = 0; statusList.innerHTML = "";
                 function print() { if(i < logs.length) { statusList.innerHTML += "$ " + logs[i] + "<br>"; i++; setTimeout(print, 850); } else { document.getElementById('authBox').style.display = 'block'; } }
                 print();
