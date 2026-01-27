@@ -180,16 +180,37 @@
         </div>
     </div>
 
-    <div id="manualVigia" style="display:none;">
+   <div id="manualVigia" style="display:none;">
         <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
-            <h3 style="text-align:center; color:#e63946;">📖 GUÍA RÁPIDA</h3>
-            <p><b>1. VOTACIÓN 👍👎:</b> Valida reportes con el pulgar arriba. Si un reporte falso recibe 3 "No me gusta" (👎), se eliminará automáticamente.</p>
-            <button class="btn-main" onclick="toggleManual()">ENTENDIDO</button>
+            <h3 style="text-align:center; color:#e63946;">📖 MANUAL DE USO</h3>
+            
+            <p style="margin-bottom:8px;"><b>1. 🗺️ NAVEGACIÓN:</b><br>
+            Usa la <b>lupa 🔍</b> (esquina superior) para buscar tu destino y trazar la mejor ruta.</p>
+
+            <p style="margin-bottom:8px;"><b>2. 🛰️ REPORTAR:</b><br>
+            Toca el botón rojo <b>GENERAR ALERTA</b> para avisar de peligros. Elige el tipo de incidente (🚨, 🚧, 💥).</p>
+
+            <div style="background:#222; padding:8px; border-radius:8px; border:1px solid #444; margin-bottom:8px;">
+                <p style="margin:0; color:#e63946; font-weight:bold;">3. 👍 COMUNIDAD (NUEVO):</p>
+                <ul style="padding-left:15px; margin:5px 0; color:#ccc;">
+                    <li><b>Validar:</b> Dale <b>LIKE (👍)</b> si el reporte es real.</li>
+                    <li><b>Limpiar:</b> Dale <b>DISLIKE (👎)</b> si ya no hay nada.</li>
+                    <li><b>Regla de Oro:</b> Si un reporte junta <b>3 Dislikes</b>, se elimina automáticamente.</li>
+                </ul>
+            </div>
+
+            <p style="margin-bottom:8px;"><b>4. 🗑️ TUS REPORTES:</b><br>
+            ¿Te equivocaste? Ahora puedes <b>borrar tus propios mensajes</b> buscando el botón de basura en el mapa.</p>
+
+            <p><b>5. 💼 SERVICIOS:</b><br>
+            Usa el botón morado para encontrar o registrar talleres, llanteras y comida.</p>
+
+            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO, VAMOS!</button>
         </div>
     </div>
 
     <div class="brand-header">
-        <h1>RED VIAL TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
+        <h1>VIGIA TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
         <span>Monitoreo Ciudadano</span>
     </div>
 
@@ -592,4 +613,5 @@
     </script>
 </body>
 </html>
+
 
