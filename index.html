@@ -52,15 +52,18 @@
         .opciones.active { display: flex; }
         .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
 
-        /* CHAT DRAWER CON TABS */
+        /* CHAT DRAWER CON TABS Y BADGE */
         #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
         #chatDrawer.open { height: 75vh; }
         .drawer-handle { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; }
         
         .tab-header { display: flex; background: #111; border-bottom: 1px solid #333; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; color: #888; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; background: #1a1a1a; border: none; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; color: #888; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; background: #1a1a1a; border: none; position: relative; }
         .tab-btn.active { color: #fff; background: #222; border-bottom: 3px solid #e63946; }
         
+        /* ESTILO DEL CONTADOR ROJO (BADGE) */
+        .badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; position: absolute; top: 8px; right: 20px; box-shadow: 0 0 5px #e63946; }
+
         #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
         #chatDrawer.open #chatBody { display: flex; }
         
@@ -85,7 +88,6 @@
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
         .biz-marker { border: 2px solid #fff; background: #9b59b6; color: white; box-shadow: 0 0 10px #9b59b6; }
-        /* MARCADOR PENDIENTE DE REVISIÓN */
         .pending-marker { border: 2px dashed #f39c12; background: #222; color: #f39c12; box-shadow: 0 0 10px #f39c12; opacity: 0.9; }
 
         .leaflet-routing-container { display: none; } 
@@ -220,7 +222,7 @@
         <div id="chatBody">
             <div class="tab-header">
                 <button class="tab-btn active" onclick="switchTab('reportes')">⚠️ REPORTES</button>
-                <button class="tab-btn" onclick="switchTab('chat')">💬 CHAT</button>
+                <button class="tab-btn" onclick="switchTab('chat')">💬 CHAT <span id="chatBadge" class="badge">0</span></button>
             </div>
             <div id="listReportes" class="list-container active">
                 <div style="text-align:center; padding:20px; color:#666;">Cargando...</div>
@@ -264,7 +266,11 @@
         let ultimoReporteTime = 0;
         let ultimoReporteCoords = null;
 
-        // DETECTAR MODO REVISIÓN (URL termina en #revision)
+        // VARIABLES DE NOTIFICACIÓN DE CHAT
+        let tabActual = 'reportes';
+        let drawerAbierto = false;
+        let mensajesVistos = 0;
+
         let esAdmin = window.location.hash === '#revision';
         if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; }
 
@@ -287,7 +293,7 @@
             controlRuta = L.Routing.control({ waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), destinoFinal], language: 'es', router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#00d4ff', opacity: 0.8, weight: 6}] }, addWaypoints: false, draggableWaypoints: false, fitSelectedRoutes: true, createMarker: function(i, wp, nWps) { if (i === nWps - 1) { return L.marker(wp.latLng, { icon: L.divIcon({ html: '🏁', className: 'custom-marker', iconSize: [30, 30] }) }); } return null; } }).addTo(map);
             document.getElementById('btnCancelarRuta').style.display = 'block';
             activarSeguimiento();
-            toggleChat(); 
+            if(drawerAbierto) toggleChat(); 
         }
 
         function limpiarRuta() {
@@ -302,7 +308,7 @@
             document.getElementById('lockBtn').innerText = '🔓';
             document.getElementById('miraCentral').style.display = 'block';
             map.setView([lat, lng], 18);
-            toggleChat();
+            if(drawerAbierto) toggleChat();
         }
 
         function iniciarGPS() {
@@ -321,15 +327,38 @@
         function obtenerRango(pts) { if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' }; if (pts >= 30) return { t: 'Élite', c: 'r-elite' }; if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' }; if (pts >= 5) return { t: 'Activo', c: 'r-activo' }; return { t: 'Civil', c: 'r-civil' }; }
         function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
         function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
-        function toggleChat() { document.getElementById('chatDrawer').classList.toggle('open'); }
+        
+        function toggleChat() { 
+            drawerAbierto = !drawerAbierto;
+            const drawer = document.getElementById('chatDrawer');
+            drawer.classList.toggle('open'); 
+            
+            // Si abrimos el drawer y el tab activo es CHAT, limpiamos notificaciones
+            if (drawerAbierto && tabActual === 'chat') {
+                document.getElementById('chatBadge').style.display = 'none';
+                // La variable mensajesVistos se actualiza en cargarPuntos si el tab está activo
+            }
+        }
+
         function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
         function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
         
         function switchTab(tab) {
+            tabActual = tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.list-container').forEach(l => l.classList.remove('active'));
-            if(tab === 'reportes') { document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); document.getElementById('listReportes').classList.add('active'); } 
-            else { document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); document.getElementById('listChat').classList.add('active'); }
+            
+            if(tab === 'reportes') { 
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); 
+                document.getElementById('listReportes').classList.add('active'); 
+            } else { 
+                // USUARIO CAMBIÓ A PESTAÑA CHAT
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); 
+                document.getElementById('listChat').classList.add('active');
+                
+                // Limpiar notificaciones
+                document.getElementById('chatBadge').style.display = 'none';
+            }
         }
 
         function checarCercaniaPolicial(miPos) {
@@ -353,17 +382,12 @@
         function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
         async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
 
-        // --- FUNCIÓN DE APROBACIÓN (SOLO ADMINS) ---
         async function aprobarNegocio(id, textoCompleto, lat, lng) {
             if(!confirm("¿Aprobar y publicar este negocio?")) return;
-            // 1. Quitamos la etiqueta [PENDIENTE]
             const nuevoTexto = textoCompleto.replace('[PENDIENTE] ', '');
             const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            
             try {
-                // 2. Creamos el nuevo reporte limpio
                 await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: nuevoTexto, fecha: fecha, lat: lat, lng: lng }) });
-                // 3. Borramos el reporte viejo (pendiente)
                 await fetch(`/api/chat/${id}`, { method: 'DELETE' });
                 alert("✅ Negocio publicado.");
                 cargarPuntos();
@@ -382,13 +406,12 @@
                 let htmlChat = "";
                 const usuariosActivos = new Set();
                 
+                // CONTADORES PARA NOTIFICACIÓN
+                let contadorMensajesTexto = 0;
+
                 puntos.reverse().forEach(p => {
-                    // --- FILTRO DE MODERACIÓN ---
                     let esPendiente = p.texto.includes('[PENDIENTE]');
-                    
-                    // Si es pendiente y NO soy admin, lo ignoro (return)
                     if (esPendiente && !esAdmin) return;
-                    // ----------------------------
 
                     const iconoEmoji = getIconHTML(p.texto);
                     let esReporteImportante = false;
@@ -396,18 +419,15 @@
                     
                     if (iconoEmoji) { 
                         esReporteImportante = true;
-                        
                         let claseMarcador = 'custom-marker';
                         if (esNegocio) claseMarcador += ' biz-marker';
-                        if (esPendiente) claseMarcador = 'custom-marker pending-marker'; // Naranja si es pendiente
+                        if (esPendiente) claseMarcador = 'custom-marker pending-marker';
 
                         const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: claseMarcador, iconSize: [35, 35] }) });
                         
-                        // POPUP DIFERENTE PARA ADMINS EN PENDIENTES
                         let popupContent = `<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`;
                         
                         if (esPendiente && esAdmin) {
-                            // Botón especial para aprobar
                             popupContent = `<div style="text-align:center; min-width:150px;">
                                 <strong style="color:#f39c12">⚠️ REVISIÓN PENDIENTE</strong><br>
                                 <div style="font-size:12px; margin:5px 0;">${p.texto}</div>
@@ -424,7 +444,13 @@
                     
                     const itemHTML = `<div class="chat-item" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} <span class="chat-date">${p.fecha} 📍</span></div>`;
 
-                    if (esReporteImportante) { htmlReportes += itemHTML; } else { htmlChat += itemHTML; }
+                    if (esReporteImportante) { 
+                        htmlReportes += itemHTML; 
+                    } else { 
+                        htmlChat += itemHTML;
+                        contadorMensajesTexto++; // Sumamos solo los mensajes de texto
+                    }
+
                     const matchUser = p.texto.match(/<b>(.*):<\/b>/);
                     if (matchUser) usuariosActivos.add(matchUser[1]);
                 });
@@ -434,10 +460,31 @@
                 document.getElementById('contadorVigias').innerText = usuariosActivos.size;
                 document.getElementById('contadorVigiasAdmin').innerText = usuariosActivos.size;
 
+                // --- LÓGICA DE NOTIFICACIONES ---
+                const badge = document.getElementById('chatBadge');
+                
+                // Si estoy viendo el chat (drawer abierto Y tab chat activo), actualizo los vistos
+                if (drawerAbierto && tabActual === 'chat') {
+                    mensajesVistos = contadorMensajesTexto;
+                    badge.style.display = 'none';
+                } else {
+                    // Si NO estoy viendo el chat, calculo la diferencia
+                    const sinLeer = contadorMensajesTexto - mensajesVistos;
+                    if (sinLeer > 0 && mensajesVistos > 0) { // Solo mostrar si ya había cargado antes
+                        badge.innerText = sinLeer;
+                        badge.style.display = 'inline-block';
+                    }
+                }
+                
+                // Inicialización primera vez (para que no salga badge apenas entras)
+                if (mensajesVistos === 0 && contadorMensajesTexto > 0) {
+                     mensajesVistos = contadorMensajesTexto; 
+                }
+                // -------------------------------
+
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
 
-        // --- LÓGICA DE NEGOCIOS ---
         function abrirRegistroNegocio() { document.getElementById('registroNegocio').style.display = 'flex'; }
         function cerrarNegocio() { document.getElementById('registroNegocio').style.display = 'none'; }
         
@@ -445,14 +492,10 @@
             const nombre = document.getElementById('bizName').value;
             const tipo = document.getElementById('bizType').value;
             const tel = document.getElementById('bizPhone').value;
-            
             if(!nombre || !tel) return alert("Llena todos los datos.");
             if (!miUbicacionReal) return alert("Esperando GPS para ubicar tu negocio...");
-            
-            // AGREGAMOS LA ETIQUETA [PENDIENTE] AL INICIO
             const msg = `[PENDIENTE] <span class="rango-tag r-negocio">NEGOCIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
             const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            
             try { 
                 await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1] }) }); 
                 alert("✅ ¡Enviado a revisión! Tu negocio aparecerá pronto.");
@@ -466,13 +509,8 @@
             if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu nombre."); document.getElementById('registroNombre').style.display = 'flex'; return; }
             let lat, lng;
             if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
-            
             const now = Date.now();
-            if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) {
-                alert("🚫 Espera un poco antes de reportar en el mismo lugar.");
-                return;
-            }
-
+            if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) { alert("🚫 Espera un poco antes de reportar en el mismo lugar."); return; }
             misReportes++; localStorage.setItem('vigiaConteo', misReportes);
             const r = obtenerRango(misReportes);
             const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
@@ -482,16 +520,10 @@
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
         function checarHash() {
-            // DETECTA SI EL USUARIO PUSO #revision AL FINAL
             esAdmin = window.location.hash === '#revision';
-            if (esAdmin) {
-                document.getElementById('adminBadge').style.display = 'inline-block';
-                cargarPuntos(); // Recargar para ver los pendientes
-            }
-
+            if (esAdmin) { document.getElementById('adminBadge').style.display = 'inline-block'; cargarPuntos(); }
             if (window.location.hash === '#iza-secure') {
                 document.getElementById('consoleIza').style.display = 'flex';
-                // ... (código consola Iza igual) ...
                 const statusList = document.getElementById('statusList');
                 const logs = ["Requesting access...", "Pinging master gateway...", "Primary Seed Identified: IZA_CORE", "Verifying dependencies...", "Establishing encrypted link...", "Node status: <span style='color:#7ee787'>IRREMPLAZABLE</span>", "Identity confirmed.", "Initialization complete."];
                 let i = 0; statusList.innerHTML = "";
