@@ -21,27 +21,29 @@
         .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
         .brand-header h1 { margin: 0; font-size: 15px; letter-spacing: 1px; color: #e63946; text-transform: uppercase; }
         .brand-header span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
-        
-        /* ESTILOS DEL DRAWER ADMIN (IZA) */
+        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px; vertical-align: middle; }
+
+        /* --- CORRECCIÓN DEL DRAWER ADMIN --- */
         #adminDrawer { 
             position: fixed; 
             top: 0; 
             left: 0; 
             width: 100%; 
-            height: 0; /* Cerrado por defecto */
+            height: 0; 
             background: #0b0e14; 
             z-index: 50000; 
             transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
+            overflow: hidden; /* Mantiene el contenido oculto */
             border-bottom: 2px solid #00d4ff;
-            display: none; /* Se activa solo con el hash */
+            display: none; 
             flex-direction: column;
         }
-        #adminDrawer.open { height: 60vh; } /* Altura cuando abre */
+        #adminDrawer.open { height: 60vh; }
 
-        .admin-handle { 
-            position: absolute; 
-            bottom: -30px; 
+        /* EL BOTÓN AHORA ES INDEPENDIENTE Y SE MUEVE */
+        #adminHandleBtn { 
+            position: fixed; 
+            top: 0; /* Empieza arriba */
             left: 50%; 
             transform: translateX(-50%);
             width: 120px; 
@@ -58,11 +60,12 @@
             border-top: none;
             z-index: 50001;
             box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+            display: none; /* Se oculta si no es admin */
+            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave */
         }
+        #adminHandleBtn.open { top: 60vh; } /* Baja cuando se abre */
 
-        /* CONTENIDO DE LA CONSOLA IZA */
         .iza-content { padding: 20px; color: #d1d5db; font-family: monospace; font-size: 11px; height: 100%; overflow-y: auto; }
-        .iza-log { line-height: 1.6; margin-bottom: 5px; }
         .iza-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; }
         
         #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
@@ -151,8 +154,8 @@
             <br>
             <div id="izaLogArea" style="color:#666;">Waiting for data stream...</div>
         </div>
-        <div class="admin-handle" onclick="toggleAdminDrawer()">▼ ADMIN IZA ▼</div>
     </div>
+    <div id="adminHandleBtn" onclick="toggleAdminDrawer()">▼ ADMIN IZA ▼</div>
 
     <div id="miraCentral">📍</div>
 
@@ -162,11 +165,9 @@
             <p>Esta plataforma tiene como único fin la <b>PREVENCIÓN DE RIESGOS VIALES Y MOVILIDAD EFICIENTE</b>.</p>
             <ul style="text-align: left; margin-bottom: 15px; font-size:12px; color:#ddd; padding-left:15px; line-height: 1.4;">
                 <li><b>1. Carácter Informativo:</b> Los reportes son referencia ciudadana sin validez oficial.</li>
-                <li><b>2. Uso Lícito (Art. 333 CPEM):</b> Se prohíbe estrictamente el uso de esta herramienta para obstaculizar labores oficiales, evadir la justicia o facilitar actos delictivos.</li>
-                <li><b>3. Responsabilidad:</b> El usuario asume total responsabilidad legal por la información que comparte. Los desarrolladores se deslindan de cualquier mal uso.</li>
-                <li><b>4. Seguridad:</b> Prohibido manipular la app mientras se conduce el vehículo.</li>
+                <li><b>2. Uso Lícito (Art. 333 CPEM):</b> Se prohíbe estrictamente el uso de esta herramienta para obstaculizar labores oficiales.</li>
+                <li><b>3. Responsabilidad:</b> El usuario asume total responsabilidad legal por la información que comparte.</li>
             </ul>
-            <p style="font-size:11px; color:#888;">El acceso implica la aceptación irrevocable de estos términos.</p>
             <button class="btn-main" onclick="irARegistro()">ACEPTO Y ME COMPROMETO</button>
         </div>
     </div>
@@ -174,7 +175,7 @@
     <div id="registroNombre" style="display:none;">
         <div class="modal-box">
             <h2>👤 Registro de Usuario</h2>
-            <p>Ingresa un alias para identificarte en la comunidad.</p>
+            <p>Ingresa un alias para identificarte.</p>
             <input type="text" id="inputNombreUser" placeholder="Tu Alias..." maxlength="12">
             <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR REGISTRO</button>
         </div>
@@ -209,7 +210,7 @@
     </div>
 
     <div class="brand-header">
-        <h1>RED VIAL TOLUCA</h1>
+        <h1>RED VIAL TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
         <span>Monitoreo Ciudadano</span>
     </div>
 
@@ -235,7 +236,7 @@
     </div>
 
     <div id="chatDrawer">
-        <div class="drawer-handle" onclick="toggleChat()">RED CIUDADANA ACTIVA ▲</div>
+        <div class="drawer-handle" onclick="toggleChat()" id="chatHandleText">RED CIUDADANA ACTIVA ▲</div>
         <div id="chatBody">
             <div class="tab-header">
                 <button class="tab-btn active" onclick="switchTab('reportes')">⚠️ ALERTAS</button>
@@ -287,9 +288,8 @@
         let drawerAbierto = false;
         let mensajesVistos = 0;
 
-        // VARIABLES ADMIN
-        let modoAdminDisponible = false; // Si el hash #admin existe
-        let panelAdminAbierto = false; // Si la pestaña de arriba está bajada
+        let modoAdminDisponible = false; 
+        let panelAdminAbierto = false; 
 
         var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Buscar destino...", geocoder: L.Control.Geocoder.photon() })
         .on('markgeocode', function(e) {
@@ -349,6 +349,15 @@
             drawerAbierto = !drawerAbierto;
             const drawer = document.getElementById('chatDrawer');
             drawer.classList.toggle('open'); 
+            
+            // LÓGICA DE FLECHA (▲ / ▼)
+            const handleText = document.getElementById('chatHandleText');
+            if (drawerAbierto) {
+                handleText.innerText = "RED CIUDADANA ACTIVA ▼"; // Flecha abajo
+            } else {
+                handleText.innerText = "RED CIUDADANA ACTIVA ▲"; // Flecha arriba
+            }
+
             if (drawerAbierto && tabActual === 'chat') {
                 document.getElementById('chatBadge').style.display = 'none';
             }
@@ -359,12 +368,17 @@
             if (!modoAdminDisponible) return;
             panelAdminAbierto = !panelAdminAbierto;
             const drawer = document.getElementById('adminDrawer');
+            const btn = document.getElementById('adminHandleBtn');
+            
             if (panelAdminAbierto) {
                 drawer.classList.add('open');
+                btn.classList.add('open'); // El botón baja
+                btn.innerText = "▲ CERRAR ADMIN ▲";
             } else {
                 drawer.classList.remove('open');
+                btn.classList.remove('open'); // El botón sube
+                btn.innerText = "▼ ADMIN IZA ▼";
             }
-            // Al abrir o cerrar, recargamos los puntos para aplicar el "Filtro de Camuflaje"
             cargarPuntos();
         }
 
@@ -433,20 +447,14 @@
                 let contadorMensajesTexto = 0;
                 let pendientesCount = 0;
 
-                // ACTUALIZAR ESTADÍSTICAS EN CONSOLA IZA
                 document.getElementById('statTotal').innerText = puntos.length;
 
                 puntos.reverse().forEach(p => {
                     let esPendiente = p.texto.includes('[PENDIENTE]');
                     if (esPendiente) pendientesCount++;
 
-                    // --- LÓGICA DE CAMUFLAJE ---
-                    // Solo mostramos pendientes si: MODO ADMIN DISPONIBLE + PANEL ABIERTO
                     let mostrarAdminStuff = (modoAdminDisponible && panelAdminAbierto);
-
-                    // Si es pendiente y NO está activo el camuflaje, lo ignoramos
                     if (esPendiente && !mostrarAdminStuff) return;
-                    // ----------------------------
 
                     const iconoEmoji = getIconHTML(p.texto);
                     let esReporteImportante = false;
@@ -462,7 +470,6 @@
                         
                         let popupContent = `<div style="text-align:center; min-width:120px;"><div style="font-size:14px; margin-bottom:5px;">${p.texto}</div><small style="color:#666;">${p.fecha}</small><div style="margin-top:8px;"></div></div>`;
                         
-                        // BOTONES DE ADMIN: Solo se agregan si el Panel está ABIERTO
                         if (mostrarAdminStuff) {
                             if (esPendiente) {
                                 popupContent = `<div style="text-align:center; min-width:150px;">
@@ -474,7 +481,6 @@
                                     </div>
                                 </div>`;
                             } else {
-                                // Para reportes normales, agregamos el botón de borrar solo si el panel está abierto
                                 popupContent = popupContent.replace('</div></div>', `<button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div></div>`);
                             }
                         }
@@ -549,29 +555,21 @@
         function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
 
         function checarHash() {
-            // DETECCIÓN DEL MODO CAMUFLAJE
             if (window.location.hash === '#admin') {
                 modoAdminDisponible = true;
                 document.getElementById('adminDrawer').style.display = 'flex';
-                // Logs simulados para la consola Iza
-                const logs = ["Initializing Secure Protocol...", "Verifying Admin Hash...", "Access Granted.", "Monitoring Node: Iza_Core"];
-                let i = 0; 
+                document.getElementById('adminHandleBtn').style.display = 'block';
+                document.getElementById('adminBadge').style.display = 'inline-block';
+                
                 const logArea = document.getElementById('izaLogArea');
-                logArea.innerHTML = "";
-                function print() { 
-                    if(i < logs.length) { 
-                        logArea.innerHTML += "<div>> " + logs[i] + "</div>"; 
-                        i++; 
-                        setTimeout(print, 600); 
-                    } 
-                }
-                print();
+                logArea.innerHTML = "<div>> Protocolo Admin Iniciado...</div><div>> Esperando comandos...</div>";
             } else {
                 modoAdminDisponible = false;
                 document.getElementById('adminDrawer').style.display = 'none';
-                panelAdminAbierto = false; // Asegurar que inicie cerrado
+                document.getElementById('adminHandleBtn').style.display = 'none';
+                document.getElementById('adminBadge').style.display = 'none';
+                panelAdminAbierto = false; 
             }
-            // Siempre cargamos puntos al iniciar para aplicar filtros
             cargarPuntos();
         }
 
