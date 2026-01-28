@@ -57,8 +57,6 @@
         .btn-help { top: 180px; background: #333; }
         .btn-theme { top: 235px; background: #f1c40f; color: #000; border: none; }
         .btn-biz { top: 290px; background: #9b59b6; color: white; border: 2px solid #fff; }
-        
-        /* BOTÓN DE INSTALACIÓN (Visible por defecto, JS lo oculta si ya está instalada) */
         #btnInstall { top: 345px; background: #007bff; display: flex; } 
         
         #btnCancelarRuta { position: absolute; top: 80px; left: 10px; background: #dc3545; color: white; padding: 10px 15px; border-radius: 30px; font-weight: bold; font-size: 14px; z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid white; cursor: pointer; }
@@ -100,9 +98,14 @@
         .r-comandante { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
         .r-negocio { background: #9b59b6; border: 1px solid white; color: white; }
 
-        .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-top: 1px solid #333; }
+        /* INPUT AREA CON MICRÓFONO */
+        .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-top: 1px solid #333; align-items: center; }
         #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 20px; color: white; padding: 10px 15px; outline: none; font-size: 14px; }
         .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        
+        /* BOTÓN DE MICRÓFONO (ESTILO RADIO) */
+        .btn-mic { background: #444; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-mic.listening { background: #e63946; animation: pulse 1s infinite; }
 
         .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
         .biz-marker { border: 2px solid #fff; background: #9b59b6; color: white; box-shadow: 0 0 10px #9b59b6; }
@@ -184,7 +187,6 @@
         <div class="modal-box">
             <h2 style="color:#007bff;">📲 INSTALAR APP</h2>
             <p>Para tener Red Vial Toluca como app en tu pantalla de inicio:</p>
-            
             <div style="background:#222; padding:10px; border-radius:8px; text-align:left; margin-bottom:10px; border:1px solid #444;">
                 <strong style="color:#fff;">🍏 En iPhone (iOS):</strong>
                 <ol style="margin:5px 0; padding-left:20px; font-size:12px; color:#ccc;">
@@ -193,7 +195,6 @@
                     <li>Dale en <b>Agregar</b>.</li>
                 </ol>
             </div>
-
             <div style="background:#222; padding:10px; border-radius:8px; text-align:left; margin-bottom:10px; border:1px solid #444;">
                 <strong style="color:#fff;">🤖 En Android:</strong>
                 <ol style="margin:5px 0; padding-left:20px; font-size:12px; color:#ccc;">
@@ -201,7 +202,6 @@
                     <li>Selecciona <b>"Instalar aplicación"</b> o "Agregar a la pantalla principal".</li>
                 </ol>
             </div>
-
             <button class="btn-main" style="background:#333;" onclick="cerrarInstallModal()">CERRAR</button>
         </div>
     </div>
@@ -225,8 +225,8 @@
                 </ul>
             </div>
 
-            <p style="margin-bottom:8px;"><b>4. 🗑️ TUS REPORTES:</b><br>
-            ¿Te equivocaste? Ahora puedes <b>borrar tus propios mensajes</b> buscando el botón de basura en el mapa.</p>
+            <p style="margin-bottom:8px;"><b>4. 🎙️ RADIO / CHAT:</b><br>
+            Usa el botón de micrófono 🎙️ para dictar reportes de voz a texto sin escribir.</p>
 
             <p><b>5. 💼 SERVICIOS:</b><br>
             Usa el botón morado para encontrar o registrar talleres, llanteras y comida.</p>
@@ -277,6 +277,7 @@
             </div>
             <div class="chat-input-area">
                 <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
+                <button class="btn-mic" onclick="toggleDictado()">🎙️</button>
                 <button class="btn-send" onclick="enviarChat()">➤</button>
             </div>
         </div>
@@ -297,21 +298,17 @@
             else { map.removeLayer(lightLayer); darkLayer.addTo(map); document.querySelector('.btn-theme').innerText = "☀️"; }
         }
 
-        // --- LÓGICA DE INSTALACIÓN UNIVERSAL ---
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => { 
             e.preventDefault(); 
             deferredPrompt = e; 
-            // El botón ya es visible por defecto, pero esto asegura que funcione el "prompt" automático
         });
 
-        // Detectar si ya está instalada (Standalone) para ocultar el botón
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
             document.getElementById('btnInstall').style.display = 'none';
         }
 
         function abrirInstallModal() {
-            // Intenta instalación automática primero
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
@@ -321,7 +318,6 @@
                     deferredPrompt = null;
                 });
             } else {
-                // Si no hay automático (iPhone o ya pasó el evento), muestra el manual
                 document.getElementById('installModal').style.display = 'flex';
             }
         }
@@ -329,7 +325,6 @@
         function cerrarInstallModal() {
             document.getElementById('installModal').style.display = 'none';
         }
-        // ----------------------------------------
 
         let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
         let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null;
@@ -343,10 +338,50 @@
 
         let tabActual = 'reportes';
         let drawerAbierto = false;
-        let mensajesVistos = 0;
+        
+        // --- LOGICA DE NOTIFICACIONES PERSISTENTES ---
+        let mensajesVistos = parseInt(localStorage.getItem('lastViewedCount')) || 0;
 
         let modoAdminDisponible = false; 
         let panelAdminAbierto = false; 
+
+        // --- LÓGICA DE RECONOCIMIENTO DE VOZ ---
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'es-MX';
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = text;
+                document.querySelector('.btn-mic').classList.remove('listening');
+                // Auto-enviar si se detecta texto claro
+                if(text.length > 2) enviarChat();
+            };
+
+            recognition.onerror = function() {
+                document.querySelector('.btn-mic').classList.remove('listening');
+                alert("Error con el micrófono. Intenta escribir.");
+            };
+            
+            recognition.onend = function() {
+                document.querySelector('.btn-mic').classList.remove('listening');
+            };
+        }
+
+        function toggleDictado() {
+            if (!recognition) return alert("Tu navegador no soporta voz.");
+            const btn = document.querySelector('.btn-mic');
+            if (btn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                btn.classList.add('listening');
+            }
+        }
+        // ----------------------------------------
 
         var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Buscar destino...", geocoder: L.Control.Geocoder.photon() })
         .on('markgeocode', function(e) {
@@ -408,7 +443,12 @@
             drawer.classList.toggle('open'); 
             const handleText = document.getElementById('chatHandleText');
             if (drawerAbierto) { handleText.innerText = "RED CIUDADANA ACTIVA ▼"; } else { handleText.innerText = "RED CIUDADANA ACTIVA ▲"; }
-            if (drawerAbierto && tabActual === 'chat') { document.getElementById('chatBadge').style.display = 'none'; }
+            
+            if (drawerAbierto && tabActual === 'chat') { 
+                document.getElementById('chatBadge').style.display = 'none';
+                // Si abres el chat, igualamos los contadores
+                // (La actualización de mensajesVistos se hace en cargarPuntos cuando el drawer está abierto)
+            }
         }
 
         function toggleAdminDrawer() {
@@ -429,7 +469,11 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.list-container').forEach(l => l.classList.remove('active'));
             if(tab === 'reportes') { document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); document.getElementById('listReportes').classList.add('active'); } 
-            else { document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); document.getElementById('listChat').classList.add('active'); document.getElementById('chatBadge').style.display = 'none'; }
+            else { 
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); 
+                document.getElementById('listChat').classList.add('active'); 
+                document.getElementById('chatBadge').style.display = 'none';
+            }
         }
 
         function checarCercaniaPolicial(miPos) {
@@ -512,13 +556,11 @@
                 let contadorMensajesTexto = 0;
                 let pendientesCount = 0;
 
-                // --- FILTRO DE TIEMPO (12 HORAS) ---
                 const TIEMPO_LIMITE = 12 * 60 * 60 * 1000; 
                 
                 document.getElementById('statTotal').innerText = puntos.length;
 
                 puntos.reverse().forEach(p => {
-                    // FILTRO AUTOMÁTICO DE TIEMPO (Si tiene timestamp)
                     if (p.timestamp && (Date.now() - p.timestamp > TIEMPO_LIMITE)) return;
 
                     let esPendiente = p.texto.includes('[PENDIENTE]');
@@ -599,9 +641,12 @@
                 document.getElementById('listReportes').innerHTML = htmlReportes || "<div style='text-align:center; padding:20px; color:#666;'>Sin alertas activas.</div>";
                 document.getElementById('listChat').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Comunidad silenciosa.</div>";
                 
+                // --- LÓGICA DE NOTIFICACIONES PERSISTENTES ---
                 const badge = document.getElementById('chatBadge');
                 if (drawerAbierto && tabActual === 'chat') {
+                    // Si estoy viendo, guardo el total actual como "visto"
                     mensajesVistos = contadorMensajesTexto;
+                    localStorage.setItem('lastViewedCount', mensajesVistos); // GUARDAR EN MEMORIA
                     badge.style.display = 'none';
                 } else {
                     const sinLeer = contadorMensajesTexto - mensajesVistos;
@@ -610,7 +655,11 @@
                         badge.style.display = 'inline-block';
                     }
                 }
-                if (mensajesVistos === 0 && contadorMensajesTexto > 0) { mensajesVistos = contadorMensajesTexto; }
+                // Inicialización primera vez
+                if (mensajesVistos === 0 && contadorMensajesTexto > 0) { 
+                    mensajesVistos = contadorMensajesTexto; 
+                    localStorage.setItem('lastViewedCount', mensajesVistos);
+                }
 
             } catch (e) { setTimeout(cargarPuntos, 4000); }
         }
