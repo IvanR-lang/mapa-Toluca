@@ -2,726 +2,402 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#000000">
-    <title>VIGIA Toluca</title>
-    
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Red Vial Toluca","short_name":"Red Vial","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/124/124034.png","sizes":"192x192","type":"image/png"}]}' />
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efímero - Vasos Biodegradables</title>
+    <link rel="manifest" href="./manifest.json">
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #000; overflow: hidden; }
-        #map { height: 100vh; width: 100%; background: #1a1a1a; z-index: 1; }
-        
-        .brand-header { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); color: #fff; padding: 10px 15px; border-radius: 12px; z-index: 1000; border: 1px solid rgba(255,255,255,0.1); }
-        .brand-header h1 { margin: 0; font-size: 15px; letter-spacing: 1px; color: #e63946; text-transform: uppercase; }
-        .brand-header span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
-        .admin-badge { display:none; background:#f39c12; color:black; padding:2px 5px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px; vertical-align: middle; }
+        /* Paleta de colores inspirada en el stand: Verdes, blanco y beige */
+        :root {
+            --verde-oscuro: #2d4a22;
+            --verde-claro: #8fbc8f;
+            --verde-suave: #e8f5e9;
+            --beige: #f5f5dc;
+            --blanco: #ffffff;
+            --gris-oscuro: #333333;
+        }
 
-        /* --- ESTILOS DE VOTACIÓN --- */
-        .vote-box { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; align-items: center; }
-        .btn-vote { background: #222; border: 1px solid #444; color: #888; border-radius: 15px; padding: 2px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s; }
-        .btn-vote:hover { background: #333; }
-        .btn-vote.voted-like { background: #1b4d2e; color: #4caf50; border-color: #4caf50; pointer-events: none; } 
-        .btn-vote.voted-dislike { background: #4d1b1b; color: #ff4d4d; border-color: #ff4d4d; pointer-events: none; } 
-        .vote-count { font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        /* DRAWER ADMIN */
-        #adminDrawer { position: fixed; top: 0; left: 0; width: 100%; height: 0; background: #111; z-index: 50000; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; border-bottom: 2px solid #00d4ff; display: none; flex-direction: column; align-items: center; padding-top: 20px; }
-        #adminDrawer.open { height: 70vh; }
-        .iza-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 90%; width: 400px; border-top: 5px solid #1a1a1a; color: #333; margin-bottom: 20px; }
-        #adminHandleBtn { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 140px; height: 30px; background: #0b0e14; color: #00d4ff; text-align: center; line-height: 30px; font-size: 10px; font-weight: bold; border-radius: 0 0 10px 10px; cursor: pointer; border: 1px solid #00d4ff; border-top: none; z-index: 50001; box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2); display: none; transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        #adminHandleBtn.open { top: 70vh; } 
-        .iza-content { padding: 20px; color: #d1d5db; font-family: monospace; font-size: 11px; height: 100%; overflow-y: auto; }
-        .iza-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; }
-        
-        #miraCentral { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 2000; font-size: 40px; pointer-events: none; display: none; filter: drop-shadow(0 0 5px black); }
+        body {
+            background-color: var(--blanco);
+            color: var(--gris-oscuro);
+            line-height: 1.6;
+        }
 
-        /* MODALES */
-        #avisoLegal, #manualVigia, #registroNombre, #registroNegocio, #installModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 40000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: #1a1a1a; color: white; padding: 25px; border-radius: 15px; max-width: 400px; border: 1px solid #333; text-align: center; }
-        .modal-box h2 { font-size: 18px; margin-top: 0; color: #e63946; } 
-        .modal-box p { font-size: 13px; line-height: 1.5; color: #ccc; }
-        .btn-main { background: #e63946; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-top: 10px; outline: none; box-sizing: border-box; text-align: center; font-weight: bold; }
+        /* Navegación / Header */
+        header {
+            background-color: var(--blanco);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        /* BOTONES */
-        .side-btn { position: absolute; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #444; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-        .btn-gps { top: 70px; }
-        .btn-lock { top: 125px; }
-        .btn-help { top: 180px; background: #333; }
-        .btn-theme { top: 235px; background: #f1c40f; color: #000; border: none; }
-        .btn-biz { top: 290px; background: #9b59b6; color: white; border: 2px solid #fff; }
-        #btnInstall { top: 345px; background: #007bff; display: flex; } 
-        
-        #btnCancelarRuta { position: absolute; top: 80px; left: 10px; background: #dc3545; color: white; padding: 10px 15px; border-radius: 30px; font-weight: bold; font-size: 14px; z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid white; cursor: pointer; }
-        .btn-quick-police { position: absolute; bottom: 140px; right: 15px; width: 65px; height: 65px; background: #0051ff; border-radius: 50%; border: 4px solid white; z-index: 1000; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
-        .btn-sugerencias { position: absolute; bottom: 130px; left: 15px; width: 50px; height: 50px; background: #5865F2; border-radius: 12px; border: 2px solid white; color: white; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        .menu-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; width: 100%; pointer-events: none; }
-        .menu-container > * { pointer-events: auto; }
-        .btn-reportar { background: #e63946; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-        .opciones { display: none; gap: 15px; margin-bottom: 20px; }
-        .opciones.active { display: flex; }
-        .btn-opcion { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; font-size: 24px; color: white; cursor: pointer; transition: transform 0.1s; }
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            transition: transform 0.3s ease;
+        }
 
-        /* CHAT DRAWER */
-        #chatDrawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #1a1a1a; z-index: 3000; border-radius: 20px 20px 0 0; border-top: 2px solid #333; transition: height 0.3s ease; display: flex; flex-direction: column; }
-        #chatDrawer.open { height: 75vh; }
-        .drawer-handle { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .tab-header { display: flex; background: #111; border-bottom: 1px solid #333; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; color: #888; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; background: #1a1a1a; border: none; position: relative; }
-        .tab-btn.active { color: #fff; background: #222; border-bottom: 3px solid #e63946; }
-        .badge { background: #e63946; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; position: absolute; top: 8px; right: 20px; box-shadow: 0 0 5px #e63946; }
+        .logo-img:hover {
+            transform: rotate(15deg) scale(1.1);
+        }
 
-        #chatBody { flex-grow: 1; display: none; flex-direction: column; background: #0e0e0e; padding: 0; overflow: hidden; }
-        #chatDrawer.open #chatBody { display: flex; }
-        .list-container { flex-grow: 1; overflow-y: auto; color: white; font-size: 13px; padding: 10px; display: none; }
-        .list-container.active { display: block; }
-        .chat-item { padding: 10px; border-bottom: 1px solid #222; transition: background 0.2s; }
-        .chat-item.clickable { cursor: pointer; }
-        .chat-item.clickable:active { background: #333; }
-        .chat-item.private { cursor: default; background: #0e0e0e; }
-        .chat-date { font-size: 9px; color: #666; float: right; }
+        .logo-texto {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--verde-oscuro);
+            letter-spacing: 1px;
+        }
 
-        .rango-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; display: inline-block; }
-        .r-civil { background: #6c757d; }
-        .r-activo { background: #28a745; }
-        .r-veterano { background: #007bff; }
-        .r-elite { background: #6f42c1; }
-        .r-comandante { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
-        .r-negocio { background: #9b59b6; border: 1px solid white; color: white; }
+        /* Sección Hero (Inicio Principal) */
+        .hero {
+            background: linear-gradient(135deg, var(--verde-suave) 0%, var(--beige) 100%);
+            padding: 5rem 2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* INPUT AREA CON MICRÓFONO */
-        .chat-input-area { display: flex; gap: 10px; padding: 10px; background: #1a1a1a; border-top: 1px solid #333; align-items: center; }
-        #chatInput { flex-grow: 1; background: #333; border: none; border-radius: 20px; color: white; padding: 10px 15px; outline: none; font-size: 14px; }
-        .btn-send { background: #008f39; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        
-        /* BOTÓN DE MICRÓFONO (ESTILO RADIO) */
-        .btn-mic { background: #444; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-mic.listening { background: #e63946; animation: pulse 1s infinite; }
+        .hero h1 {
+            font-size: 3rem;
+            color: var(--verde-oscuro);
+            margin-bottom: 1rem;
+        }
 
-        .custom-marker { display: flex; justify-content: center; align-items: center; background: white; border: 2px solid #333; border-radius: 50%; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
-        .biz-marker { border: 2px solid #fff; background: #9b59b6; color: white; box-shadow: 0 0 10px #9b59b6; }
-        .pending-marker { border: 2px dashed #f39c12; background: #222; color: #f39c12; box-shadow: 0 0 10px #f39c12; opacity: 0.9; }
+        .hero p {
+            font-size: 1.25rem;
+            color: #555;
+            max-width: 600px;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
 
-        .leaflet-routing-container { display: none; } 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* Sección Características Rápidas */
+        .features-badges {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            background-color: var(--verde-oscuro);
+            color: var(--blanco);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Sección Ingredientes (¿De qué está hecho?) */
+        .seccion {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .titulo-seccion {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--verde-oscuro);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .titulo-seccion::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background-color: var(--verde-claro);
+            margin: 10px auto 0;
+        }
+
+        .grid-ingredientes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .tarjeta {
+            background-color: var(--blanco);
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            opacity: 0; /* Para la animación de scroll con JS */
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        /* Clase activa que añadirá app.js al hacer scroll */
+        .tarjeta.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tarjeta:hover {
+            box-shadow: 0 10px 20px rgba(45, 74, 34, 0.1);
+            border-color: var(--verde-claro);
+        }
+
+        .tarjeta-icono {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tarjeta h3 {
+            color: var(--verde-oscuro);
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        /* Sección Simulador Dinámico (Interactiva) */
+        .simulador-container {
+            background-color: var(--verde-suave);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .controles-simulador {
+            margin: 2rem 0;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 80%;
+            max-width: 400px;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--verde-oscuro);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .visor-tiempo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--verde-oscuro);
+            margin-top: 0.5rem;
+        }
+
+        .comparativa-vasos {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            margin-top: 3rem;
+            height: 200px;
+        }
+
+        .contenedor-vaso {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        /* Representación visual de los vasos */
+        .grafico-vaso {
+            width: 80px;
+            height: 120px;
+            margin-bottom: 1rem;
+            transition: all 0.4s ease;
+        }
+
+        .vaso-efimero {
+            background-color: #a3e4d7; /* Color azul/verde translúcido */
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+            border-radius: 0 0 10px 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .vaso-plastico {
+            background-color: #aed6f1; /* Plástico convencional */
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Sección Call To Action (Venta) */
+        .cta-section {
+            background-color: var(--verde-oscuro);
+            color: var(--blanco);
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .btn-whatsapp {
+            display: inline-block;
+            background-color: #25d366; /* Color oficial WhatsApp */
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1a1a1a;
+            color: #888;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .grid-ingredientes { gap: 1.5rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="adminDrawer">
-        <div class="iza-card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
-                <div>
-                    <h2 style="margin:0; color:#1a1a1a; font-size:16px; letter-spacing:0.8px; font-weight:700; text-transform:uppercase;">Network Admin</h2>
-                    <code style="font-size:11px; color:#007bff; font-weight:600;">Secure Node: Iza_Core</code>
+    <header>
+        <div class="logo-container">
+            <svg class="logo-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#2d4a22" stroke-width="4"/>
+                <path d="M30 45 Q50 25 70 45 Q50 65 30 45 Z" fill="#2d4a22"/>
+                <circle cx="43" cy="42" r="3" fill="white"/>
+                <circle cx="57" cy="42" r="3" fill="white"/>
+                <path d="M45 52 Q50 56 55 52" stroke="white" stroke-width="2" fill="none"/>
+                <path d="M25 40 Q15 35 20 45" stroke="#2d4a22" stroke-width="3" fill="none"/>
+                <path d="M75 40 Q85 35 80 45" stroke="#2d4a22" stroke-width="3" fill="none"/>
+            </svg>
+            <span class="logo-texto">efímero</span>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Pequeñas elecciones, gran impacto.</h1>
+        <p>Vasos desechables eco-amigables diseñados para transformar tu consumo diario en una acción positiva por nuestro planeta.</p>
+        
+        <div class="features-badges">
+            <span class="badge">100% Biodegradable</span>
+            <span class="badge">Compostable</span>
+            <span class="badge">Seguro y No Tóxico</span>
+            <span class="badge">Economía Circular</span>
+        </div>
+    </section>
+
+    <section class="seccion">
+        <h2 class="titulo-seccion">¿De qué está hecho?</h2>
+        <div class="grid-ingredientes">
+            
+            <div class="tarjeta">
+                <div class="tarjeta-icono">🌱</div>
+                <h3>Grenetina</h3>
+                <p>Aporta la estructura sólida base y una alta resistencia mecánica de origen completamente natural.</p>
+            </div>
+
+            <div class="tarjeta">
+                <div class="tarjeta-icono">🧪</div>
+                <h3>Glicerina Vegetal</h3>
+                <p>El componente clave que otorga flexibilidad y durabilidad al bioplástico, evitando que se quiebre.</p>
+            </div>
+
+            <div class="tarjeta">
+                <div class="tarjeta-icono">🌸</div>
+                <h3>Flores Naturales</h3>
+                <p>Pigmentos orgánicos extraídos directamente de la naturaleza para darle colores vibrantes sin químicos sintéticos.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="seccion" style="background-color: #fafafa;">
+        <h2 class="titulo-seccion">Simulador de Biodegradação</h2>
+        <p style="text-align: center; margin-bottom: 2rem; color: #666;">Arrastra la barra para ver la diferencia de impacto en el tiempo:</p>
+        
+        <div class="simulador-container">
+            <div class="controles-simulador">
+                <input type="range" min="0" max="100" value="0" class="slider" id="selectorTiempo">
+                <div class="visor-tiempo" id="etiquetaTiempo">Día 1 (Recién desechado)</div>
+            </div>
+
+            <div class="comparativa-vasos">
+                <div class="contenedor-vaso">
+                    <div class="grafico-vaso vaso-efimero" id="vasoEfimero"></div>
+                    <strong>Vaso Efímero</strong>
+                    <span id="estadoEfimero" style="font-size: 0.85rem; color: #555;">Intacto y funcional</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px; background:#f1f3f5; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:bold; color:#1a1a1a; border:1px solid #dee2e6;">
-                    <span style="color:#e63946; animation: pulse 1.5s infinite;">●</span> ACTIVE
+
+                <div class="contenedor-vaso">
+                    <div class="grafico-vaso vaso-plastico" id="vasoPlastico"></div>
+                    <strong>Vaso de Plástico</strong>
+                    <span style="font-size: 0.85rem; color: #555;">Permanecerá por 500 años</span>
                 </div>
             </div>
-            <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
-                <div class="iza-stat" style="border:none; padding:4px 0; color:#333;"><strong>Pending Reviews:</strong> <span id="statPendientes" style="color:#f39c12; font-weight:bold;">0</span></div>
-                <div class="iza-stat" style="border:none; padding:4px 0; color:#333;"><strong>Total Markers:</strong> <span id="statTotal" style="font-weight:bold;">0</span></div>
-            </div>
-            <div id="izaLogArea" style="background:#0b0e14; color:#00d4ff; padding:15px; border-radius:8px; font-family:monospace; font-size:10px; height:80px; overflow-y:auto; border:1px solid #333;">
-                Initializing...
-            </div>
         </div>
-    </div>
+    </section>
 
-    <div id="adminHandleBtn" onclick="toggleAdminDrawer()">▼ ADMIN IZA ▼</div>
+    <section class="cta-section">
+        <h2>Disfruta tu bebida, cuida el planeta</h2>
+        <p>¿Tienes una cafetería, negocio escolar o evento cercano en Toluca? Haz tu pedido directamente con nosotros.</p>
+        <a href="https://wa.me/#" target="_blank" class="btn-whatsapp">¡Haz tu pedido por WhatsApp!</a>
+    </section>
 
-    <div id="miraCentral">📍</div>
+    <footer>
+        <p>&copy; 2026 Efímero Bioplásticos. Pequeñas elecciones, gran impacto. Proyecto Integrador Escolar.</p>
+    </footer>
 
-    <div id="avisoLegal">
-        <div class="modal-box">
-            <h2>🛡️ TÉRMINOS DE USO Y RESPONSABILIDAD</h2>
-            <p>Esta plataforma tiene como único fin la <b>PREVENCIÓN DE RIESGOS VIALES Y MOVILIDAD EFICIENTE</b>.</p>
-            <ul style="text-align: left; margin-bottom: 15px; font-size:12px; color:#ddd; padding-left:15px; line-height: 1.4;">
-                <li><b>1. Carácter Informativo:</b> Los reportes son referencia ciudadana sin validez oficial.</li>
-                <li><b>2. Uso Lícito (Art. 333 CPEM):</b> Se prohíbe estrictamente el uso de esta herramienta para obstaculizar labores oficiales, evadir la justicia o facilitar actos delictivos.</li>
-                <li><b>3. Responsabilidad:</b> El usuario asume total responsabilidad legal por la información que comparte. Los desarrolladores se deslindan de cualquier mal uso.</li>
-                <li><b>4. Seguridad:</b> Prohibido manipular la app mientras se conduce el vehículo.</li>
-            </ul>
-            <p style="font-size:11px; color:#888;">El acceso implica la aceptación irrevocable de estos términos.</p>
-            <button class="btn-main" onclick="irARegistro()">ACEPTO Y ME COMPROMETO</button>
-        </div>
-    </div>
-
-    <div id="registroNombre" style="display:none;">
-        <div class="modal-box">
-            <h2>👤 Identidad</h2>
-            <p>Elige tu Alias.</p>
-            <input type="text" id="inputNombreUser" placeholder="Tu Alias..." maxlength="12">
-            <button class="btn-main" onclick="guardarIdentidad()">CONFIRMAR</button>
-        </div>
-    </div>
-
-    <div id="registroNegocio" style="display:none;">
-        <div class="modal-box">
-            <h2>💼 Servicios</h2>
-            <p style="font-size:12px; color:#aaa;">Registra un servicio útil.</p>
-            <input type="text" id="bizName" placeholder="Nombre del Establecimiento">
-            <select id="bizType">
-                <option value="🔧">🔧 Mecánico</option>
-                <option value="🛞">🛞 Llantera</option>
-                <option value="⛽">⛽ Gasolinera</option>
-                <option value="🌮">🌮 Comida</option>
-            </select>
-            <input type="tel" id="bizPhone" placeholder="Teléfono">
-            <button class="btn-main" style="background:#9b59b6;" onclick="guardarNegocio()">SOLICITAR PUBLICACIÓN</button>
-            <button style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;" onclick="cerrarNegocio()">Cancelar</button>
-        </div>
-    </div>
-
-    <div id="installModal" style="display:none;">
-        <div class="modal-box">
-            <h2 style="color:#007bff;">📲 INSTALAR APP</h2>
-            <p>Para tener Red Vial Toluca como app en tu pantalla de inicio:</p>
-            <div style="background:#222; padding:10px; border-radius:8px; text-align:left; margin-bottom:10px; border:1px solid #444;">
-                <strong style="color:#fff;">🍏 En iPhone (iOS):</strong>
-                <ol style="margin:5px 0; padding-left:20px; font-size:12px; color:#ccc;">
-                    <li>Toca el botón <b>Compartir</b> (cuadro con flecha) abajo en Safari.</li>
-                    <li>Desliza y busca <b>"Agregar a Inicio"</b> ➕.</li>
-                    <li>Dale en <b>Agregar</b>.</li>
-                </ol>
-            </div>
-            <div style="background:#222; padding:10px; border-radius:8px; text-align:left; margin-bottom:10px; border:1px solid #444;">
-                <strong style="color:#fff;">🤖 En Android:</strong>
-                <ol style="margin:5px 0; padding-left:20px; font-size:12px; color:#ccc;">
-                    <li>Toca los <b>3 puntitos</b> arriba a la derecha.</li>
-                    <li>Selecciona <b>"Instalar aplicación"</b> o "Agregar a la pantalla principal".</li>
-                </ol>
-            </div>
-            <button class="btn-main" style="background:#333;" onclick="cerrarInstallModal()">CERRAR</button>
-        </div>
-    </div>
-
-    <div id="manualVigia" style="display:none;">
-        <div class="modal-box" style="text-align:left; max-height: 80vh; overflow-y: auto;">
-            <h3 style="text-align:center; color:#e63946;">📖 MANUAL DE USO</h3>
-            
-            <p style="margin-bottom:8px;"><b>1. 🗺️ NAVEGACIÓN:</b><br>
-            Usa la <b>lupa 🔍</b> (esquina superior) para buscar tu destino y trazar la mejor ruta.</p>
-
-            <p style="margin-bottom:8px;"><b>2. 🛰️ REPORTAR:</b><br>
-            Toca el botón rojo <b>GENERAR ALERTA</b> para avisar de peligros. Elige el tipo de incidente (🚨, 🚧, 💥).</p>
-
-            <div style="background:#222; padding:8px; border-radius:8px; border:1px solid #444; margin-bottom:8px;">
-                <p style="margin:0; color:#e63946; font-weight:bold;">3. 👍 COMUNIDAD (NUEVO):</p>
-                <ul style="padding-left:15px; margin:5px 0; color:#ccc;">
-                    <li><b>Validar:</b> Dale <b>LIKE (👍)</b> si el reporte es real.</li>
-                    <li><b>Limpiar:</b> Dale <b>DISLIKE (👎)</b> si ya no hay nada.</li>
-                    <li><b>Regla de Oro:</b> Si un reporte junta <b>3 Dislikes</b>, se elimina automáticamente.</li>
-                </ul>
-            </div>
-
-            <p style="margin-bottom:8px;"><b>4. 🎙️ RADIO / CHAT:</b><br>
-            Usa el botón de micrófono 🎙️ para dictar reportes de voz a texto sin escribir.</p>
-
-            <p><b>5. 💼 SERVICIOS:</b><br>
-            Usa el botón morado para encontrar o registrar talleres, llanteras y comida.</p>
-
-            <button class="btn-main" onclick="toggleManual()">¡ENTENDIDO, VAMOS!</button>
-        </div>
-    </div>
-
-    <div class="brand-header">
-        <h1>VIGIA TOLUCA <span class="admin-badge" id="adminBadge">ADMIN</span></h1>
-        <span>Monitoreo Ciudadano</span>
-    </div>
-
-    <button id="btnCancelarRuta" onclick="limpiarRuta()">✕ FINALIZAR RUTA</button>
-    <button class="side-btn btn-gps" onclick="activarSeguimiento()">🎯</button>
-    <button class="side-btn btn-lock" id="lockBtn" onclick="toggleLock()">🔒</button>
-    <button class="side-btn btn-help" onclick="toggleManual()">❓</button>
-    <button class="side-btn btn-theme" onclick="toggleTheme()">☀️</button>
-    <button class="side-btn btn-biz" onclick="abrirRegistroNegocio()">💼</button>
-    <button class="side-btn" id="btnInstall" onclick="abrirInstallModal()">📲</button>
-    
-    <button class="btn-quick-police" onclick="intentoReportePolicial()">👮</button>
-    <button class="btn-sugerencias" onclick="window.open('https://tally.so/r/0QeJXj', '_blank')">💬</button>
-
-    <div id="map"></div>
-    
-    <div class="menu-container">
-        <button class="btn-reportar" onclick="toggleMenu()">🛰️ GENERAR ALERTA</button>
-        <div class="opciones" id="menuOpciones">
-            <button class="btn-opcion" style="background:#e63946" onclick="enviarReporte('🚨 EMERGENCIA VIAL')">🚨</button>
-            <button class="btn-opcion" style="background:#ff8c00" onclick="enviarReporte('🚧 RIESGO EN VÍA')">🚧</button>
-            <button class="btn-opcion" style="background:#ffd700" onclick="enviarReporte('💥 SINIESTRO VIAL')">💥</button>
-        </div>
-    </div>
-
-    <div id="chatDrawer">
-        <div class="drawer-handle" onclick="toggleChat()" id="chatHandleText">RED CIUDADANA ACTIVA ▲</div>
-        <div id="chatBody">
-            <div class="tab-header">
-                <button class="tab-btn active" onclick="switchTab('reportes')">⚠️ ALERTAS</button>
-                <button class="tab-btn" onclick="switchTab('chat')">💬 COMUNIDAD <span id="chatBadge" class="badge">0</span></button>
-            </div>
-            <div id="listReportes" class="list-container active">
-                <div style="text-align:center; padding:20px; color:#666;">Cargando red...</div>
-            </div>
-            <div id="listChat" class="list-container">
-                <div style="text-align:center; padding:20px; color:#666;">Sin mensajes.</div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
-                <button class="btn-mic" onclick="toggleDictado()">🎙️</button>
-                <button class="btn-send" onclick="enviarChat()">➤</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-
-    <script>
-        const map = L.map('map', { zoomControl: false, tap: false }).setView([19.2827, -99.6557], 14);
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-        function toggleTheme() {
-            if (map.hasLayer(darkLayer)) { map.removeLayer(darkLayer); lightLayer.addTo(map); document.querySelector('.btn-theme').innerText = "🌙"; }
-            else { map.removeLayer(lightLayer); darkLayer.addTo(map); document.querySelector('.btn-theme').innerText = "☀️"; }
-        }
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => { 
-            e.preventDefault(); 
-            deferredPrompt = e; 
-        });
-
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-            document.getElementById('btnInstall').style.display = 'none';
-        }
-
-        function abrirInstallModal() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        document.getElementById('btnInstall').style.display = 'none';
-                    }
-                    deferredPrompt = null;
-                });
-            } else {
-                document.getElementById('installModal').style.display = 'flex';
-            }
-        }
-
-        function cerrarInstallModal() {
-            document.getElementById('installModal').style.display = 'none';
-        }
-
-        let clusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 17 }).addTo(map);
-        let siguiendo = true, miUbicacionReal = null, marcadorUsuario = null;
-        let miNombre = localStorage.getItem('vigiaNombre') || "";
-        let misReportes = parseInt(localStorage.getItem('vigiaConteo')) || 0;
-        let puntosCache = [];
-        const historialAlertas = {}; 
-        let controlRuta = null, destinoFinal = null, marcadorDestinoTemp = null;
-        let ultimoReporteTime = 0;
-        let ultimoReporteCoords = null;
-
-        let tabActual = 'reportes';
-        let drawerAbierto = false;
-        
-        // --- LOGICA DE NOTIFICACIONES PERSISTENTES ---
-        let mensajesVistos = parseInt(localStorage.getItem('lastViewedCount')) || 0;
-
-        let modoAdminDisponible = false; 
-        let panelAdminAbierto = false; 
-
-        // --- LÓGICA DE RECONOCIMIENTO DE VOZ ---
-        let recognition;
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'es-MX';
-            recognition.interimResults = false;
-
-            recognition.onresult = function(event) {
-                const text = event.results[0][0].transcript;
-                document.getElementById('chatInput').value = text;
-                document.querySelector('.btn-mic').classList.remove('listening');
-                // Auto-enviar si se detecta texto claro
-                if(text.length > 2) enviarChat();
-            };
-
-            recognition.onerror = function() {
-                document.querySelector('.btn-mic').classList.remove('listening');
-                alert("Error con el micrófono. Intenta escribir.");
-            };
-            
-            recognition.onend = function() {
-                document.querySelector('.btn-mic').classList.remove('listening');
-            };
-        }
-
-        function toggleDictado() {
-            if (!recognition) return alert("Tu navegador no soporta voz.");
-            const btn = document.querySelector('.btn-mic');
-            if (btn.classList.contains('listening')) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                btn.classList.add('listening');
-            }
-        }
-        // ----------------------------------------
-
-        var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Buscar destino...", geocoder: L.Control.Geocoder.photon() })
-        .on('markgeocode', function(e) {
-            if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
-            var center = e.geocode.center;
-            marcadorDestinoTemp = L.marker(center).addTo(map);
-            map.setView(center, 16);
-            var popupHtml = `<div style="text-align:center; padding:5px;"><strong>¿Navegar a este destino?</strong><br><small>${e.geocode.name}</small><div style="margin-top:10px;"><button onclick="iniciarNavegacion(${center.lat}, ${center.lng})" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ TRAZAR RUTA</button></div></div>`;
-            marcadorDestinoTemp.bindPopup(popupHtml).openPopup();
-        })
-        .addTo(map);
-
-        function iniciarNavegacion(lat, lng) {
-            if (!miUbicacionReal) return alert("Esperando señal GPS...");
-            if (marcadorDestinoTemp) map.removeLayer(marcadorDestinoTemp);
-            destinoFinal = L.latLng(lat, lng);
-            if (controlRuta) map.removeControl(controlRuta);
-            controlRuta = L.Routing.control({ waypoints: [L.latLng(miUbicacionReal[0], miUbicacionReal[1]), destinoFinal], language: 'es', router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#00d4ff', opacity: 0.8, weight: 6}] }, addWaypoints: false, draggableWaypoints: false, fitSelectedRoutes: true, createMarker: function(i, wp, nWps) { if (i === nWps - 1) { return L.marker(wp.latLng, { icon: L.divIcon({ html: '🏁', className: 'custom-marker', iconSize: [30, 30] }) }); } return null; } }).addTo(map);
-            document.getElementById('btnCancelarRuta').style.display = 'block';
-            activarSeguimiento();
-            if(drawerAbierto) toggleChat(); 
-        }
-
-        function limpiarRuta() {
-            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; }
-            if (marcadorDestinoTemp) { map.removeLayer(marcadorDestinoTemp); marcadorDestinoTemp = null; }
-            destinoFinal = null;
-            document.getElementById('btnCancelarRuta').style.display = 'none';
-        }
-
-        function localizarReporte(lat, lng) {
-            siguiendo = false;
-            document.getElementById('lockBtn').innerText = '🔓';
-            document.getElementById('miraCentral').style.display = 'block';
-            map.setView([lat, lng], 18);
-            if(drawerAbierto) toggleChat();
-        }
-
-        function iniciarGPS() {
-            if (!navigator.geolocation) return alert("Tu dispositivo no soporta GPS.");
-            navigator.geolocation.watchPosition((pos) => {
-                miUbicacionReal = [pos.coords.latitude, pos.coords.longitude];
-                if (!marcadorUsuario) { marcadorUsuario = L.marker(miUbicacionReal, { icon: L.divIcon({ html: '<div style="width:14px;height:14px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #00d4ff;"></div>', className: 'user-dot', iconSize: [20, 20] }) }).addTo(map); map.setView(miUbicacionReal, 16); } else { marcadorUsuario.setLatLng(miUbicacionReal); }
-                if (siguiendo) map.setView(miUbicacionReal, map.getZoom());
-                if (controlRuta && destinoFinal) { controlRuta.setWaypoints([L.latLng(miUbicacionReal[0], miUbicacionReal[1]), destinoFinal]); if (map.distance(miUbicacionReal, destinoFinal) < 30) { hablarSistema("Has llegado a tu destino."); limpiarRuta(); } }
-                checarCercaniaPolicial(miUbicacionReal);
-            }, (err) => { console.log(err); }, { enableHighAccuracy: true });
-        }
-
-        function irARegistro() { document.getElementById('avisoLegal').style.display = 'none'; if (!miNombre) { document.getElementById('registroNombre').style.display = 'flex'; } else { iniciarGPS(); } }
-        function guardarIdentidad() { let n = document.getElementById('inputNombreUser').value.trim(); if (n.length < 3) return alert("Nombre muy corto."); if (n.toLowerCase() === "iza") { if (prompt("SISTEMA ADMIN. Clave:") === "iza2026") { n = "Iza"; } else { return alert("Acceso denegado."); } } miNombre = n; localStorage.setItem('vigiaNombre', n); document.getElementById('registroNombre').style.display = 'none'; iniciarGPS(); }
-        function obtenerRango(pts) { if (pts >= 50) return { t: 'Comandante', c: 'r-comandante' }; if (pts >= 30) return { t: 'Élite', c: 'r-elite' }; if (pts >= 15) return { t: 'Veterano', c: 'r-veterano' }; if (pts >= 5) return { t: 'Activo', c: 'r-activo' }; return { t: 'Civil', c: 'r-civil' }; }
-        function toggleManual() { const m = document.getElementById('manualVigia'); m.style.display = (m.style.display==='none'||m.style.display==='')?'flex':'none'; }
-        function toggleMenu() { document.getElementById('menuOpciones').classList.toggle('active'); }
-        
-        function toggleChat() { 
-            drawerAbierto = !drawerAbierto;
-            const drawer = document.getElementById('chatDrawer');
-            drawer.classList.toggle('open'); 
-            const handleText = document.getElementById('chatHandleText');
-            if (drawerAbierto) { handleText.innerText = "RED CIUDADANA ACTIVA ▼"; } else { handleText.innerText = "RED CIUDADANA ACTIVA ▲"; }
-            
-            if (drawerAbierto && tabActual === 'chat') { 
-                document.getElementById('chatBadge').style.display = 'none';
-                // Si abres el chat, igualamos los contadores
-                // (La actualización de mensajesVistos se hace en cargarPuntos cuando el drawer está abierto)
-            }
-        }
-
-        function toggleAdminDrawer() {
-            if (!modoAdminDisponible) return;
-            panelAdminAbierto = !panelAdminAbierto;
-            const drawer = document.getElementById('adminDrawer');
-            const btn = document.getElementById('adminHandleBtn');
-            if (panelAdminAbierto) { drawer.classList.add('open'); btn.classList.add('open'); btn.innerText = "▲ CERRAR ADMIN ▲"; } 
-            else { drawer.classList.remove('open'); btn.classList.remove('open'); btn.innerText = "▼ ADMIN IZA ▼"; }
-            cargarPuntos();
-        }
-
-        function toggleLock() { siguiendo = !siguiendo; document.getElementById('lockBtn').innerText = siguiendo ? '🔒' : '🔓'; document.getElementById('miraCentral').style.display = siguiendo ? 'none' : 'block'; }
-        function activarSeguimiento() { siguiendo = true; document.getElementById('lockBtn').innerText = '🔒'; document.getElementById('miraCentral').style.display = 'none'; if (miUbicacionReal) map.setView(miUbicacionReal, 17); }
-        
-        function switchTab(tab) {
-            tabActual = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.list-container').forEach(l => l.classList.remove('active'));
-            if(tab === 'reportes') { document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); document.getElementById('listReportes').classList.add('active'); } 
-            else { 
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); 
-                document.getElementById('listChat').classList.add('active'); 
-                document.getElementById('chatBadge').style.display = 'none';
-            }
-        }
-
-        function checarCercaniaPolicial(miPos) {
-            if (!puntosCache || puntosCache.length === 0) return;
-            puntosCache.forEach(p => {
-                if (!p._id) return;
-                const dist = map.distance(miPos, [p.lat, p.lng]);
-                const id = p._id;
-                if (!historialAlertas[id]) { historialAlertas[id] = 0; }
-                if (p.texto.includes('👮') && dist < 500) { if (historialAlertas[id] < 1) { hablarSistema("Precaución. Zona de operativo vial a 500 metros."); historialAlertas[id]++; } }
-                if (p.texto.includes('🚨') && dist < 1000) { if (historialAlertas[id] < 2) { hablarSistema("Atención. Incidente reportado cerca de tu ubicación."); historialAlertas[id]++; } }
-            });
-        }
-
-        function hablarSistema(texto) { if ('speechSynthesis' in window) { const utterance = new SpeechSynthesisUtterance(texto); utterance.lang = "es-MX"; utterance.rate = 1.5; window.speechSynthesis.speak(utterance); } }
-        function getIconHTML(texto) { 
-            if (texto.includes('🚨')) return '🚨'; if (texto.includes('🚧')) return '🚧'; if (texto.includes('💥')) return '💥'; if (texto.includes('👮')) return '👮'; 
-            if (texto.includes('🔧')) return '🔧'; if (texto.includes('🛞')) return '🛞'; if (texto.includes('🔋')) return '🔋'; if (texto.includes('⛽')) return '⛽'; if (texto.includes('🌮')) return '🌮';
-            return null; 
-        }
-        function confirmarBorrado(id) { if(confirm("¿Eliminar reporte?")) { borrarReporte(id); } }
-        async function borrarReporte(id) { await fetch(`/api/chat/${id}`, { method: 'DELETE' }); cargarPuntos(); }
-
-        async function aprobarNegocio(id, textoCompleto, lat, lng) {
-            if(!confirm("¿Aprobar y publicar este servicio?")) return;
-            const nuevoTexto = textoCompleto.replace('[PENDIENTE] ', '');
-            const fecha = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            try {
-                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: nuevoTexto, fecha: fecha, lat: lat, lng: lng, timestamp: Date.now() }) });
-                await fetch(`/api/chat/${id}`, { method: 'DELETE' });
-                alert("✅ Servicio publicado.");
-                cargarPuntos();
-            } catch(e) { alert("Error al aprobar."); }
-        }
-
-        async function realizarVoto(id, tipo, likesActuales, dislikesActuales, votersActuales) {
-            if (!miNombre) return alert("Registra tu nombre para votar.");
-            
-            let voters = votersActuales || [];
-            if (voters.includes(miNombre)) return alert("⚠️ Ya votaste en este reporte.");
-
-            let nuevosLikes = parseInt(likesActuales || 0);
-            let nuevosDislikes = parseInt(dislikesActuales || 0);
-            
-            if (tipo === 'like') nuevosLikes++;
-            if (tipo === 'dislike') nuevosDislikes++;
-            
-            voters.push(miNombre);
-
-            if (nuevosDislikes >= 3) {
-                borrarReporte(id); 
-                alert("🗑️ Reporte eliminado por la comunidad (3 reportes negativos).");
-                return;
-            }
-
-            try {
-                await fetch(`/api/chat/${id}/vote`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ likes: nuevosLikes, dislikes: nuevosDislikes, voters: voters }) 
-                });
-                cargarPuntos();
-            } catch (e) { 
-                console.log("Simulando voto localmente..."); 
-                cargarPuntos(); 
-            }
-        }
-
-        async function cargarPuntos() {
-            try {
-                const res = await fetch('/api/chat');
-                if(!res.ok) throw new Error("Server error");
-                const puntos = await res.json();
-                puntosCache = puntos; 
-                clusterGroup.clearLayers();
-                
-                let htmlReportes = "";
-                let htmlChat = "";
-                const usuariosActivos = new Set();
-                let contadorMensajesTexto = 0;
-                let pendientesCount = 0;
-
-                const TIEMPO_LIMITE = 12 * 60 * 60 * 1000; 
-                
-                document.getElementById('statTotal').innerText = puntos.length;
-
-                puntos.reverse().forEach(p => {
-                    if (p.timestamp && (Date.now() - p.timestamp > TIEMPO_LIMITE)) return;
-
-                    let esPendiente = p.texto.includes('[PENDIENTE]');
-                    if (esPendiente) pendientesCount++;
-
-                    let mostrarAdminStuff = (modoAdminDisponible && panelAdminAbierto);
-                    if (esPendiente && !mostrarAdminStuff) return;
-
-                    const iconoEmoji = getIconHTML(p.texto);
-                    let esReporteImportante = false;
-                    let esNegocio = p.texto.includes('[NEGOCIO]');
-                    
-                    let likes = p.likes || 0;
-                    let dislikes = p.dislikes || 0;
-                    let voters = p.voters || [];
-                    
-                    let yaVoteLike = voters.includes(miNombre) ? 'voted-like' : ''; 
-                    let yaVoteDislike = voters.includes(miNombre) ? 'voted-dislike' : ''; 
-
-                    if (iconoEmoji) { 
-                        esReporteImportante = true;
-                        let claseMarcador = 'custom-marker';
-                        if (esNegocio) claseMarcador += ' biz-marker';
-                        if (esPendiente) claseMarcador = 'custom-marker pending-marker';
-
-                        const marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ html: iconoEmoji, className: claseMarcador, iconSize: [35, 35] }) });
-                        
-                        let botonBorrar = "";
-                        const esMio = p.texto.includes('<b>' + miNombre + ':</b>');
-                        if (mostrarAdminStuff || esMio) {
-                            botonBorrar = `<div style="margin-top:8px;"><button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Borrar</button></div>`;
-                        }
-
-                        let botonesVoto = "";
-                        if (!esPendiente && !esNegocio) { 
-                            botonesVoto = `
-                            <div class="vote-box">
-                                <button class="btn-vote ${yaVoteLike}" onclick="realizarVoto('${p._id}', 'like', ${likes}, ${dislikes}, ${JSON.stringify(voters).replace(/"/g, '&quot;')})">👍 <span class="vote-count">${likes}</span></button>
-                                <button class="btn-vote ${yaVoteDislike}" onclick="realizarVoto('${p._id}', 'dislike', ${likes}, ${dislikes}, ${JSON.stringify(voters).replace(/"/g, '&quot;')})">👎 <span class="vote-count">${dislikes}</span></button>
-                            </div>`;
-                        }
-
-                        let popupContent = `<div style="text-align:center; min-width:140px;">
-                            <div style="font-size:14px; margin-bottom:5px;">${p.texto}</div>
-                            <small style="color:#666;">${p.fecha}</small>
-                            ${botonesVoto}
-                            ${botonBorrar}
-                        </div>`;
-                        
-                        if (esPendiente && mostrarAdminStuff) {
-                            popupContent = `<div style="text-align:center; min-width:150px;">
-                                <strong style="color:#f39c12">⚠️ REVISIÓN PENDIENTE</strong><br>
-                                <div style="font-size:12px; margin:5px 0;">${p.texto}</div>
-                                <div style="display:flex; gap:5px; justify-content:center; margin-top:10px;">
-                                    <button onclick="aprobarNegocio('${p._id}', '${p.texto}', ${p.lat}, ${p.lng})" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">✅ APROBAR</button>
-                                    <button onclick="confirmarBorrado('${p._id}')" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">❌ RECHAZAR</button>
-                                </div>
-                            </div>`;
-                        }
-
-                        marker.bindPopup(popupContent);
-                        clusterGroup.addLayer(marker);
-                    }
-                    
-                    if (esReporteImportante) { 
-                        let htmlVotoLista = (!esPendiente && !esNegocio) ? `<span style="font-size:10px; color:#888; margin-left:5px;">(👍${likes})</span>` : '';
-                        htmlReportes += `<div class="chat-item clickable" onclick="localizarReporte(${p.lat}, ${p.lng})">${p.texto} ${htmlVotoLista} <span class="chat-date">${p.fecha} 📍</span></div>`;
-                    } else { 
-                        htmlChat += `<div class="chat-item private">${p.texto} <span class="chat-date">${p.fecha}</span></div>`;
-                        contadorMensajesTexto++;
-                    }
-
-                    const matchUser = p.texto.match(/<b>(.*):<\/b>/);
-                    if (matchUser) usuariosActivos.add(matchUser[1]);
-                });
-
-                document.getElementById('statPendientes').innerText = pendientesCount;
-                document.getElementById('listReportes').innerHTML = htmlReportes || "<div style='text-align:center; padding:20px; color:#666;'>Sin alertas activas.</div>";
-                document.getElementById('listChat').innerHTML = htmlChat || "<div style='text-align:center; padding:20px; color:#666;'>Comunidad silenciosa.</div>";
-                
-                // --- LÓGICA DE NOTIFICACIONES PERSISTENTES ---
-                const badge = document.getElementById('chatBadge');
-                if (drawerAbierto && tabActual === 'chat') {
-                    // Si estoy viendo, guardo el total actual como "visto"
-                    mensajesVistos = contadorMensajesTexto;
-                    localStorage.setItem('lastViewedCount', mensajesVistos); // GUARDAR EN MEMORIA
-                    badge.style.display = 'none';
-                } else {
-                    const sinLeer = contadorMensajesTexto - mensajesVistos;
-                    if (sinLeer > 0 && mensajesVistos > 0) {
-                        badge.innerText = sinLeer;
-                        badge.style.display = 'inline-block';
-                    }
-                }
-                // Inicialización primera vez
-                if (mensajesVistos === 0 && contadorMensajesTexto > 0) { 
-                    mensajesVistos = contadorMensajesTexto; 
-                    localStorage.setItem('lastViewedCount', mensajesVistos);
-                }
-
-            } catch (e) { setTimeout(cargarPuntos, 4000); }
-        }
-
-        function abrirRegistroNegocio() { document.getElementById('registroNegocio').style.display = 'flex'; }
-        function cerrarNegocio() { document.getElementById('registroNegocio').style.display = 'none'; }
-        
-        async function guardarNegocio() {
-            const nombre = document.getElementById('bizName').value;
-            const tipo = document.getElementById('bizType').value;
-            const tel = document.getElementById('bizPhone').value;
-            if(!nombre || !tel) return alert("Por favor completa los datos del servicio.");
-            if (!miUbicacionReal) return alert("Esperando GPS para ubicar el establecimiento...");
-            const msg = `[PENDIENTE] <span class="rango-tag r-negocio">SERVICIO</span> <b>[NEGOCIO] ${tipo} ${nombre}:</b> (Tel: ${tel})`;
-            const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            try { 
-                await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat: miUbicacionReal[0], lng: miUbicacionReal[1], likes: 0, dislikes: 0, voters: [], timestamp: Date.now() }) }); 
-                alert("✅ Solicitud enviada a revisión.");
-                cerrarNegocio();
-                cargarPuntos(); 
-            } catch (e) { alert("Error al registrar."); }
-        }
-
-        function intentoReportePolicial() { enviarReporte('👮 OPERATIVO VIAL / RETÉN'); }
-        async function enviarReporte(t) {
-            if (!miNombre || miNombre === "") { alert("⚠️ Error: Debes registrar tu alias."); document.getElementById('registroNombre').style.display = 'flex'; return; }
-            let lat, lng;
-            if (!siguiendo) { const c = map.getCenter(); lat = c.lat; lng = c.lng; } else { if (!miUbicacionReal) return alert("⏳ Esperando GPS..."); lat = miUbicacionReal[0]; lng = miUbicacionReal[1]; }
-            const now = Date.now();
-            if (ultimoReporteCoords && map.distance(ultimoReporteCoords, [lat, lng]) < 50 && (now - ultimoReporteTime) < 300000) { alert("🚫 Espera antes de reportar en el mismo punto."); return; }
-            misReportes++; localStorage.setItem('vigiaConteo', misReportes);
-            const r = obtenerRango(misReportes);
-            const msg = `<span class="rango-tag ${r.c}">${r.t}</span> <b>${miNombre}:</b> ${t}`;
-            const f = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            
-            try { await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: msg, fecha: f, lat, lng, likes: 0, dislikes: 0, voters: [], timestamp: Date.now() }) }); ultimoReporteTime = now; ultimoReporteCoords = [lat, lng]; cargarPuntos(); document.getElementById('chatInput').value = ""; } catch (e) { alert("Error."); }
-        }
-        function enviarChat() { const i = document.getElementById('chatInput'); if(i.value.trim()) enviarReporte(i.value.trim()); }
-
-        function checarHash() {
-            if (window.location.hash === '#admin') {
-                modoAdminDisponible = true;
-                document.getElementById('adminHandleBtn').style.display = 'block';
-                document.getElementById('adminBadge').style.display = 'inline-block';
-                document.getElementById('adminDrawer').style.display = 'flex'; 
-                
-                const logArea = document.getElementById('izaLogArea');
-                logArea.innerHTML = "<div>> Protocolo Admin Iniciado...</div><div>> Esperando comandos...</div>";
-            } else {
-                modoAdminDisponible = false;
-                document.getElementById('adminDrawer').style.display = 'none';
-                document.getElementById('adminHandleBtn').style.display = 'none';
-                document.getElementById('adminBadge').style.display = 'none';
-                panelAdminAbierto = false; 
-            }
-            cargarPuntos();
-        }
-
-        window.addEventListener('hashchange', checarHash);
-        checarHash();
-        setInterval(cargarPuntos, 7000);
-        setTimeout(cargarPuntos, 1000);
-    </script>
+    <script src="./app.js"></script>
 </body>
 </html>
