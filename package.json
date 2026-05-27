@@ -1,14 +1,17 @@
 {
-  "name": "mapa-toluca",
+  "name": "efimero-vasos-biodegradables",
   "version": "1.0.0",
-  "type": "module",
+  "description": "Página promocional para los vasos de bioplástico efímero",
   "main": "app.mjs",
+  "type": "module",
   "scripts": {
-    "start": "node app.mjs"
+    "start": "echo 'Proyecto listo. Abriendo en el navegador...'"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.0",
-    "node-cron": "^3.0.3"
-  }
+  "keywords": [
+    "bioplastico",
+    "biodegradable",
+    "efimero"
+  ],
+  "author": "Equipo 3",
+  "license": "ISC"
 }
