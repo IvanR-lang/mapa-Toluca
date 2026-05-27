@@ -2,16 +2,15 @@
   "name": "efimero-vasos-biodegradables",
   "version": "1.0.0",
   "description": "Página promocional para los vasos de bioplástico efímero",
-  "main": "app.mjs",
+  "main": "index.html",
   "type": "module",
   "scripts": {
-    "start": "echo 'Proyecto listo. Abriendo en el navegador...'"
+    "build": "echo 'No se requiere compilación'",
+    "start": "npx serve ."
   },
-  "keywords": [
-    "bioplastico",
-    "biodegradable",
-    "efimero"
-  ],
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
   "author": "Equipo 3",
   "license": "ISC"
 }
